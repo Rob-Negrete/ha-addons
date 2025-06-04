@@ -1,0 +1,116 @@
+[
+  {
+    "id": "f1d25a40f2f4be1d",
+    "type": "server-events",
+    "z": "face-rekon-flow",
+    "name": "Frigate Event",
+    "server": "home-assistant",
+    "version": 3,
+    "event_type": "frigate/events",
+    "exposeToHomeAssistant": false,
+    "haConfig": [],
+    "waitForRunning": true,
+    "outputProperties": [
+      {
+        "property": "payload",
+        "propertyType": "msg",
+        "value": "",
+        "valueType": "eventData"
+      }
+    ],
+    "x": 140,
+    "y": 100,
+    "wires": [["dfb7fa041bf65b12"]]
+  },
+  {
+    "id": "dfb7fa041bf65b12",
+    "type": "switch",
+    "z": "face-rekon-flow",
+    "name": "persona + snapshot",
+    "property": "payload.type",
+    "propertyType": "msg",
+    "rules": [
+      {
+        "t": "eq",
+        "v": "person",
+        "vt": "str"
+      }
+    ],
+    "checkall": "true",
+    "repair": false,
+    "outputs": 1,
+    "x": 370,
+    "y": 100,
+    "wires": [["fe17813e9198c9c3"]]
+  },
+  {
+    "id": "fe17813e9198c9c3",
+    "type": "http request",
+    "z": "face-rekon-flow",
+    "name": "Descargar imagen",
+    "method": "GET",
+    "ret": "bin",
+    "paytoqs": "ignore",
+    "url": "http://localhost:5000/api/events/{{payload.id}}/snapshot.jpg?bbox=1&timestamp=1",
+    "tls": "",
+    "persist": false,
+    "authType": "",
+    "x": 610,
+    "y": 100,
+    "wires": [["b1139a73ac2cd7c1"]]
+  },
+  {
+    "id": "b1139a73ac2cd7c1",
+    "type": "file",
+    "z": "face-rekon-flow",
+    "name": "Guardar como new_face.jpg",
+    "filename": "/config/face-rekon/images/new_face.jpg",
+    "appendNewline": false,
+    "createDir": true,
+    "overwriteFile": "true",
+    "encoding": "binary",
+    "x": 860,
+    "y": 100,
+    "wires": [["5c4cd69d4f2a86ab"]]
+  },
+  {
+    "id": "5c4cd69d4f2a86ab",
+    "type": "exec",
+    "z": "face-rekon-flow",
+    "command": "python3 /app/scripts/clasificador.py",
+    "addpay": false,
+    "append": "",
+    "useSpawn": "false",
+    "timer": "",
+    "oldrc": false,
+    "name": "Ejecutar Face Rekon",
+    "x": 1110,
+    "y": 100,
+    "wires": [
+      [["fc4b23b104144e02"]],
+      [],
+      []
+    ]
+  },
+  {
+    "id": "fc4b23b104144e02",
+    "type": "debug",
+    "z": "face-rekon-flow",
+    "name": "Resultado",
+    "active": true,
+    "tosidebar": true,
+    "console": false,
+    "tostatus": false,
+    "complete": "payload",
+    "targetType": "msg",
+    "x": 1320,
+    "y": 100,
+    "wires": []
+  },
+  {
+    "id": "home-assistant",
+    "type": "server",
+    "name": "Home Assistant",
+    "addon": true
+  }
+]

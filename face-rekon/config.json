@@ -1,0 +1,17 @@
+{
+    "name": "Face Rekon",
+    "version": "1.0",
+    "slug": "face_rekon",
+    "description": "Reconocimiento facial integrado con Home Assistant",
+    "arch": ["amd64", "aarch64"],
+    "startup": "application",
+    "boot": "auto",
+    "options": {},
+    "schema": {},
+    "ingress": false,
+    "host_network": true,
+    "map": ["config:rw", "media:rw"],
+    "privileged": ["SYS_ADMIN"],
+    "image": "local/face_rekon"
+  }
+  
