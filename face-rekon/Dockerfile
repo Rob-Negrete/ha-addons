@@ -32,7 +32,8 @@ RUN pip install --no-cache-dir \
     opencv-python-headless \
     tinydb \
     faiss-cpu==1.10.0 \
-    onnxruntime
+    onnxruntime \
+    flask
 
 # Ejecutar script de reconocimiento
 CMD ["/run.sh"]
