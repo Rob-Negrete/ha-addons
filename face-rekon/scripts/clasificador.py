@@ -4,107 +4,114 @@ import numpy as np
 import base64
 from PIL import Image
 import time
-import pickle
-from insightface import App
+import io
+import uuid
+from insightface.app import FaceAnalysis
 from tinydb import TinyDB, Query
 import faiss
-import io
 
 # Configuración de rutas
 BASE_PATH = "/config/face-rekon/faces"
 UNKNOWN_PATH = "/config/face-rekon/unknowns"
 DB_PATH = "/config/face-rekon/db/tinydb.json"
-THUMBNAIL_SIZE = (160, 160)  # Tamaño del thumbnail
+FAISS_INDEX_PATH = "/config/face-rekon/db/faiss_index.index"
+MAPPING_PATH = "/config/face-rekon/db/faiss_id_map.npy"
+THUMBNAIL_SIZE = (160, 160)
 
-# Inicializar InsightFace para detección de rostros
-app = App()
-app.prepare(ctx_id=0)
+# Inicializar InsightFace
+app = FaceAnalysis(allowed_modules=['detection', 'recognition'])
+app.prepare(ctx_id=0, det_size=(640, 640))
 
-# Inicializar la base de datos TinyDB
+# TinyDB
 db = TinyDB(DB_PATH)
 Face = Query()
 
-# Crear el índice FAISS para las comparaciones de rostros
-dimension = 512  # Tamaño del vector de InsightFace
-index = faiss.IndexFlatL2(dimension)  # Usamos el índice básico de faiss
-if os.path.exists('/config/face-rekon/db/faiss_index.index'):
-    faiss.read_index('/config/face-rekon/db/faiss_index.index')  # Cargar el índice previamente guardado
+# Cargar o crear índice FAISS
+dimension = 512
+if os.path.exists(FAISS_INDEX_PATH):
+    index = faiss.read_index(FAISS_INDEX_PATH)
+    id_map = np.load(MAPPING_PATH).tolist()
+else:
+    index = faiss.IndexFlatL2(dimension)
+    id_map = []
 
-# Función para extraer el vector del rostro usando InsightFace
+# Extraer vector facial
 def extract_face_embedding(image_path):
-    img = cv2.imread(image_path)
-    faces = app.get(image_path)
+    # Carga la imagen desde disco
+    img_bgr = cv2.imread(image_path)
+    if img_bgr is None:
+        print(f"No se pudo leer la imagen: {image_path}")
+        return None
+
+    # Convierte BGR (OpenCV) a RGB (InsightFace)
+    img_rgb = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)
+
+    # Llama a InsightFace con el array
+    faces = app.get(img_rgb)
     if faces:
         return faces[0].embedding
     return None
 
-# Función para generar un thumbnail y convertirlo a base64
+# Crear thumbnail base64
 def generate_thumbnail(image_path):
     img = Image.open(image_path)
     img.thumbnail(THUMBNAIL_SIZE)
-    
-    # Convertir a base64
     buffered = io.BytesIO()
     img.save(buffered, format="JPEG")
-    thumbnail_base64 = base64.b64encode(buffered.getvalue()).decode('utf-8')
-    
-    return thumbnail_base64
+    return base64.b64encode(buffered.getvalue()).decode("utf-8")
 
-# Función para guardar el rostro desconocido en TinyDB y FAISS
+# Guardar rostro desconocido
 def save_unknown_face(image_path):
-    # Extraer el embedding del rostro
     embedding = extract_face_embedding(image_path)
     if embedding is None:
-        print("No se pudo detectar un rostro en la imagen.")
+        print("No se detectó rostro.")
         return
 
-    # Generar el thumbnail y convertirlo a base64
-    thumbnail_base64 = generate_thumbnail(image_path)
-
-    # Guardar los metadatos en TinyDB
+    thumbnail = generate_thumbnail(image_path)
     timestamp = int(time.time())
-    face_data = {
-        'timestamp': timestamp,
-        'image_path': image_path,
-        'embedding': embedding.tolist(),
-        'thumbnail': thumbnail_base64,
-    }
-    db.insert(face_data)
+    face_id = str(uuid.uuid4())
 
-    # Insertar el rostro en FAISS
-    faiss_index = np.array([embedding], dtype=np.float32)
-    index.add(faiss_index)
+    # Insertar en TinyDB
+    db.insert({
+        "face_id": face_id,
+        "timestamp": timestamp,
+        "image_path": image_path,
+        "embedding": embedding.tolist(),
+        "thumbnail": thumbnail,
+        "name": None,
+        "relationship": "unknown",
+        "confidence": "unknown"
+    })
 
-    # Guardar el índice FAISS para la persistencia
-    faiss.write_index(index, '/config/face-rekon/db/faiss_index.index')
+    # Insertar en FAISS e ID map
+    index.add(np.array([embedding], dtype=np.float32))
+    id_map.append(face_id)
 
-    print(f"Rostro desconocido guardado en el índice FAISS y en la base de datos TinyDB.")
+    # Guardar índice y map
+    faiss.write_index(index, FAISS_INDEX_PATH)
+    np.save(MAPPING_PATH, np.array(id_map))
 
-# Función para identificar rostros conocidos
+    print("Rostro guardado con ID:", face_id)
+
+# Identificar rostro
 def identify_face(image_path):
     embedding = extract_face_embedding(image_path)
     if embedding is None:
-        print("No se pudo detectar un rostro en la imagen.")
+        print("No se detectó rostro.")
         return None
 
-    # Buscar en FAISS
-    faiss_index = np.array([embedding], dtype=np.float32)
-    D, I = index.search(faiss_index, 1)  # Buscar el rostro más cercano
-    if D[0][0] < 0.5:  # Umbral de similitud (ajustable)
-        # Obtener el rostro más cercano de TinyDB
-        matched_face = db.get(Face.embedding == embedding.tolist())
-        if matched_face:
-            person_name = matched_face['timestamp']
-            print(f"Rostro identificado: {person_name}")
-            return person_name
+    D, I = index.search(np.array([embedding], dtype=np.float32), 1)
+    if D[0][0] < 0.5:
+        face_id = id_map[I[0][0]]
+        matched = db.get(Face.face_id == face_id)
+        if matched:
+            print(f"Identificado: {matched.get('name', matched['face_id'])}")
+            return matched
     print("Rostro no identificado.")
     return None
 
-# Ejemplo de uso
+# Ejemplo
 new_image_path = "/config/face-rekon/images/new_face.jpg"
-
-# Intentar identificar al rostro
-person_name = identify_face(new_image_path)
-if not person_name:
-    # Si no se ha identificado, guardar el rostro como desconocido
+result = identify_face(new_image_path)
+if not result:
     save_unknown_face(new_image_path)
