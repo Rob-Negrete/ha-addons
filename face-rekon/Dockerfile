@@ -33,7 +33,8 @@ RUN pip install --no-cache-dir \
     tinydb \
     faiss-cpu==1.10.0 \
     onnxruntime \
-    flask
+    flask \
+    flask-cors
 
 # Ejecutar script de reconocimiento
 CMD ["/run.sh"]
