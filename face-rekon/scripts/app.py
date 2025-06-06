@@ -3,6 +3,7 @@ from flask_cors import CORS
 import os
 import uuid
 import clasificador
+import base64
 
 app = Flask(__name__)
 CORS(app)
@@ -13,18 +14,18 @@ def ping():
 
 @app.route('/recognize', methods=['POST'])
 def recognize():
-    if 'image' not in request.files:
-        return jsonify({"error": "No image provided"}), 400
+    data = request.get_json()
+    if not data or 'image_base64' not in data:
+        return jsonify({"error": "Missing image_base64"}), 400
 
-    image = request.files['image']
-    if image.filename == '':
-        return jsonify({"error": "Empty filename"}), 400
+    image_data = base64.b64decode(data['image_base64'])
 
-    # Guardar imagen temporal
     tmp_dir = "/tmp/face-rekon"
     os.makedirs(tmp_dir, exist_ok=True)
     tmp_path = os.path.join(tmp_dir, f"{uuid.uuid4().hex}.jpg")
-    image.save(tmp_path)
+
+    with open(tmp_path, "wb") as f:
+        f.write(image_data)
 
     try:
         result = clasificador.identify_face(tmp_path)
