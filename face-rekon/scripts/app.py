@@ -8,11 +8,11 @@ import base64
 app = Flask(__name__)
 CORS(app)
 
-@app.route('/ping', methods=['GET'])
+@app.route('/face-rekon/ping', methods=['GET'])
 def ping():
     return jsonify({"pong": True})
 
-@app.route('/recognize', methods=['POST'])
+@app.route('/face-rekon/recognize', methods=['POST'])
 def recognize():
     data = request.get_json()
     if not data or 'image_base64' not in data:
@@ -44,4 +44,4 @@ def recognize():
         os.remove(tmp_path)
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
+    app.run(host="0.0.0.0", port=6000)
