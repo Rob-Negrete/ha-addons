@@ -112,7 +112,11 @@ def identify_face(image_path):
 
 # Obtener rostros desconocidos
 def get_unclassified_faces():
-    return [face["face_id", "thumbnail", "image_path", "name"] for face in db.all() if face.get("name") is None]
+    unclassified = [{"face_id": face["face_id"],
+                     "image_path": face.get("image_path", None),
+                     "thumbnail": face.get("thumbnail", None)}
+                   for face in db.all() if not face.get("name")]
+    return unclassified
 
 if __name__ == "__main__":
     new_image_path = "/config/face-rekon/images/new_face.jpg"
