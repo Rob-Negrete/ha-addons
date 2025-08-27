@@ -110,8 +110,13 @@ def identify_face(image_path):
     print("Rostro no identificado.")
     return None
 
+# Obtener rostros desconocidos
+def get_unclassified_faces():
+    return [face["face_id"] for face in db.items() if face.get("name") is None]
+
 if __name__ == "__main__":
     new_image_path = "/config/face-rekon/images/new_face.jpg"
     result = identify_face(new_image_path)
     if not result:
         save_unknown_face(new_image_path)
+
