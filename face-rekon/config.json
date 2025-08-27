@@ -1,6 +1,6 @@
 {
   "name": "Face Rekon",
-  "version": "1.0.11",
+  "version": "1.0.12",
   "slug": "face_rekon",
   "description": "Reconocimiento facial con almacenamiento en TinyDB y comparación con FAISS",
   "startup": "application",
