@@ -1,0 +1,20 @@
+# Ignore all log files
+*.log
+
+# Ignore temporary files created by Docker or other tools
+# Dockerfile
+# run.sh
+# docker-compose.yml
+
+# Ignore generated files like .pyc and __pycache__
+*.pyc
+__pycache__/
+
+# Ignore TinyDB (a simple NoSQL database) temporary data files
+tinydb.json
+
+# Ignore Python libraries cache
+lib/python*/site-packages/*
+
+# OS Files
+.DS_Store
