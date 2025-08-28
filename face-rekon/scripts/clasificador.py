@@ -118,9 +118,19 @@ def get_unclassified_faces():
                    for face in db.all() if not face.get("name")]
     return unclassified
 
+# Guardar rostro ya identificado
+def update_face(face_id, data):
+    """Update a face's details"""    
+    db.update({ 
+            "name": data['name'], 
+            "relationship": data['relationship'], 
+            "confidence": data['confidence'] 
+        }, 
+        Face.face_id == face_id
+    )
+
 if __name__ == "__main__":
     new_image_path = "/config/face-rekon/images/new_face.jpg"
     result = identify_face(new_image_path)
     if not result:
         save_unknown_face(new_image_path)
-

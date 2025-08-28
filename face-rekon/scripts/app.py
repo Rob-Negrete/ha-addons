@@ -51,10 +51,16 @@ def get_unclassified():
     unclassified_faces = clasificador.get_unclassified_faces()
     return jsonify([{'face_id': face} for face in unclassified_faces])
 
-# create a dummy endpoint here
-def autocomplete_here(): 
-    """Do something"""
-    return "dummy"
+@app.route('/face-rekon/<string:face_id>', methods=['PATCH'])
+def update_face(face_id):
+    """Update a face's details"""
+    data = request.get_json()  # This will contain the JSON payload from your PUT request
+    
+    try:
+        clasificador.update_face(face_id, data)
+        return jsonify({"status": "success", "message": f"Face  {face_id} updated successfully."})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=5001)
