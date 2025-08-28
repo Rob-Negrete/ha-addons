@@ -51,6 +51,13 @@ def get_unclassified():
     unclassified_faces = clasificador.get_unclassified_faces()
     return jsonify([{'face_id': face} for face in unclassified_faces])
 
+@app.route('/face-rekon/<string:face_id>', methods=['GET'])
+def get_face(face_id):
+    """Return a face"""
+    face = clasificador.get_face(face_id)
+    return face
+
+
 @app.route('/face-rekon/<string:face_id>', methods=['PATCH'])
 def update_face(face_id):
     """Update a face's details"""

@@ -129,6 +129,12 @@ def update_face(face_id, data):
         Face.face_id == face_id
     )
 
+# Obtiene un rostro por su id
+def get_face(face_id):
+    """Get a face"""
+    return db.search(Face.face_id == face_id)
+
+
 if __name__ == "__main__":
     new_image_path = "/config/face-rekon/images/new_face.jpg"
     result = identify_face(new_image_path)
