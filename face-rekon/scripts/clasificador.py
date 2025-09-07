@@ -52,6 +52,21 @@ def extract_face_embedding(image_path):
         return faces[0].embedding
     return None
 
+# Extraer todos los vectores faciales de una imagen
+def extract_all_face_embeddings(image_path):
+    # Carga la imagen desde disco
+    img_bgr = cv2.imread(image_path)
+    if img_bgr is None:
+        print(f"No se pudo leer la imagen: {image_path}")
+        return []
+
+    # Convierte BGR (OpenCV) a RGB (InsightFace)
+    img_rgb = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)
+
+    # Llama a InsightFace con el array
+    faces = app.get(img_rgb)
+    return [face.embedding for face in faces] if faces else []
+
 # Crear thumbnail base64
 def generate_thumbnail(image_path):
     img = Image.open(image_path)
@@ -110,6 +125,46 @@ def identify_face(image_path):
     print("Rostro no identificado.")
     return None
 
+# Identificar todos los rostros en una imagen
+def identify_all_faces(image_path):
+    embeddings = extract_all_face_embeddings(image_path)
+    if not embeddings:
+        print("No se detectaron rostros.")
+        return []
+    
+    results = []
+    for i, embedding in enumerate(embeddings):
+        D, I = index.search(np.array([embedding], dtype=np.float32), 1)
+        if D[0][0] < 0.5:
+            face_id = id_map[I[0][0]]
+            matched = db.get(Face.face_id == face_id)
+            if matched:
+                results.append({
+                    'face_index': i,
+                    'status': 'identified',
+                    'face_data': matched,
+                    'confidence': float(1.0 - D[0][0])  # Convert distance to confidence
+                })
+                print(f"Rostro {i}: Identificado como {matched.get('name', matched['face_id'])}")
+            else:
+                results.append({
+                    'face_index': i,
+                    'status': 'unknown',
+                    'face_data': None,
+                    'confidence': 0.0
+                })
+                print(f"Rostro {i}: No identificado")
+        else:
+            results.append({
+                'face_index': i,
+                'status': 'unknown', 
+                'face_data': None,
+                'confidence': 0.0
+            })
+            print(f"Rostro {i}: No identificado")
+    
+    return results
+
 # Obtener rostros desconocidos
 def get_unclassified_faces():
     unclassified = [{"face_id": face["face_id"],
@@ -133,7 +188,6 @@ def update_face(face_id, data):
 def get_face(face_id):
     """Get a face"""
     return db.search(Face.face_id == face_id)
-
 
 if __name__ == "__main__":
     new_image_path = "/config/face-rekon/images/new_face.jpg"
