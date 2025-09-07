@@ -1,0 +1,1 @@
+curl -X GET 'http://192.168.3.124:5001/face-rekon/ping'
