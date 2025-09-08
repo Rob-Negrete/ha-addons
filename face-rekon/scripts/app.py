@@ -20,7 +20,15 @@ def recognize():
     if not data or 'image_base64' not in data:
         return jsonify({'error': 'Missing image_base64'}), 400
 
-    image_data = base64.b64decode(data['image_base64'])
+    image_base64 = data['image_base64']
+    
+    # Handle data URI format (e.g., "data:image/jpeg;base64,..." or "image/jpg;data:...")
+    if 'data:' in image_base64:
+        image_base64 = image_base64.split(',', 1)[1]  # Remove "data:image/jpeg;base64," prefix
+    elif ';data:' in image_base64:
+        image_base64 = image_base64.split(';data:', 1)[1]  # Remove "image/jpg;data:" prefix    
+    
+    image_data = base64.b64decode(image_base64)
     # print("image_data", image_data)
 
     tmp_dir = "/app/data/tmp"
@@ -30,6 +38,8 @@ def recognize():
     with open(tmp_path, "wb") as f:
         f.write(image_data)
 
+    event_id = data['event_id']
+
     try:
         # Always process all faces in the image
         results = clasificador.identify_all_faces(tmp_path)
@@ -37,7 +47,7 @@ def recognize():
         # Save unknown faces for later classification
         has_unknown = any(result['status'] == 'unknown' for result in results)
         if has_unknown:
-            clasificador.save_unknown_face(tmp_path)
+            clasificador.save_unknown_face(tmp_path, event_id)
         
         return jsonify({
             'status': 'success' if results else 'no_faces_detected',

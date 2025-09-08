@@ -76,7 +76,7 @@ def generate_thumbnail(image_path):
     return base64.b64encode(buffered.getvalue()).decode("utf-8")
 
 # Guardar rostro desconocido
-def save_unknown_face(image_path):
+def save_unknown_face(image_path, event_id):
     embedding = extract_face_embedding(image_path)
     if embedding is None:
         print("No se detectó rostro.")
@@ -89,6 +89,7 @@ def save_unknown_face(image_path):
     # Insertar en TinyDB
     db.insert({
         "face_id": face_id,
+        "event_id": event_id,
         "timestamp": timestamp,
         "image_path": image_path,
         "embedding": embedding.tolist(),
@@ -168,6 +169,7 @@ def identify_all_faces(image_path):
 # Obtener rostros desconocidos
 def get_unclassified_faces():
     unclassified = [{"face_id": face["face_id"],
+                     "event_id": face.get("event_id", None),
                      "image_path": face.get("image_path", None),
                      "thumbnail": face.get("thumbnail", None)}
                    for face in db.all() if not face.get("name")]
