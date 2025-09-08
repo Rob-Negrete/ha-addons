@@ -168,11 +168,18 @@ def identify_all_faces(image_path):
 
 # Obtener rostros desconocidos
 def get_unclassified_faces():
-    unclassified = [{"face_id": face["face_id"],
-                     "event_id": face.get("event_id", None),
-                     "image_path": face.get("image_path", None),
-                     "thumbnail": face.get("thumbnail", None)}
-                   for face in db.all() if not face.get("name")]
+    unclassified = [{
+        "face_id": face["face_id"],
+        "event_id": face.get("event_id", None),
+        "image_path": face.get("image_path", None),
+        "thumbnail": face.get("thumbnail", None),        
+        "name": None,
+        "relationship": "unknown",
+        "confidence": "unknown",
+        "name": face.get("name", None)
+    }
+    for face in db.all() if not face.get("name")]
+    
     return unclassified
 
 # Guardar rostro ya identificado
