@@ -6,9 +6,11 @@ services:
     image: face-rekon
     environment:
       - PYTHONUNBUFFERED=1
+      - FLASK_ENV=development
+      - FLASK_DEBUG=1
     volumes:
       - ./config:/config
       - ./tmp:/app/data/tmp # adjust as needed, depending on your local setup
       - ./scripts:/app/scripts
     ports:
-      - "5001:5001" # assuming Flask app runs on port 5000
+      - "5001:5001" # assuming Flask app runs on port 5001
