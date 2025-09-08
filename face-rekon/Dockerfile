@@ -34,7 +34,8 @@ RUN pip install --no-cache-dir \
     faiss-cpu==1.10.0 \
     onnxruntime \
     flask \
-    flask-cors
+    flask-cors \
+    flask-restx
 
 # Ejecutar script de reconocimiento
 CMD ["/run.sh"]
