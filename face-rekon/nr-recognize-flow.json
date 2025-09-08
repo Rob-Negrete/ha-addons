@@ -1,0 +1,258 @@
+[
+  {
+    "id": "fd2309771b0c3bbc",
+    "type": "tab",
+    "label": "Flujo 1",
+    "disabled": false,
+    "info": "",
+    "env": []
+  },
+  {
+    "id": "3420c17bd89b47a5",
+    "type": "function",
+    "z": "fd2309771b0c3bbc",
+    "name": "Preparar URL y Headers",
+    "func": "// Cambia esto por tu IP y tu token de largo plazo\nconst baseUrl = \"http://192.168.3.124:5000\";\nconst token = \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiI4ZjYwZWRhODRlOWQ0MTg3ODBlZWZhMjVjMGZiMTQ0MSIsImlhdCI6MTc0OTIyMDExMCwiZXhwIjoyMDY0NTgwMTEwfQ.6oOQHHtSS75kuFe8USavQpi_kzHhZz5MRI_oWjIG_XQ\";\n\nconst eventId = msg.payload.event.id;\nmsg.eventId = eventId;  // Preserve eventId in message\nmsg.url = `${baseUrl}/api/events/${eventId}/thumbnail.jpg`;\nmsg.headers = {\n    \"Authorization\": `Bearer ${token}`\n};\nmsg.method = \"GET\";\nreturn msg;",
+    "outputs": 1,
+    "timeout": "",
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 1750,
+    "y": 140,
+    "wires": [
+      [
+        "efd8217af6db324b",
+        "82c81950cb72bb9e"
+      ]
+    ]
+  },
+  {
+    "id": "efd8217af6db324b",
+    "type": "http request",
+    "z": "fd2309771b0c3bbc",
+    "name": "Descargar snapshot",
+    "method": "use",
+    "ret": "bin",
+    "paytoqs": "ignore",
+    "url": "",
+    "tls": "",
+    "persist": false,
+    "proxy": "",
+    "insecureHTTPParser": false,
+    "authType": "",
+    "senderr": false,
+    "headers": [],
+    "x": 2080,
+    "y": 140,
+    "wires": [
+      [
+        "f5cc2abf289664e5",
+        "b62e207a19834b16"
+      ]
+    ]
+  },
+  {
+    "id": "f5cc2abf289664e5",
+    "type": "function",
+    "z": "fd2309771b0c3bbc",
+    "name": "Preparar multipart",
+    "func": "msg.payload = {\n    image_base64: msg.payload.toString('base64'),\n    event_id: msg.eventId\n};\n\nreturn msg;\n",
+    "outputs": 1,
+    "timeout": "",
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [
+      {
+        "var": "FormData",
+        "module": "form-data"
+      }
+    ],
+    "x": 2460,
+    "y": 140,
+    "wires": [
+      [
+        "ebe0049e4b25747e",
+        "5b3b388516006694"
+      ]
+    ]
+  },
+  {
+    "id": "ebe0049e4b25747e",
+    "type": "http request",
+    "z": "fd2309771b0c3bbc",
+    "name": "Enviar a /recognize",
+    "method": "POST",
+    "ret": "txt",
+    "paytoqs": "ignore",
+    "url": "http://192.168.3.124:5001/face-rekon/recognize",
+    "tls": "",
+    "persist": false,
+    "proxy": "",
+    "insecureHTTPParser": false,
+    "authType": "",
+    "senderr": false,
+    "headers": [
+      {
+        "keyType": "other",
+        "keyValue": "Content-Type",
+        "valueType": "other",
+        "valueValue": "application/json"
+      }
+    ],
+    "x": 2690,
+    "y": 140,
+    "wires": [
+      [
+        "3831a3b79ac022d8",
+        "ddd1aae8ab47f8e8"
+      ]
+    ]
+  },
+  {
+    "id": "3831a3b79ac022d8",
+    "type": "debug",
+    "z": "fd2309771b0c3bbc",
+    "name": "Resultado",
+    "active": true,
+    "tosidebar": true,
+    "console": false,
+    "tostatus": false,
+    "complete": "payload",
+    "targetType": "msg",
+    "statusVal": "",
+    "statusType": "auto",
+    "x": 2910,
+    "y": 140,
+    "wires": []
+  },
+  {
+    "id": "b62e207a19834b16",
+    "type": "debug",
+    "z": "fd2309771b0c3bbc",
+    "name": "Debug payload",
+    "active": true,
+    "tosidebar": true,
+    "console": true,
+    "tostatus": false,
+    "complete": "true",
+    "targetType": "full",
+    "statusVal": "",
+    "statusType": "auto",
+    "x": 2350,
+    "y": 280,
+    "wires": []
+  },
+  {
+    "id": "5b3b388516006694",
+    "type": "debug",
+    "z": "fd2309771b0c3bbc",
+    "name": "Debug request multipart",
+    "active": true,
+    "tosidebar": true,
+    "console": true,
+    "tostatus": false,
+    "complete": "true",
+    "targetType": "full",
+    "statusVal": "",
+    "statusType": "auto",
+    "x": 2640,
+    "y": 280,
+    "wires": []
+  },
+  {
+    "id": "ac60660d64e3f491",
+    "type": "server-events",
+    "z": "fd2309771b0c3bbc",
+    "name": "Frigate Event",
+    "server": "home-assistant",
+    "version": 3,
+    "exposeAsEntityConfig": "",
+    "eventType": "frigate_person_garden",
+    "eventData": "",
+    "waitForRunning": true,
+    "outputProperties": [
+      {
+        "property": "payload",
+        "propertyType": "msg",
+        "value": "",
+        "valueType": "eventData"
+      }
+    ],
+    "x": 1450,
+    "y": 140,
+    "wires": [
+      [
+        "021b9048937f5290",
+        "3420c17bd89b47a5"
+      ]
+    ]
+  },
+  {
+    "id": "021b9048937f5290",
+    "type": "debug",
+    "z": "fd2309771b0c3bbc",
+    "name": "Event Triggered",
+    "active": true,
+    "tosidebar": true,
+    "console": true,
+    "tostatus": false,
+    "complete": "true",
+    "targetType": "full",
+    "statusVal": "",
+    "statusType": "auto",
+    "x": 1570,
+    "y": 260,
+    "wires": []
+  },
+  {
+    "id": "82c81950cb72bb9e",
+    "type": "debug",
+    "z": "fd2309771b0c3bbc",
+    "name": "Debug URL y Headers",
+    "active": true,
+    "tosidebar": true,
+    "console": true,
+    "tostatus": false,
+    "complete": "true",
+    "targetType": "full",
+    "statusVal": "",
+    "statusType": "auto",
+    "x": 1990,
+    "y": 240,
+    "wires": []
+  },
+  {
+    "id": "ddd1aae8ab47f8e8",
+    "type": "debug",
+    "z": "fd2309771b0c3bbc",
+    "name": "Debug request a /recognize",
+    "active": true,
+    "tosidebar": true,
+    "console": true,
+    "tostatus": false,
+    "complete": "payload",
+    "targetType": "msg",
+    "statusVal": "",
+    "statusType": "auto",
+    "x": 3010,
+    "y": 280,
+    "wires": []
+  },
+  {
+    "id": "home-assistant",
+    "type": "server",
+    "name": "Home Assistant",
+    "addon": true,
+    "rejectUnauthorizedCerts": true,
+    "ha_boolean": "",
+    "connectionDelay": false,
+    "cacheJson": false,
+    "heartbeat": false,
+    "heartbeatInterval": "",
+    "statusSeparator": "",
+    "enableGlobalContextStore": false
+  }
+]
