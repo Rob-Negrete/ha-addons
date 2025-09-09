@@ -18,7 +18,7 @@ python run_tests.py unit
 
 ```bash
 # Development mode
-docker-compose up
+docker compose up
 
 # Production build
 docker build -t face-rekon .

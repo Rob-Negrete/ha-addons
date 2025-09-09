@@ -8,7 +8,7 @@ echo "==============================="
 # Test files to run (ordered by execution time - fastest first)
 test_files=(
     "tests/integration/test_database_integration.py"
-    "tests/integration/test_api_integration.py" 
+    "tests/integration/test_api_integration.py"
     "tests/integration/test_end_to_end.py"
 )
 
@@ -22,9 +22,9 @@ for test_file in "${test_files[@]}"; do
     echo "🔧 Running: $test_file"
     echo "----------------------------------------"
     file_start=$(date +%s)
-    
+
     # Run single test file with optimized settings
-    if docker-compose -f docker-compose.test.yml run --rm integration-tests \
+    if docker compose -f docker-compose.test.yml run --rm integration-tests \
         pytest "$test_file" -c pytest-integration.ini --tb=short --maxfail=3 -q; then
         file_end=$(date +%s)
         duration=$((file_end - file_start))
@@ -36,7 +36,7 @@ for test_file in "${test_files[@]}"; do
         echo "❌ $test_file FAILED (${duration}s)"
         failed_tests+=("$test_file")
     fi
-    
+
     # Minimal cleanup delay
     sleep 1
 done

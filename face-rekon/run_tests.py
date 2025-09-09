@@ -53,23 +53,36 @@ def run_integration_tests():
         # We're in the test container - run in batches to manage memory
         test_batches = [
             ("API Integration Tests", "tests/integration/test_api_integration.py"),
-            ("Database Integration Tests", "tests/integration/test_database_integration.py"),
+            (
+                "Database Integration Tests",
+                "tests/integration/test_database_integration.py",
+            ),
             ("End-to-End Integration Tests", "tests/integration/test_end_to_end.py"),
         ]
-        
+
         all_passed = True
         for batch_name, batch_path in test_batches:
             print(f"\n🔧 Running {batch_name}")
-            command = ["python", "-m", "pytest", batch_path, "-c", "pytest-integration.ini", "-v", "--tb=short"]
+            command = [
+                "python",
+                "-m",
+                "pytest",
+                batch_path,
+                "-c",
+                "pytest-integration.ini",
+                "-v",
+                "--tb=short",
+            ]
             result = run_command(command, f"Running {batch_name}")
             if not result:
                 all_passed = False
                 break  # Stop on first failure to save resources
-                
+
             # Force garbage collection between batches
             import gc
+
             gc.collect()
-            
+
         return all_passed
 
     # Check if ML dependencies are available locally
@@ -88,14 +101,14 @@ def run_integration_tests():
             missing_ml_deps.append(dep_name)
 
     if missing_ml_deps:
-        print(f"\n⚠️  Integration tests require ML dependencies:")
+        print("\n⚠️  Integration tests require ML dependencies:")
         print(f"   Missing: {', '.join(missing_ml_deps)}")
-        print(f"\n🐳 Run with Docker (recommended):")
-        print(f"   docker-compose -f docker-compose.test.yml run integration-tests")
-        print(f"\n📦 Or install locally:")
-        print(f"   pip install -r requirements-integration.txt")
-        print(f"\n🚀 Or run unit tests instead:")
-        print(f"   python run_tests.py unit")
+        print("\n🐳 Run with Docker (recommended):")
+        print("   docker compose -f docker compose.test.yml run integration-tests")
+        print("\n📦 Or install locally:")
+        print("   pip install -r requirements-integration.txt")
+        print("\n🚀 Or run unit tests instead:")
+        print("   python run_tests.py unit")
         return False
 
     command = [
@@ -155,9 +168,9 @@ def run_e2e_tests():
 def run_docker_tests():
     """Run tests in Docker containers"""
     command = [
-        "docker-compose",
+        "docker compose",
         "-f",
-        "docker-compose.test.yml",
+        "docker compose.test.yml",
         "run",
         "--rm",
         "test-runner",
@@ -168,9 +181,9 @@ def run_docker_tests():
 def run_docker_unit_tests():
     """Run unit tests in lightweight container"""
     command = [
-        "docker-compose",
+        "docker compose",
         "-f",
-        "docker-compose.test.yml",
+        "docker compose.test.yml",
         "run",
         "--rm",
         "unit-tests",
@@ -181,9 +194,9 @@ def run_docker_unit_tests():
 def run_docker_integration_tests():
     """Run integration tests in container"""
     command = [
-        "docker-compose",
+        "docker compose",
         "-f",
-        "docker-compose.test.yml",
+        "docker compose.test.yml",
         "run",
         "--rm",
         "integration-tests",
@@ -245,7 +258,7 @@ def run_coverage():
 
     success = True
     for command in commands:
-        if not run_command(command, f"Running Coverage Tests"):
+        if not run_command(command, "Running Coverage Tests"):
             success = False
 
     if success:

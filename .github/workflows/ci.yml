@@ -49,7 +49,7 @@ jobs:
       - name: Run integration tests in container
         run: |
           cd face-rekon
-          docker-compose -f docker-compose.test.yml run --rm integration-tests
+          docker compose -f docker-compose.test.yml run --rm integration-tests
 
       - name: Run test coverage
         if: github.event_name == 'pull_request'
