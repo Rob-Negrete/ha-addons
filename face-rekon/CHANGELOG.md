@@ -2,7 +2,7 @@
 
 All notable changes to the Face Rekon Home Assistant add-on will be documented in this file.
 
-## [2.0.0](https://github.com/Rob-Negrete/ha-addons/compare/face-rekon-v1.0.18...face-rekon-v2.0.0) (2025-09-09)
+## [1.0.19](https://github.com/Rob-Negrete/ha-addons/compare/face-rekon-v1.0.17...face-rekon-v1.0.19) (2025-09-09)
 
 ### 🧪 Testing Infrastructure
 
@@ -12,8 +12,6 @@ All notable changes to the Face Rekon Home Assistant add-on will be documented i
   - Create professional test runner with smart dependency detection
   - Add session-scoped ML model fixtures for reliable testing
   - Include comprehensive documentation and troubleshooting guides
-
-### 🔧 Build & CI Improvements
 
 ### 🐛 Bug Fixes
 

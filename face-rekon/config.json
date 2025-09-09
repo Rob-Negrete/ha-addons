@@ -1,19 +1,12 @@
 {
   "name": "Face Rekon",
-  "version": "2.0.0",
+  "version": "1.0.19",
   "slug": "face_rekon",
   "description": "Reconocimiento facial con almacenamiento en TinyDB y comparación con FAISS",
   "startup": "application",
-  "arch": [
-    "amd64",
-    "armv7",
-    "aarch64"
-  ],
+  "arch": ["amd64", "armv7", "aarch64"],
   "boot": "auto",
-  "map": [
-    "config:rw",
-    "addons:rw"
-  ],
+  "map": ["config:rw", "addons:rw"],
   "host_network": false,
   "options": {
     "db_path": "/config/face-rekon/db",
