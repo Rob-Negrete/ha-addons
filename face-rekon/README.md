@@ -56,6 +56,14 @@ This project includes a **professional-grade testing framework**:
 - Professional testing infrastructure
 - CI/CD ready with automated releases
 
+## 🔧 API Endpoints
+
+- `GET /face-rekon/ping` - Health check
+- `POST /face-rekon/recognize` - Face recognition from base64 image
+- `GET /face-rekon` - List unclassified faces
+- `GET /face-rekon/<face_id>` - Get specific face data
+- `PATCH /face-rekon/<face_id>` - Update face information
+
 ## 📊 Project Status
 
 - ✅ **Core Features**: Complete and tested
