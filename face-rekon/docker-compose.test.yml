@@ -1,4 +1,4 @@
-version: '3.8'
+version: "3.8"
 
 services:
   test-runner:
@@ -41,4 +41,14 @@ services:
       - ./pytest-integration.ini:/app/pytest-integration.ini
     environment:
       - PYTHONPATH=/app
+      # Optimize memory usage
+      - OMP_NUM_THREADS=2
+      - MKL_NUM_THREADS=2
+      - NUMEXPR_MAX_THREADS=2
+    deploy:
+      resources:
+        limits:
+          memory: 4G
+        reservations:
+          memory: 2G
     command: python run_tests.py integration

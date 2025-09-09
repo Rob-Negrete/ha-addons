@@ -18,7 +18,6 @@ api = Api(
     title="Face Recognition API",
     description="Home Assistant Face Recognition Add-on API",
     doc="/swagger/",
-    prefix="/face-rekon",
 )
 
 # Create namespace for face recognition endpoints

@@ -29,6 +29,7 @@ face-rekon/
 ## 🎯 Test Categories
 
 ### Unit Tests (`tests/unit/`)
+
 **Purpose**: Fast, isolated testing of business logic
 **Speed**: < 0.1 seconds
 **Dependencies**: None (pure Python logic)
@@ -42,6 +43,7 @@ face-rekon/
   - Data structures
 
 ### Integration Tests (`tests/integration/`)
+
 **Purpose**: Real component interaction testing
 **Speed**: 1-10 seconds
 **Dependencies**: Flask, mocked ML libraries
@@ -53,6 +55,7 @@ face-rekon/
 ## 🚀 Running Tests
 
 ### Quick Commands
+
 ```bash
 # Fast unit tests (recommended for development)
 python run_tests.py unit
@@ -65,6 +68,7 @@ python run_tests.py all
 ```
 
 ### Direct pytest Commands
+
 ```bash
 # Unit tests only
 pytest tests/unit/test_simple.py -c pytest-unit.ini -v
@@ -79,12 +83,14 @@ pytest tests/ -v
 ## 📊 Test Status
 
 ### ✅ Working Tests (Production Ready)
+
 - **Unit Tests**: 10/10 passing (0.04s execution)
 - **Environment**: Fully isolated
 - **CI/CD**: Ready for automation
 - **Coverage**: Core business logic validated
 
 ### 🔨 Integration Tests (Framework Ready)
+
 - **Infrastructure**: Complete test environment setup
 - **Fixtures**: Real data generation and cleanup
 - **Patterns**: Professional test organization
@@ -93,16 +99,19 @@ pytest tests/ -v
 ## 🏗️ Professional Benefits
 
 ### Clear Separation of Concerns
+
 - **Unit tests** focus on logic validation
 - **Integration tests** verify component interaction
 - **E2E tests** validate complete user workflows
 
 ### Development Workflow
+
 - **Fast feedback** - Unit tests provide instant validation
 - **Comprehensive coverage** - Integration tests catch interaction bugs
 - **Confidence** - Multiple test layers ensure reliability
 
 ### Team Collaboration
+
 - **Clear structure** - Developers know where to add tests
 - **Professional standards** - Industry-standard organization
 - **Scalable architecture** - Framework grows with project complexity

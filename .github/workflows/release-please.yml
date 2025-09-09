@@ -24,7 +24,7 @@ jobs:
         with:
           # Configuration file path
           config-file: .release-please-config.json
-          # Manifest file path  
+          # Manifest file path
           manifest-file: .release-please-manifest.json
 
   build-and-publish:
@@ -77,7 +77,7 @@ jobs:
           # Update config.json with the new version
           jq --arg version "${{ needs.release-please.outputs.face_rekon_version }}" '.version = $version' config.json > config.tmp
           mv config.tmp config.json
-          
+
       - name: Commit version update
         run: |
           git config --local user.email "action@github.com"

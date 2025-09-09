@@ -55,12 +55,14 @@ def create_models(api):
     face_model = api.model(
         "Face",
         {
-            "id": fields.String(description="Face ID"),
+            "face_id": fields.String(description="Face ID"),
             "name": fields.String(description="Person name"),
             "timestamp": fields.String(description="When face was detected"),
             "event_id": fields.String(description="Associated event ID"),
             "image_path": fields.String(description="Path to face image"),
-            "thumbnail_path": fields.String(description="Path to thumbnail image"),
+            "thumbnail": fields.String(description="Path to thumbnail image"),
+            "relationship": fields.String(description="Relationship to owner"),
+            "confidence": fields.String(description="Confidence level"),
         },
     )
 

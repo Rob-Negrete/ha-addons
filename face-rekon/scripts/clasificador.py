@@ -10,12 +10,12 @@ from insightface.app import FaceAnalysis
 from tinydb import TinyDB, Query
 import faiss
 
-# Configuración de rutas
-BASE_PATH = "/config/face-rekon/faces"
-UNKNOWN_PATH = "/config/face-rekon/unknowns"
-DB_PATH = "/config/face-rekon/db/tinydb.json"
-FAISS_INDEX_PATH = "/config/face-rekon/db/faiss_index.index"
-MAPPING_PATH = "/config/face-rekon/db/faiss_id_map.npy"
+# Configuración de rutas (con soporte para variables de entorno para testing)
+BASE_PATH = os.environ.get("FACE_REKON_BASE_PATH", "/config/face-rekon/faces")
+UNKNOWN_PATH = os.environ.get("FACE_REKON_UNKNOWN_PATH", "/config/face-rekon/unknowns")
+DB_PATH = os.environ.get("FACE_REKON_DB_PATH", "/config/face-rekon/db/tinydb.json")
+FAISS_INDEX_PATH = os.environ.get("FACE_REKON_FAISS_INDEX_PATH", "/config/face-rekon/db/faiss_index.index")
+MAPPING_PATH = os.environ.get("FACE_REKON_MAPPING_PATH", "/config/face-rekon/db/faiss_id_map.npy")
 THUMBNAIL_SIZE = (160, 160)
 
 # Inicializar InsightFace
