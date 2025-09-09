@@ -1,10 +1,11 @@
 # Face-Rekon Home Assistant Add-on
 
-AI-powered face recognition add-on for Home Assistant using InsightFace, FAISS, and Flask.
+AI-powered face recognition add-on for Home Assistant using InsightFace, FAISS, and Flask REST API.
 
 ## 🚀 Quick Start
 
 ### Run Tests (Recommended)
+
 ```bash
 # Full integration test suite (57 seconds)
 ./run_integration_tests.sh
@@ -14,6 +15,7 @@ python run_tests.py unit
 ```
 
 ### Run the Application
+
 ```bash
 # Development mode
 docker-compose up
@@ -32,11 +34,12 @@ docker build -t face-rekon .
 This project includes a **professional-grade testing framework**:
 
 - ✅ **24 tests** with 100% success rate
-- ⏱️ **57-second** execution time for full suite  
+- ⏱️ **57-second** execution time for full suite
 - 🔒 **Memory-optimized** containerized testing
 - 🎯 **CI/CD ready** with proper isolation
 
 ### Test Categories
+
 - **Unit Tests**: 10 tests (~0.04s) - Fast development feedback
 - **Integration Tests**: 14 tests (~57s) - Real ML model testing
 - **Coverage**: Complete API, database, and workflow testing
@@ -68,7 +71,7 @@ This project includes a **professional-grade testing framework**:
 
 - ✅ **Core Features**: Complete and tested
 - ✅ **Testing**: Professional-grade framework
-- ✅ **Documentation**: Comprehensive guides  
+- ✅ **Documentation**: Comprehensive guides
 - ✅ **CI/CD**: GitHub Actions with release automation
 - ✅ **Production Ready**: Memory-optimized and reliable
 
