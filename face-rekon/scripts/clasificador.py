@@ -1,25 +1,30 @@
-import os
-import cv2
-import numpy as np
 import base64
-from PIL import Image
-import time
 import io
+import os
+import time
 import uuid
-from insightface.app import FaceAnalysis
-from tinydb import TinyDB, Query
+
+import cv2
 import faiss
+import numpy as np
+from insightface.app import FaceAnalysis
+from PIL import Image
+from tinydb import Query, TinyDB
 
 # Configuración de rutas (con soporte para variables de entorno para testing)
 BASE_PATH = os.environ.get("FACE_REKON_BASE_PATH", "/config/face-rekon/faces")
 UNKNOWN_PATH = os.environ.get("FACE_REKON_UNKNOWN_PATH", "/config/face-rekon/unknowns")
 DB_PATH = os.environ.get("FACE_REKON_DB_PATH", "/config/face-rekon/db/tinydb.json")
-FAISS_INDEX_PATH = os.environ.get("FACE_REKON_FAISS_INDEX_PATH", "/config/face-rekon/db/faiss_index.index")
-MAPPING_PATH = os.environ.get("FACE_REKON_MAPPING_PATH", "/config/face-rekon/db/faiss_id_map.npy")
+FAISS_INDEX_PATH = os.environ.get(
+    "FACE_REKON_FAISS_INDEX_PATH", "/config/face-rekon/db/faiss_index.index"
+)
+MAPPING_PATH = os.environ.get(
+    "FACE_REKON_MAPPING_PATH", "/config/face-rekon/db/faiss_id_map.npy"
+)
 THUMBNAIL_SIZE = (160, 160)
 
 # Inicializar InsightFace
-app = FaceAnalysis(allowed_modules=['detection', 'recognition'])
+app = FaceAnalysis(allowed_modules=["detection", "recognition"])
 app.prepare(ctx_id=0, det_size=(640, 640))
 
 # TinyDB
@@ -34,6 +39,7 @@ if os.path.exists(FAISS_INDEX_PATH):
 else:
     index = faiss.IndexFlatL2(dimension)
     id_map = []
+
 
 # Extraer vector facial
 def extract_face_embedding(image_path):
@@ -52,6 +58,7 @@ def extract_face_embedding(image_path):
         return faces[0].embedding
     return None
 
+
 # Extraer todos los vectores faciales de una imagen
 def extract_all_face_embeddings(image_path):
     # Carga la imagen desde disco
@@ -67,6 +74,7 @@ def extract_all_face_embeddings(image_path):
     faces = app.get(img_rgb)
     return [face.embedding for face in faces] if faces else []
 
+
 # Crear thumbnail base64
 def generate_thumbnail(image_path):
     img = Image.open(image_path)
@@ -74,6 +82,7 @@ def generate_thumbnail(image_path):
     buffered = io.BytesIO()
     img.save(buffered, format="JPEG")
     return base64.b64encode(buffered.getvalue()).decode("utf-8")
+
 
 # Guardar rostro desconocido
 def save_unknown_face(image_path, event_id):
@@ -87,17 +96,19 @@ def save_unknown_face(image_path, event_id):
     face_id = str(uuid.uuid4())
 
     # Insertar en TinyDB
-    db.insert({
-        "face_id": face_id,
-        "event_id": event_id,
-        "timestamp": timestamp,
-        "image_path": image_path,
-        "embedding": embedding.tolist(),
-        "thumbnail": thumbnail,
-        "name": None,
-        "relationship": "unknown",
-        "confidence": "unknown"
-    })
+    db.insert(
+        {
+            "face_id": face_id,
+            "event_id": event_id,
+            "timestamp": timestamp,
+            "image_path": image_path,
+            "embedding": embedding.tolist(),
+            "thumbnail": thumbnail,
+            "name": None,
+            "relationship": "unknown",
+            "confidence": "unknown",
+        }
+    )
 
     # Insertar en FAISS e ID map
     index.add(np.array([embedding], dtype=np.float32))
@@ -109,6 +120,7 @@ def save_unknown_face(image_path, event_id):
 
     print("Rostro guardado con ID:", face_id)
 
+
 # Identificar rostro
 def identify_face(image_path):
     embedding = extract_face_embedding(image_path)
@@ -116,9 +128,9 @@ def identify_face(image_path):
         print("No se detectó rostro.")
         return None
 
-    D, I = index.search(np.array([embedding], dtype=np.float32), 1)
-    if D[0][0] < 0.5:
-        face_id = id_map[I[0][0]]
+    distances, indices = index.search(np.array([embedding], dtype=np.float32), 1)
+    if distances[0][0] < 0.5:
+        face_id = id_map[indices[0][0]]
         matched = db.get(Face.face_id == face_id)
         if matched:
             print(f"Identificado: {matched.get('name', matched['face_id'])}")
@@ -126,77 +138,92 @@ def identify_face(image_path):
     print("Rostro no identificado.")
     return None
 
+
 # Identificar todos los rostros en una imagen
 def identify_all_faces(image_path):
     embeddings = extract_all_face_embeddings(image_path)
     if not embeddings:
         print("No se detectaron rostros.")
         return []
-    
+
     results = []
     for i, embedding in enumerate(embeddings):
-        D, I = index.search(np.array([embedding], dtype=np.float32), 1)
-        if D[0][0] < 0.5:
-            face_id = id_map[I[0][0]]
+        distances, indices = index.search(np.array([embedding], dtype=np.float32), 1)
+        if distances[0][0] < 0.5:
+            face_id = id_map[indices[0][0]]
             matched = db.get(Face.face_id == face_id)
             if matched:
-                results.append({
-                    'face_index': i,
-                    'status': 'identified',
-                    'face_data': matched,
-                    'confidence': float(1.0 - D[0][0])  # Convert distance to confidence
-                })
-                print(f"Rostro {i}: Identificado como {matched.get('name', matched['face_id'])}")
+                results.append(
+                    {
+                        "face_index": i,
+                        "status": "identified",
+                        "face_data": matched,
+                        "confidence": float(1.0 - distances[0][0]),
+                    }
+                )
+                name = matched.get('name', matched['face_id'])
+                print(f"Rostro {i}: Identificado como {name}")
             else:
-                results.append({
-                    'face_index': i,
-                    'status': 'unknown',
-                    'face_data': None,
-                    'confidence': 0.0
-                })
+                results.append(
+                    {
+                        "face_index": i,
+                        "status": "unknown",
+                        "face_data": None,
+                        "confidence": 0.0,
+                    }
+                )
                 print(f"Rostro {i}: No identificado")
         else:
-            results.append({
-                'face_index': i,
-                'status': 'unknown', 
-                'face_data': None,
-                'confidence': 0.0
-            })
+            results.append(
+                {
+                    "face_index": i,
+                    "status": "unknown",
+                    "face_data": None,
+                    "confidence": 0.0,
+                }
+            )
             print(f"Rostro {i}: No identificado")
-    
+
     return results
+
 
 # Obtener rostros desconocidos
 def get_unclassified_faces():
-    unclassified = [{
-        "face_id": face["face_id"],
-        "event_id": face.get("event_id", None),
-        "image_path": face.get("image_path", None),
-        "thumbnail": face.get("thumbnail", None),        
-        "name": None,
-        "relationship": "unknown",
-        "confidence": "unknown",
-        "name": face.get("name", None)
-    }
-    for face in db.all() if not face.get("name")]
-    
+    unclassified = [
+        {
+            "face_id": face["face_id"],
+            "event_id": face.get("event_id", None),
+            "image_path": face.get("image_path", None),
+            "thumbnail": face.get("thumbnail", None),
+            "name": face.get("name", None),
+            "relationship": "unknown",
+            "confidence": "unknown",
+        }
+        for face in db.all()
+        if not face.get("name")
+    ]
+
     return unclassified
+
 
 # Guardar rostro ya identificado
 def update_face(face_id, data):
-    """Update a face's details"""    
-    db.update({ 
-            "name": data['name'], 
-            "relationship": data['relationship'], 
-            "confidence": data['confidence'] 
-        }, 
-        Face.face_id == face_id
+    """Update a face's details"""
+    db.update(
+        {
+            "name": data["name"],
+            "relationship": data["relationship"],
+            "confidence": data["confidence"],
+        },
+        Face.face_id == face_id,
     )
 
-# Obtiene un rostro por su id
+
+# Obtiene un rostro por su id
 def get_face(face_id):
     """Get a face"""
     return db.search(Face.face_id == face_id)
+
 
 if __name__ == "__main__":
     new_image_path = "/config/face-rekon/images/new_face.jpg"
