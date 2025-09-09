@@ -1,0 +1,16 @@
+# Integration test dependencies
+# Install with: pip install -r requirements-integration.txt
+
+# ML Dependencies (match your Dockerfile)
+onnxruntime
+insightface==0.7.3
+opencv-python-headless
+faiss-cpu==1.10.0
+tinydb
+
+# Core dependencies (if not already installed)
+flask==3.1.2
+flask-cors==6.0.1
+flask-restx==1.3.0
+pillow
+numpy

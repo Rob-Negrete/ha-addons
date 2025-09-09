@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  test-runner:
+    build:
+      context: .
+      dockerfile: Dockerfile.test
+    volumes:
+      # Mount source code for development
+      - ./tests:/app/tests
+      - ./scripts:/app/scripts
+      - ./run_tests.py:/app/run_tests.py
+      - ./pytest*.ini:/app/
+    environment:
+      - PYTHONPATH=/app
+    command: python run_tests.py all
+
+  # Quick unit tests (no ML dependencies)
+  unit-tests:
+    image: python:3.10-slim
+    volumes:
+      - ./tests:/app/tests
+      - ./run_tests.py:/app/run_tests.py
+      - ./pytest-unit.ini:/app/pytest-unit.ini
+    working_dir: /app
+    command: >
+      sh -c "
+        pip install --no-cache-dir pytest flask pillow numpy &&
+        python run_tests.py unit
+      "
+
+  # Integration tests (full ML stack)
+  integration-tests:
+    build:
+      context: .
+      dockerfile: Dockerfile.test
+    volumes:
+      - ./tests:/app/tests
+      - ./scripts:/app/scripts
+      - ./run_tests.py:/app/run_tests.py
+      - ./pytest-integration.ini:/app/pytest-integration.ini
+    environment:
+      - PYTHONPATH=/app
+    command: python run_tests.py integration
