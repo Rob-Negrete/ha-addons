@@ -8,7 +8,7 @@ import pytest
 from PIL import Image
 
 # Add scripts directory to Python path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "scripts"))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", "scripts"))
 
 # Mock the dependencies before importing
 mock_insightface = Mock()
