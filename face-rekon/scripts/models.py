@@ -1,7 +1,9 @@
-from flask_restx import fields
+from typing import Any, Dict
+
+from flask_restx import Api, fields
 
 
-def create_models(api):
+def create_models(api: Api) -> Dict[str, Any]:
     """Create and return API models for Flask-RESTX documentation"""
 
     ping_model = api.model(

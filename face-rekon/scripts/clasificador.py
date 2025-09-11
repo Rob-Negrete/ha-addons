@@ -3,6 +3,7 @@ import io
 import os
 import time
 import uuid
+from typing import Any, Dict, List, Optional
 
 import cv2
 import faiss
@@ -42,7 +43,7 @@ else:
 
 
 # Extraer vector facial
-def extract_face_embedding(image_path):
+def extract_face_embedding(image_path: str) -> Optional[np.ndarray]:
     # Carga la imagen desde disco
     img_bgr = cv2.imread(image_path)
     if img_bgr is None:
@@ -60,7 +61,7 @@ def extract_face_embedding(image_path):
 
 
 # Extraer todos los vectores faciales de una imagen
-def extract_all_face_embeddings(image_path):
+def extract_all_face_embeddings(image_path: str) -> List[np.ndarray]:
     # Carga la imagen desde disco
     img_bgr = cv2.imread(image_path)
     if img_bgr is None:
@@ -76,7 +77,7 @@ def extract_all_face_embeddings(image_path):
 
 
 # Crear thumbnail base64
-def generate_thumbnail(image_path):
+def generate_thumbnail(image_path: str) -> str:
     img = Image.open(image_path)
     img.thumbnail(THUMBNAIL_SIZE)
     buffered = io.BytesIO()
@@ -85,7 +86,7 @@ def generate_thumbnail(image_path):
 
 
 # Guardar rostro desconocido
-def save_unknown_face(image_path, event_id):
+def save_unknown_face(image_path: str, event_id: str) -> None:
     embedding = extract_face_embedding(image_path)
     if embedding is None:
         print("No se detectó rostro.")
@@ -122,7 +123,7 @@ def save_unknown_face(image_path, event_id):
 
 
 # Identificar rostro
-def identify_face(image_path):
+def identify_face(image_path: str) -> Optional[Dict[str, Any]]:
     embedding = extract_face_embedding(image_path)
     if embedding is None:
         print("No se detectó rostro.")
@@ -140,7 +141,7 @@ def identify_face(image_path):
 
 
 # Identificar todos los rostros en una imagen
-def identify_all_faces(image_path):
+def identify_all_faces(image_path: str) -> List[Dict[str, Any]]:
     embeddings = extract_all_face_embeddings(image_path)
     if not embeddings:
         print("No se detectaron rostros.")
@@ -190,7 +191,7 @@ def identify_all_faces(image_path):
 
 
 # Obtener rostros desconocidos
-def get_unclassified_faces():
+def get_unclassified_faces() -> List[Dict[str, Any]]:
     unclassified = [
         {
             "face_id": face["face_id"],
@@ -209,7 +210,7 @@ def get_unclassified_faces():
 
 
 # Guardar rostro ya identificado
-def update_face(face_id, data):
+def update_face(face_id: str, data: Dict[str, str]) -> None:
     """Update a face's details"""
     db.update(
         {
@@ -222,7 +223,7 @@ def update_face(face_id, data):
 
 
 # Obtiene un rostro por su id
-def get_face(face_id):
+def get_face(face_id: str) -> Optional[Dict[str, Any]]:
     """Get a face"""
     return db.search(Face.face_id == face_id)
 
@@ -231,4 +232,4 @@ if __name__ == "__main__":
     new_image_path = "/config/face-rekon/images/new_face.jpg"
     result = identify_face(new_image_path)
     if not result:
-        save_unknown_face(new_image_path)
+        save_unknown_face(new_image_path, "main_event")

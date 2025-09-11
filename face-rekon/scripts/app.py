@@ -1,6 +1,7 @@
 import base64
 import os
 import uuid
+from typing import Any, Dict, List, Optional, Tuple
 
 import clasificador
 from flask import Flask, request, send_from_directory
@@ -36,7 +37,7 @@ api.add_namespace(ns)
 class Ping(Resource):
     @api.marshal_with(models["ping_model"])
     @api.doc("ping")
-    def get(self):
+    def get(self) -> Dict[str, bool]:
         """Health check endpoint
         Returns a simple pong response to verify the service is running.
         """
@@ -50,7 +51,7 @@ class Recognize(Resource):
     @api.response(400, "Bad Request", models["error_model"])
     @api.response(500, "Internal Server Error", models["error_model"])
     @api.doc("recognize_faces")
-    def post(self):
+    def post(self) -> Tuple[Dict[str, Any], int]:
         """Recognize faces from uploaded image
 
         Processes a base64-encoded image to detect and identify faces.
@@ -110,7 +111,7 @@ class Recognize(Resource):
 class UnclassifiedFaces(Resource):
     @api.marshal_list_with(models["face_model"])
     @api.doc("get_unclassified_faces")
-    def get(self):
+    def get(self) -> List[Dict[str, Any]]:
         """Get list of unclassified faces
 
         Returns all faces that have been detected but not yet assigned to a person.
@@ -124,7 +125,7 @@ class UnclassifiedFaces(Resource):
 class Face(Resource):
     @api.marshal_with(models["face_model"])
     @api.doc("get_face", params={"face_id": "Unique face identifier"})
-    def get(self, face_id):
+    def get(self, face_id: str) -> Optional[Dict[str, Any]]:
         """Get specific face information
 
         Retrieves detailed information about a specific face by its ID.
@@ -136,7 +137,7 @@ class Face(Resource):
     @api.marshal_with(models["update_response_model"])
     @api.response(500, "Internal Server Error", models["error_model"])
     @api.doc("update_face", params={"face_id": "Unique face identifier"})
-    def patch(self, face_id):
+    def patch(self, face_id: str) -> Dict[str, str]:
         """Update face information
 
         Assigns a name and additional information to an unclassified face.
@@ -155,12 +156,12 @@ class Face(Resource):
 
 
 @app.route("/", methods=["GET"])
-def home():
+def home() -> Any:
     return send_from_directory("./", "index.html")
 
 
 @app.route("/snapshot", methods=["GET"])
-def snapshot():
+def snapshot() -> Any:
     return send_from_directory("./", "snapshot.jpg")
 
 
