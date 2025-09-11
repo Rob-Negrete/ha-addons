@@ -103,7 +103,7 @@ jobs:
 
       - name: Install linting tools
         run: |
-          pip install black==23.7.0 flake8 mypy
+          pip install black==23.7.0 flake8==6.0.0 mypy==1.5.1
 
       - name: Check code formatting with Black
         run: |
