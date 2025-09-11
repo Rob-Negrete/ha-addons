@@ -36,10 +36,10 @@ jobs:
           cd face-rekon
           pip install -r requirements-test.txt
 
-      - name: Run unit tests
+      - name: Run unit tests with coverage
         run: |
           cd face-rekon
-          python run_tests.py unit
+          python -m pytest tests/unit/ -c pytest-unit.ini -v --cov=scripts --cov-report=xml --cov-report=term-missing
 
       - name: Build test container
         run: |
@@ -51,14 +51,7 @@ jobs:
           cd face-rekon
           docker compose -f docker-compose.test.yml run --rm integration-tests
 
-      - name: Run test coverage
-        if: github.event_name == 'pull_request'
-        run: |
-          cd face-rekon
-          python run_tests.py coverage
-
       - name: Upload coverage reports
-        if: github.event_name == 'pull_request'
         uses: codecov/codecov-action@v3
         with:
           directory: ./face-rekon
