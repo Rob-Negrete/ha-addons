@@ -24,7 +24,8 @@ class TestEndToEndIntegration:
         Comprehensive E2E test: Face detection → Classification → Retrieval
 
         Combines multiple workflows in one test to reduce execution time.
-        Tests: API endpoints, database operations, error handling, classification workflow
+        Tests: API endpoints, database operations, error handling,
+        classification workflow
         """
         clasificador = shared_ml_models["clasificador"]
 

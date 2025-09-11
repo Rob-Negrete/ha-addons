@@ -58,7 +58,8 @@ class TestDatabaseIntegration:
         # Test save_unknown_face function with real image
         event_id = "test_event_db_integration"
 
-        # This should work with the real ML models - but might not find a face in a red square
+        # This should work with the real ML models - but might not find a face
+        # in a red square
         # That's ok for this integration test - we're testing the database operations
         clasificador.save_unknown_face(test_image_path, event_id)
 
@@ -90,11 +91,14 @@ class TestDatabaseIntegration:
         img = Image.new("RGB", (200, 200), "blue")
         img.save(test_image_path)
 
-        # Test identification - this might return None if no face is detected in solid color image
-        # That's fine for integration testing - we're testing the database query functionality
+        # Test identification - this might return None if no face is detected
+        # in solid color image
+        # That's fine for integration testing - we're testing the database
+        # query functionality
         result = clasificador.identify_face(test_image_path)
 
-        # The result should either be None (no face detected) or a dict (face identified)
+        # The result should either be None (no face detected) or a dict
+        # (face identified)
         assert result is None or isinstance(result, dict)
 
     def test_get_unclassified_faces_database_integration(
@@ -220,7 +224,8 @@ class TestDatabaseIntegration:
         assert updated_faces[0]["name"] == "Persistent Name"
         assert updated_faces[0]["relationship"] == "test"
 
-        # 5. Verify face appears in unclassified list (since name is set now, it shouldn't)
+        # 5. Verify face appears in unclassified list (since name is set now,
+        # it shouldn't)
         unclassified = clasificador.get_unclassified_faces()
         unclassified_ids = [f["face_id"] for f in unclassified]
         assert (
