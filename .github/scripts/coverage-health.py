@@ -240,8 +240,8 @@ Coverage is below target ({self.green_threshold}%). Consider adding tests.
             "state": state_map[report["status"]],
             "target_url": None,  # Could link to coverage report
             "description": (
-                f"{report['emoji']} {report['current_coverage']}% "
-                f"(Δ{report['delta']:+.1f}%)"
+                f"Coverage: {report['current_coverage']}% "
+                f"(Δ{report['delta']:+.1f}%) - {report['status']}"
             ),
             "context": context,
         }
