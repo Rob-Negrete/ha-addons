@@ -1,0 +1,220 @@
+name: Coverage Health Check
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "face-rekon/**"
+      - ".github/workflows/coverage-health.yml"
+      - ".github/scripts/coverage-health.py"
+
+permissions:
+  contents: read
+  pull-requests: write
+  checks: write
+  statuses: write
+
+jobs:
+  coverage-health:
+    name: Check Coverage Health
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+
+    steps:
+      - name: Checkout PR branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10.18"
+
+      - name: Cache pip dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-coverage-${{ hashFiles('**/requirements*.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-coverage-
+            ${{ runner.os }}-pip-
+
+      - name: Install test dependencies
+        run: |
+          cd face-rekon
+          pip install -r requirements-test.txt
+
+      - name: Run tests with coverage (PR branch)
+        run: |
+          cd face-rekon
+          python -m pytest tests/unit/ -c pytest-unit.ini \
+            --cov=scripts \
+            --cov-report=xml:coverage-pr.xml \
+            --cov-report=json:coverage-pr.json \
+            --cov-report=term-missing
+
+          # Move coverage files to root for easy access
+          mv coverage-pr.xml ../coverage-pr.xml
+          mv coverage-pr.json ../coverage-pr.json
+
+          # Clean up temporary coverage files to avoid git conflicts
+          rm -f .coverage .coverage.*
+
+      - name: Checkout main branch for baseline
+        run: |
+          # Clean any remaining coverage files before checkout
+          rm -f face-rekon/.coverage face-rekon/.coverage.*
+          git fetch origin main:main
+          git checkout main
+
+      - name: Run tests with coverage (main branch)
+        run: |
+          cd face-rekon
+          python -m pytest tests/unit/ -c pytest-unit.ini \
+            --cov=scripts \
+            --cov-report=xml:coverage-main.xml \
+            --cov-report=json:coverage-main.json \
+            --cov-report=term-missing || true
+
+          # Move coverage files to root
+          mv coverage-main.xml ../coverage-main.xml 2>/dev/null || echo "No main coverage XML"
+          mv coverage-main.json ../coverage-main.json 2>/dev/null || echo "No main coverage JSON"
+
+          # Clean up temporary coverage files
+          rm -f .coverage .coverage.*
+
+      - name: Switch back to PR branch
+        run: |
+          git checkout ${{ github.event.pull_request.head.sha }}
+
+      - name: Make coverage health script executable
+        run: chmod +x .github/scripts/coverage-health.py
+
+      - name: Run coverage health analysis
+        id: coverage-health
+        env:
+          BASELINE_COVERAGE: "67.0"
+        run: |
+          python .github/scripts/coverage-health.py coverage-pr.xml coverage-main.xml
+        continue-on-error: true
+
+      - name: Read coverage report
+        id: coverage-report
+        run: |
+          if [[ -f "coverage-report.md" ]]; then
+            echo "report<<EOF" >> $GITHUB_OUTPUT
+            cat coverage-report.md >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+          else
+            echo "report=Coverage report not generated" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create/Update PR Comment
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const coverageReport = `${{ steps.coverage-report.outputs.report }}`;
+            const commentBody = `## 📊 Coverage Health Report
+
+            ${coverageReport}
+
+            <details>
+            <summary>About Coverage Health Checks</summary>
+
+            This automated check analyzes test coverage and provides status indicators:
+
+            - 🟢 **Green (Pass)**: Coverage maintained or improved (≥67%)
+            - 🟡 **Amber (Warning)**: Minor coverage decrease (60-66%)
+            - 🔴 **Red (Fail)**: Significant coverage drop (<60%)
+
+            The baseline coverage is set at **67%** based on the current codebase state.
+
+            Coverage is calculated from unit tests only. Integration tests require ML dependencies and run separately.
+            </details>
+
+            ---
+            *Coverage health check powered by GitHub Actions*`;
+
+            // Find existing comment
+            const comments = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+
+            const existingComment = comments.data.find(comment =>
+              comment.body.includes('## 📊 Coverage Health Report')
+            );
+
+            if (existingComment) {
+              // Update existing comment
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existingComment.id,
+                body: commentBody
+              });
+            } else {
+              // Create new comment
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: commentBody
+              });
+            }
+
+      - name: Create Coverage Status Check
+        uses: actions/github-script@v7
+        if: always()
+        with:
+          script: |
+            const fs = require('fs');
+
+            let statusData = {
+              state: 'error',
+              description: 'Coverage analysis failed',
+              context: 'coverage/health'
+            };
+
+            try {
+              if (fs.existsSync('status-check.json')) {
+                statusData = JSON.parse(fs.readFileSync('status-check.json', 'utf8'));
+              }
+            } catch (error) {
+              console.log('Could not read status-check.json, using default error state');
+            }
+
+            await github.rest.repos.createCommitStatus({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              sha: '${{ github.event.pull_request.head.sha }}',
+              state: statusData.state,
+              target_url: `https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
+              description: statusData.description,
+              context: statusData.context
+            });
+
+      - name: Upload coverage reports as artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-reports
+          path: |
+            coverage-*.xml
+            coverage-*.json
+            coverage-report.md
+            status-check.json
+          retention-days: 30
+
+      - name: Fail job if coverage is critically low
+        run: |
+          if [[ -f "status-check.json" ]]; then
+            STATE=$(cat status-check.json | python -c "import sys, json; print(json.load(sys.stdin)['state'])")
+            if [[ "$STATE" == "failure" ]]; then
+              echo "❌ Coverage health check failed - coverage is critically low"
+              exit 1
+            fi
+          fi
