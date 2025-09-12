@@ -45,7 +45,7 @@ jobs:
       - name: Run unit tests with coverage
         run: |
           cd face-rekon
-          python -m pytest tests/unit/ -c pytest-unit.ini -v --cov=scripts --cov-report=xml --cov-report=term-missing
+          python -m pytest tests/unit/ -c pytest-unit.ini -v --cov=scripts --cov-report=xml --cov-report=json --cov-report=term-missing
 
       - name: Build test container
         run: |

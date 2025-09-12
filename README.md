@@ -1,5 +1,9 @@
 # Home Assistant Add-ons Repository
 
+![Coverage](https://img.shields.io/badge/coverage-67%25-brightgreen)
+![CI](https://github.com/Rob-Negrete/ha-addons/workflows/CI/badge.svg)
+![Coverage Health](https://github.com/Rob-Negrete/ha-addons/workflows/Coverage%20Health%20Check/badge.svg)
+
 This repository contains custom Home Assistant add-ons for enhanced home automation capabilities.
 
 ## 🏠 Available Add-ons
