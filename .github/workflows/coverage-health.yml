@@ -61,6 +61,8 @@ jobs:
 
       - name: Checkout main branch for baseline
         run: |
+          # Stash any temporary files (like .coverage) before checkout
+          git stash push -u -m "temporary coverage files" || true
           git fetch origin main:main
           git checkout main
 
@@ -80,6 +82,8 @@ jobs:
       - name: Switch back to PR branch
         run: |
           git checkout ${{ github.event.pull_request.head.sha }}
+          # Restore any stashed files if they exist
+          git stash pop || true
 
       - name: Make coverage health script executable
         run: chmod +x .github/scripts/coverage-health.py
