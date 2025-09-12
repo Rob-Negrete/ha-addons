@@ -59,10 +59,13 @@ jobs:
           mv coverage-pr.xml ../coverage-pr.xml
           mv coverage-pr.json ../coverage-pr.json
 
+          # Clean up temporary coverage files to avoid git conflicts
+          rm -f .coverage .coverage.*
+
       - name: Checkout main branch for baseline
         run: |
-          # Stash any temporary files (like .coverage) before checkout
-          git stash push -u -m "temporary coverage files" || true
+          # Clean any remaining coverage files before checkout
+          rm -f face-rekon/.coverage face-rekon/.coverage.*
           git fetch origin main:main
           git checkout main
 
@@ -79,11 +82,12 @@ jobs:
           mv coverage-main.xml ../coverage-main.xml 2>/dev/null || echo "No main coverage XML"
           mv coverage-main.json ../coverage-main.json 2>/dev/null || echo "No main coverage JSON"
 
+          # Clean up temporary coverage files
+          rm -f .coverage .coverage.*
+
       - name: Switch back to PR branch
         run: |
           git checkout ${{ github.event.pull_request.head.sha }}
-          # Restore any stashed files if they exist
-          git stash pop || true
 
       - name: Make coverage health script executable
         run: chmod +x .github/scripts/coverage-health.py
