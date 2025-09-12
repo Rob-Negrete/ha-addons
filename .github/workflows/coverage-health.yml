@@ -33,7 +33,7 @@ jobs:
           python-version: "3.10.18"
 
       - name: Cache pip dependencies
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ~/.cache/pip
           key: ${{ runner.os }}-pip-coverage-${{ hashFiles('**/requirements*.txt') }}
@@ -190,7 +190,7 @@ jobs:
             });
 
       - name: Upload coverage reports as artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: always()
         with:
           name: coverage-reports
