@@ -19,6 +19,7 @@ api = Api(
     title="Face Recognition API",
     description="Home Assistant Face Recognition Add-on API",
     doc="/swagger/",
+    prefix="/api",
 )
 
 # Create namespace for face recognition endpoints
@@ -157,11 +158,28 @@ class Face(Resource):
 
 @app.route("/", methods=["GET"])
 def home() -> Any:
-    return send_from_directory("./", "index.html")
+    """Serve the main UI page"""
+    import os
+
+    # Get absolute path to ensure it works regardless of working directory
+    ui_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "ui"))
+    return send_from_directory(ui_dir, "index.html")
+
+
+@app.route("/assets/<path:filename>", methods=["GET"])
+def serve_assets(filename: str) -> Any:
+    """Serve static UI assets (CSS, JS, images)"""
+    import os
+
+    ui_assets_dir = os.path.abspath(
+        os.path.join(os.path.dirname(__file__), "..", "ui", "assets")
+    )
+    return send_from_directory(ui_assets_dir, filename)
 
 
 @app.route("/snapshot", methods=["GET"])
 def snapshot() -> Any:
+    """Serve snapshot image for testing purposes"""
     return send_from_directory("./", "snapshot.jpg")
 
 

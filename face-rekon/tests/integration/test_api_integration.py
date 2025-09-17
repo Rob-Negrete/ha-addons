@@ -13,7 +13,7 @@ class TestFaceRecognitionAPIIntegration:
 
     def test_ping_endpoint_integration(self, flask_test_client):
         """Test ping endpoint with real Flask app"""
-        response = flask_test_client.get("/face-rekon/ping")
+        response = flask_test_client.get("/api/face-rekon/ping")
 
         assert response.status_code == 200
         data = json.loads(response.data)
@@ -43,7 +43,7 @@ class TestFaceRecognitionAPIIntegration:
 
         # Make API request
         response = flask_test_client.post(
-            "/face-rekon/recognize",
+            "/api/face-rekon/recognize",
             data=json.dumps(request_data),
             content_type="application/json",
         )
@@ -88,7 +88,7 @@ class TestFaceRecognitionAPIIntegration:
 
         # Make API request
         response = flask_test_client.post(
-            "/face-rekon/recognize",
+            "/api/face-rekon/recognize",
             data=json.dumps(request_data),
             content_type="application/json",
         )
@@ -117,7 +117,7 @@ class TestFaceRecognitionAPIIntegration:
         }
 
         response = flask_test_client.post(
-            "/face-rekon/recognize",
+            "/api/face-rekon/recognize",
             data=json.dumps(request_data),
             content_type="application/json",
         )
@@ -143,7 +143,7 @@ class TestFaceRecognitionAPIIntegration:
         }
 
         response = flask_test_client.post(
-            "/face-rekon/recognize",
+            "/api/face-rekon/recognize",
             data=json.dumps(request_data),
             content_type="application/json",
         )
@@ -168,7 +168,7 @@ class TestFaceRecognitionAPIIntegration:
         invalid_request = {"event_id": "invalid_test"}
 
         response = flask_test_client.post(
-            "/face-rekon/recognize",
+            "/api/face-rekon/recognize",
             data=json.dumps(invalid_request),
             content_type="application/json",
         )
@@ -192,7 +192,7 @@ class TestFaceRecognitionAPIIntegration:
         }
 
         response = flask_test_client.post(
-            "/face-rekon/recognize",
+            "/api/face-rekon/recognize",
             data=json.dumps(request_data),
             content_type="application/json",
         )
@@ -225,7 +225,7 @@ class TestFaceManagementAPIIntegration:
         for face in test_faces:
             clasificador.db.insert(face)
 
-        response = flask_test_client.get("/face-rekon/")
+        response = flask_test_client.get("/api/face-rekon/")
 
         assert response.status_code == 200
         data = json.loads(response.data)
@@ -249,7 +249,9 @@ class TestFaceManagementAPIIntegration:
         clasificador.db.truncate()
         clasificador.db.insert(sample_face_data)
 
-        response = flask_test_client.get(f"/face-rekon/{sample_face_data['face_id']}")
+        response = flask_test_client.get(
+            f"/api/face-rekon/{sample_face_data['face_id']}"
+        )
 
         assert response.status_code == 200
         data = json.loads(response.data)
@@ -277,7 +279,7 @@ class TestFaceManagementAPIIntegration:
         }
 
         response = flask_test_client.patch(
-            f"/face-rekon/{sample_face_data['face_id']}",
+            f"/api/face-rekon/{sample_face_data['face_id']}",
             data=json.dumps(update_data),
             content_type="application/json",
         )
@@ -301,7 +303,7 @@ class TestFaceManagementAPIIntegration:
         }
 
         response = flask_test_client.patch(
-            "/face-rekon/nonexistent_id",
+            "/api/face-rekon/nonexistent_id",
             data=json.dumps(update_data),
             content_type="application/json",
         )

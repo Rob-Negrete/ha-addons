@@ -204,6 +204,12 @@ def run_docker_integration_tests():
     return run_command(command, "Running Integration Tests in Docker")
 
 
+def run_ui_tests():
+    """Run UI tests using npm"""
+    command = ["npm", "test", "--prefix", "ui"]
+    return run_command(command, "Running UI Tests")
+
+
 def run_all_tests():
     """Run all tests in sequence"""
     print("🚀 Running Complete Test Suite")
@@ -213,6 +219,10 @@ def run_all_tests():
 
     # Run unit tests first (fastest)
     if not run_unit_tests():
+        success = False
+
+    # Run UI tests
+    if not run_ui_tests():
         success = False
 
     # Run integration tests
@@ -306,6 +316,7 @@ Examples:
   python run_tests.py integration    # Run integration tests
   python run_tests.py api            # Run API tests only
   python run_tests.py e2e            # Run end-to-end tests
+  python run_tests.py ui             # Run UI tests only
   python run_tests.py all            # Run all tests
   python run_tests.py coverage       # Run with coverage report
   python run_tests.py check          # Check dependencies
@@ -320,6 +331,7 @@ Examples:
             "api",
             "database",
             "e2e",
+            "ui",
             "all",
             "coverage",
             "check",
@@ -344,6 +356,8 @@ Examples:
         success = run_database_tests()
     elif args.test_type == "e2e":
         success = run_e2e_tests()
+    elif args.test_type == "ui":
+        success = run_ui_tests()
     elif args.test_type == "all":
         success = run_all_tests()
     elif args.test_type == "coverage":

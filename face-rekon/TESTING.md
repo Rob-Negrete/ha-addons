@@ -7,9 +7,10 @@ Complete instructions for running the professional testing suite for the face-re
 | Command                      | Description        | Time  | Use Case                    |
 | ---------------------------- | ------------------ | ----- | --------------------------- |
 | `python run_tests.py unit`   | Fast unit tests    | ~0.1s | Development feedback        |
+| `python run_tests.py ui`     | UI tests only      | ~5s   | Frontend development        |
 | `python run_tests.py check`  | Dependency check   | ~2s   | Setup verification          |
 | `./run_integration_tests.sh` | **⭐ Recommended** | ~57s  | Full integration testing    |
-| `python run_tests.py all`    | All tests locally  | ~60s  | Local comprehensive testing |
+| `python run_tests.py all`    | All tests locally  | ~65s  | Local comprehensive testing |
 
 ## 🚀 Recommended Usage
 
@@ -18,6 +19,9 @@ Complete instructions for running the professional testing suite for the face-re
 ```bash
 # Quick unit tests during development
 python run_tests.py unit
+
+# UI component tests
+python run_tests.py ui
 
 # Check if dependencies are available
 python run_tests.py check
@@ -56,6 +60,7 @@ python run_tests.py all
 - ⏱️ **~57 seconds** total execution time
 - 🔒 **Memory-safe** with proper resource limits
 - 🎯 **CI/CD optimized** for reliability
+- 📝 **UI tests available separately** (139 additional tests)
 
 #### 2. Individual Test Suites
 
@@ -97,6 +102,14 @@ python run_tests.py unit
 # Tests core business logic without external dependencies
 ```
 
+#### UI Tests Only
+
+```bash
+python run_tests.py ui
+# ✅ 139 tests, ~5s
+# Tests all JavaScript components, services, and utilities
+```
+
 #### Integration Tests by Category
 
 ```bash
@@ -128,17 +141,19 @@ python run_tests.py check
 
 ### Current Test Status ✅
 
-- **Unit Tests**: 10/10 passing (~0.04s)
+- **Python Unit Tests**: 10/10 passing (~0.04s)
+- **UI Unit Tests**: 139/139 passing (~5s)
 - **Database Integration**: 8/8 passing (~18s)
 - **API Integration**: 11/11 passing (~18s)
 - **End-to-End**: 5/5 passing (~18s)
-- **Total**: 24 tests, 100% success rate
+- **Total**: 163 tests, 100% success rate
 
 ### Test Layers
 
-1. **Unit Tests** (`tests/unit/`) - Fast, isolated logic tests
-2. **Integration Tests** (`tests/integration/`) - Real ML models and APIs
-3. **End-to-End Tests** - Complete workflow validation
+1. **Python Unit Tests** (`tests/unit/`) - Fast, isolated logic tests
+2. **UI Unit Tests** (`ui/assets/js/**/__tests__/`) - Component and service tests
+3. **Integration Tests** (`tests/integration/`) - Real ML models and APIs
+4. **End-to-End Tests** - Complete workflow validation
 
 ### Key Features
 
@@ -202,12 +217,13 @@ The project includes `.github/workflows/` with:
 
 Current coverage:
 
-- **Unit Tests**: Core business logic (10 tests)
+- **Python Unit Tests**: Core business logic (10 tests)
+- **UI Unit Tests**: All components, services, and utilities (139 tests)
 - **Integration Tests**:
   - Database operations (8 tests)
   - API endpoints (11 tests)
   - End-to-end workflows (5 tests)
-- **Total**: 24 tests with comprehensive coverage
+- **Total**: 163 tests with comprehensive coverage
 
 ## 🔍 Debugging Tests
 
@@ -237,7 +253,7 @@ docker compose -f docker compose.test.yml run --rm integration-tests pytest test
 ```
 tests/
 ├── unit/
-│   └── test_simple.py          # Unit tests (10 tests)
+│   └── test_simple.py          # Python unit tests (10 tests)
 ├── integration/
 │   ├── conftest.py             # Test fixtures and setup
 │   ├── test_api_integration.py      # API tests (11 tests)
@@ -246,6 +262,13 @@ tests/
 ├── pytest.ini                 # Base pytest configuration
 ├── pytest-unit.ini            # Unit test configuration
 └── pytest-integration.ini     # Integration test configuration
+
+ui/assets/js/
+├── components/__tests__/       # Component tests
+├── services/__tests__/         # Service tests
+├── utils/__tests__/           # Utility tests
+├── package.json               # npm dependencies and scripts
+└── jest.config.js            # Jest configuration
 ```
 
 ## ⚙️ Configuration Files
@@ -267,7 +290,7 @@ tests/
 
 This gives you:
 
-- Complete test coverage (24 tests)
+- Complete Python test coverage (24 tests)
 - Reliable execution (~57 seconds)
 - No dependency management headaches
 - CI/CD ready results
@@ -275,7 +298,8 @@ This gives you:
 **🔧 For development:**
 
 ```bash
-python run_tests.py unit  # Fast feedback
+python run_tests.py unit  # Fast Python feedback
+python run_tests.py ui    # Fast UI feedback
 ```
 
 **📊 For coverage analysis:**

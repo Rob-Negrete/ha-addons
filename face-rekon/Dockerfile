@@ -17,6 +17,7 @@ WORKDIR /app
 # Copiar archivos
 COPY run.sh /run.sh
 COPY scripts/ /app/scripts/
+COPY ui/ /app/ui/
 # COPY data/ /app/data/
 RUN mkdir -p /app/data/
 

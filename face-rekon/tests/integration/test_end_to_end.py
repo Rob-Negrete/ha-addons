@@ -40,7 +40,7 @@ class TestEndToEndIntegration:
         }
 
         response = flask_test_client.post(
-            "/face-rekon/recognize",
+            "/api/face-rekon/recognize",
             data=json.dumps(request_data),
             content_type="application/json",
         )
@@ -63,7 +63,7 @@ class TestEndToEndIntegration:
         clasificador.db.insert(test_face_data)
 
         # Test 3: Get unclassified faces API
-        response = flask_test_client.get("/face-rekon/")
+        response = flask_test_client.get("/api/face-rekon/")
         assert response.status_code == 200
         unclassified_faces = json.loads(response.data)
         assert len(unclassified_faces) >= 1
@@ -77,14 +77,14 @@ class TestEndToEndIntegration:
         }
 
         response = flask_test_client.patch(
-            f"/face-rekon/{face_id}",
+            f"/api/face-rekon/{face_id}",
             data=json.dumps(classification_data),
             content_type="application/json",
         )
         assert response.status_code == 200
 
         # Test 5: Verify classification persisted
-        response = flask_test_client.get(f"/face-rekon/{face_id}")
+        response = flask_test_client.get(f"/api/face-rekon/{face_id}")
         assert response.status_code == 200
         face_details = json.loads(response.data)
         assert len(face_details) == 1
@@ -102,7 +102,7 @@ class TestEndToEndIntegration:
         # Test invalid request handling
         try:
             response = flask_test_client.post(
-                "/face-rekon/recognize",
+                "/api/face-rekon/recognize",
                 data=json.dumps(
                     {"image_base64": "aGVsbG93b3JsZA==", "event_id": "error_test"}
                 ),
@@ -114,7 +114,7 @@ class TestEndToEndIntegration:
 
         # Test system recovery with valid request
         response = flask_test_client.post(
-            "/face-rekon/recognize",
+            "/api/face-rekon/recognize",
             data=json.dumps(
                 {
                     "image_base64": test_images["small_image"]["base64"],
@@ -137,7 +137,7 @@ class TestSystemIntegration:
         clasificador = shared_ml_models["clasificador"]
 
         # Test ping endpoint
-        response = flask_test_client.get("/face-rekon/ping")
+        response = flask_test_client.get("/api/face-rekon/ping")
         assert response.status_code == 200
         data = json.loads(response.data)
         assert data["pong"] is True
@@ -147,7 +147,7 @@ class TestSystemIntegration:
         assert isinstance(all_faces, list)
 
         # Test unclassified faces endpoint
-        response = flask_test_client.get("/face-rekon/")
+        response = flask_test_client.get("/api/face-rekon/")
         assert response.status_code == 200
         unclassified = json.loads(response.data)
         assert isinstance(unclassified, list)

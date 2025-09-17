@@ -12,5 +12,6 @@ services:
       - ./config:/config
       - ./tmp:/app/data/tmp # adjust as needed, depending on your local setup
       - ./scripts:/app/scripts
+      - ./ui:/app/ui
     ports:
       - "5001:5001" # assuming Flask app runs on port 5001

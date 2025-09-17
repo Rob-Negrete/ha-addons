@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Face Recognition Management</title>
+    <link rel="stylesheet" href="./assets/css/styles.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>Face Recognition Management</h1>
+            <p class="subtitle">Manage unclassified faces detected by the system</p>
+        </header>
+
+        <main class="main-content">
+            <!-- Status and Loading Section -->
+            <div id="status-container" class="status-container">
+                <div id="loading-indicator" class="loading-indicator hidden">
+                    <div class="spinner"></div>
+                    <span>Loading faces...</span>
+                </div>
+                <div id="error-message" class="error-message hidden"></div>
+                <div id="success-message" class="success-message hidden"></div>
+            </div>
+
+            <!-- Controls Section -->
+            <div class="controls">
+                <button id="refresh-btn" class="btn btn-primary">
+                    <span>🔄</span>
+                    Refresh List
+                </button>
+                <div class="stats">
+                    <span id="face-count">0 faces found</span>
+                </div>
+            </div>
+
+            <!-- Face List Section -->
+            <div id="face-list-container" class="face-list-container">
+                <div id="face-list" class="face-list">
+                    <!-- Face cards will be dynamically inserted here -->
+                </div>
+                <div id="empty-state" class="empty-state hidden">
+                    <div class="empty-icon">👤</div>
+                    <h3>No unclassified faces found</h3>
+                    <p>All detected faces have been classified or no faces have been detected yet.</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Face Detail Modal -->
+    <div id="face-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Face Details</h2>
+                <button id="close-modal" class="close-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="modal-face-image" class="modal-face-image">
+                    <!-- Face image will be inserted here -->
+                </div>
+                <div class="modal-face-info">
+                    <div class="info-group">
+                        <label>Face ID:</label>
+                        <span id="modal-face-id">-</span>
+                    </div>
+                    <div class="info-group">
+                        <label>Detection Date:</label>
+                        <span id="modal-detection-date">-</span>
+                    </div>
+                    <div class="info-group">
+                        <label>Current Status:</label>
+                        <span id="modal-face-status">-</span>
+                    </div>
+                </div>
+                <form id="face-update-form" class="face-update-form">
+                    <div class="form-group">
+                        <label for="face-name">Assign Name:</label>
+                        <input type="text" id="face-name" name="name" placeholder="Enter person's name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="face-notes">Notes (optional):</label>
+                        <textarea id="face-notes" name="notes" placeholder="Additional information about this person"></textarea>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" id="cancel-update" class="btn btn-secondary">Cancel</button>
+                        <button type="submit" id="save-update" class="btn btn-primary">Save Classification</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="./assets/js/utils/helpers.js"></script>
+    <script src="./assets/js/services/faceService.js"></script>
+    <script src="./assets/js/components/faceList.js"></script>
+    <script src="./assets/js/app.js"></script>
+</body>
+</html>

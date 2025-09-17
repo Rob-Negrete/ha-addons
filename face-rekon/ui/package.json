@@ -1,0 +1,39 @@
+{
+  "name": "face-rekon-ui",
+  "version": "1.0.0",
+  "description": "Web UI for Face Recognition Home Assistant Add-on",
+  "main": "assets/js/app.js",
+  "scripts": {
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "test:verbose": "jest --verbose",
+    "lint": "echo 'Linting not configured yet'",
+    "dev": "echo 'Development server not configured - serve via Flask app'"
+  },
+  "keywords": [
+    "face-recognition",
+    "home-assistant",
+    "ui",
+    "javascript",
+    "vanilla-js"
+  ],
+  "author": "Face Rekon Team",
+  "license": "MIT",
+  "devDependencies": {
+    "jest": "^29.0.0",
+    "jest-environment-jsdom": "^29.0.0",
+    "@jest/globals": "^29.0.0"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-repo/stark-fortress"
+  },
+  "bugs": {
+    "url": "https://github.com/your-repo/stark-fortress/issues"
+  },
+  "homepage": "https://github.com/your-repo/stark-fortress#readme"
+}
