@@ -2,6 +2,13 @@
 
 All notable changes to the Face Rekon Home Assistant add-on will be documented in this file.
 
+## [1.1.0](https://github.com/Rob-Negrete/ha-addons/compare/face-rekon-v1.0.21...face-rekon-v1.1.0) (2025-09-17)
+
+
+### ✨ Features
+
+* **face-rekon:** add comprehensive web UI for face management ([10a5b4c](https://github.com/Rob-Negrete/ha-addons/commit/10a5b4ce169d27504ca9e963d2189b0c4ac5a751))
+
 ## [1.0.21](https://github.com/Rob-Negrete/ha-addons/compare/face-rekon-v1.0.21...face-rekon-v1.0.21) (2025-09-12)
 
 
