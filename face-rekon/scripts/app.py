@@ -183,5 +183,73 @@ def snapshot() -> Any:
     return send_from_directory("./", "snapshot.jpg")
 
 
+@app.route("/images/<string:face_id>", methods=["GET"])
+def serve_face_image(face_id: str) -> Any:
+    """Serve face thumbnail images by face ID
+
+    Returns face thumbnail as JPEG image from base64 data stored in TinyDB.
+    Provides proper HTTP headers for caching and content type.
+
+    Args:
+        face_id: Unique face identifier (UUID format)
+
+    Returns:
+        200: Image data with proper headers
+        404: Face ID not found
+        400: Invalid face ID format
+    """
+    import base64
+    import re
+
+    from flask import Response
+
+    # Validate face_id format (basic UUID validation)
+    if not face_id or not isinstance(face_id, str):
+        return {"error": "Invalid face ID"}, 400
+
+    # Basic UUID format check
+    uuid_pattern = re.compile(
+        r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$", re.IGNORECASE
+    )
+    if not uuid_pattern.match(face_id):
+        return {"error": "Invalid face ID format"}, 400
+
+    try:
+        # Get face data from database
+        face_data = clasificador.get_face(face_id)
+
+        if not face_data or len(face_data) == 0:
+            return {"error": "Face not found"}, 404
+
+        # Get the first result (get_face returns a list)
+        face = face_data[0] if isinstance(face_data, list) else face_data
+
+        # Check if thumbnail exists
+        if "thumbnail" not in face or not face["thumbnail"]:
+            return {"error": "No thumbnail available"}, 404
+
+        # Decode base64 thumbnail
+        try:
+            image_data = base64.b64decode(face["thumbnail"])
+        except Exception:
+            return {"error": "Invalid image data"}, 400
+
+        # Create response with proper headers
+        response = Response(
+            image_data,
+            mimetype="image/jpeg",
+            headers={
+                "Content-Type": "image/jpeg",
+                "Cache-Control": "public, max-age=3600",  # Cache for 1 hour
+                "Content-Length": str(len(image_data)),
+            },
+        )
+
+        return response
+
+    except Exception as e:
+        return {"error": f"Internal server error: {str(e)}"}, 500
+
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5001, debug=True)
