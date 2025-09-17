@@ -62,9 +62,8 @@ function createImageUrl(faceId, baseUrl = '') {
         return null;
     }
 
-    // For now, return null as the backend doesn't seem to serve images directly
-    // This can be updated when image serving is implemented
-    return null;
+    // Return URL to the new image serving endpoint
+    return `${baseUrl}/images/${encodeURIComponent(faceId)}`;
 }
 
 /**

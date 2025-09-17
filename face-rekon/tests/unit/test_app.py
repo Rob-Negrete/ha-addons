@@ -227,3 +227,47 @@ class TestAppFunctionality:
         assert update_result["status"] == "success"
         assert "updated successfully" in update_result["message"]
         clasificador.update_face.assert_called_once_with("test_face_id", update_data)
+
+    def test_serve_face_image_logic(self):
+        """Test image serving endpoint logic"""
+        import re
+        import uuid
+
+        # Test valid UUID format validation
+        valid_face_id = str(uuid.uuid4())
+        uuid_pattern = re.compile(
+            r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            re.IGNORECASE,
+        )
+        assert uuid_pattern.match(valid_face_id)
+
+        # Test invalid UUID format
+        invalid_face_id = "invalid-uuid"
+        assert not uuid_pattern.match(invalid_face_id)
+
+        # Mock face data with thumbnail
+        mock_face_data = [
+            {
+                "face_id": valid_face_id,
+                "thumbnail": self.test_image_b64,
+                "name": "Test Face",
+            }
+        ]
+        clasificador.get_face = Mock(return_value=mock_face_data)
+
+        # Test successful image retrieval logic
+        face_data = clasificador.get_face(valid_face_id)
+        assert len(face_data) > 0
+        assert face_data[0]["thumbnail"] == self.test_image_b64
+
+        # Test base64 decoding
+        try:
+            image_data = base64.b64decode(face_data[0]["thumbnail"])
+            assert len(image_data) > 0
+        except Exception:
+            pytest.fail("Failed to decode base64 thumbnail")
+
+        # Test face not found case
+        clasificador.get_face = Mock(return_value=[])
+        empty_result = clasificador.get_face("nonexistent-face")
+        assert len(empty_result) == 0

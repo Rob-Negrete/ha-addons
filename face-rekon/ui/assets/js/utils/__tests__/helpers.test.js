@@ -68,9 +68,17 @@ describe('Helper Functions', () => {
       expect(helpers.createImageUrl('')).toBeNull();
     });
 
-    it('should return null for valid face ID (not implemented yet)', () => {
-      // As per the current implementation, this always returns null
-      expect(helpers.createImageUrl('test-face-123')).toBeNull();
+    it('should return proper URL for valid face ID', () => {
+      // Test that the function now returns proper image URLs
+      expect(helpers.createImageUrl('test-face-123')).toBe('/images/test-face-123');
+      expect(helpers.createImageUrl('another-id', 'http://localhost:5001')).toBe('http://localhost:5001/images/another-id');
+    });
+
+    it('should encode face ID in URL', () => {
+      // Test URL encoding for special characters
+      const faceIdWithSpecialChars = 'face-id with spaces';
+      const result = helpers.createImageUrl(faceIdWithSpecialChars);
+      expect(result).toBe('/images/face-id%20with%20spaces');
     });
   });
 
