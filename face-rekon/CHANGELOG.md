@@ -2,6 +2,16 @@
 
 All notable changes to the Face Rekon Home Assistant add-on will be documented in this file.
 
+## [1.2.6](https://github.com/Rob-Negrete/ha-addons/compare/face-rekon-v1.2.5...face-rekon-v1.2.6) (2025-09-18)
+
+
+### 🐛 Bug Fixes
+
+* add noqa comment for Black/flake8 slice notation conflict ([034e840](https://github.com/Rob-Negrete/ha-addons/commit/034e8402478c4e28e566f70128911b32f02df4a5))
+* resolve CI flake8 linting errors and improve thumbnail directory handling ([1d788ce](https://github.com/Rob-Negrete/ha-addons/commit/1d788ce1a8f7001b8932e33a63f43d7e0450636e))
+* resolve CI permission errors and test environment compatibility ([a321b1b](https://github.com/Rob-Negrete/ha-addons/commit/a321b1b19159d909d7eabbfa43ac0ce554a12d19))
+* shorten comment to satisfy flake8 line length requirement ([1ac6507](https://github.com/Rob-Negrete/ha-addons/commit/1ac6507b10ce554c4e3419cc7d09d57ef0bd551a))
+
 ## [1.2.5](https://github.com/Rob-Negrete/ha-addons/compare/face-rekon-v1.2.4...face-rekon-v1.2.5) (2025-09-18)
 
 
