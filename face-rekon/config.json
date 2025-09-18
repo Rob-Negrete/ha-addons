@@ -1,6 +1,6 @@
 {
   "name": "Face Rekon",
-  "version": "1.2.2",
+  "version": "1.2.3",
   "slug": "face_rekon",
   "description": "AI-powered face recognition with comprehensive web UI for managing and labeling faces. Features real-time detection, FAISS similarity search, and seamless Home Assistant integration.",
   "startup": "application",

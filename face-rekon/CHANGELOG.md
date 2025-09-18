@@ -2,6 +2,13 @@
 
 All notable changes to the Face Rekon Home Assistant add-on will be documented in this file.
 
+## [1.2.3](https://github.com/Rob-Negrete/ha-addons/compare/face-rekon-v1.2.2...face-rekon-v1.2.3) (2025-09-18)
+
+
+### 🐛 Bug Fixes
+
+* resolve WEBP image processing and 404 error filtering in face recognition ([c094fc9](https://github.com/Rob-Negrete/ha-addons/commit/c094fc96cf419df98b15e51cf864277b0e69ba39))
+
 ## [1.2.2](https://github.com/Rob-Negrete/ha-addons/compare/face-rekon-v1.2.1...face-rekon-v1.2.2) (2025-09-18)
 
 
