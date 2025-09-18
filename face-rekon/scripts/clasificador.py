@@ -710,12 +710,22 @@ def save_thumbnail_to_file(thumbnail_base64: str, face_id: str) -> str:
     Returns:
         Path to saved thumbnail file
     """
+    # Determine thumbnail directory
+    thumbnail_dir = THUMBNAIL_PATH
+
     # Ensure thumbnail directory exists
-    os.makedirs(THUMBNAIL_PATH, exist_ok=True)
+    try:
+        os.makedirs(thumbnail_dir, exist_ok=True)
+    except (OSError, PermissionError) as e:
+        logger.warning(f"⚠️ Could not create thumbnail directory {thumbnail_dir}: {e}")
+        # Fallback to temp directory for testing environments
+        thumbnail_dir = os.path.join("/tmp", "face_rekon_thumbnails")
+        os.makedirs(thumbnail_dir, exist_ok=True)
+        logger.info(f"📁 Using fallback thumbnail path: {thumbnail_dir}")
 
     # Create thumbnail file path
     thumbnail_file = f"{face_id}.jpg"
-    thumbnail_path = os.path.join(THUMBNAIL_PATH, thumbnail_file)
+    thumbnail_path = os.path.join(thumbnail_dir, thumbnail_file)
 
     # Decode and save thumbnail
     try:
