@@ -49,8 +49,16 @@ MIN_QUALITY_SCORE = float(
 )  # Overall quality threshold (0.0-1.0)
 
 # Inicializar InsightFace
-app = FaceAnalysis(allowed_modules=["detection", "recognition"])
-app.prepare(ctx_id=0, det_size=(640, 640))
+logger.info("🚀 Initializing InsightFace...")
+try:
+    app = FaceAnalysis(allowed_modules=["detection", "recognition"])
+    logger.info("✅ FaceAnalysis instance created")
+    app.prepare(ctx_id=0, det_size=(640, 640))
+    logger.info("✅ InsightFace prepared successfully")
+except Exception as e:
+    logger.error(f"❌ InsightFace initialization failed: {e}")
+    logger.exception("InsightFace initialization exception:")
+    raise
 
 # TinyDB
 db = TinyDB(DB_PATH)
@@ -256,8 +264,20 @@ def extract_face_crops(
 
     # Llama a InsightFace con el array
     logger.info(f"🔍 Running InsightFace detection on image: {img_rgb.shape}")
-    faces = app.get(img_rgb)
-    logger.info(f"👥 InsightFace detected {len(faces)} faces")
+    logger.info(
+        f"📊 Image dtype: {img_rgb.dtype}, min: {img_rgb.min()}, max: {img_rgb.max()}"
+    )
+
+    try:
+        faces = app.get(img_rgb)
+        logger.info(f"👥 InsightFace detected {len(faces)} faces")
+        logger.info(
+            f"📊 Faces details: {[getattr(f, 'bbox', 'no bbox') for f in faces]}"
+        )
+    except Exception as e:
+        logger.error(f"❌ InsightFace detection failed: {e}")
+        logger.exception("InsightFace exception details:")
+        return []
     if not faces:
         logger.warning("⚠️ No faces detected by InsightFace")
         return []
@@ -304,7 +324,8 @@ def extract_face_crops(
 
     if faces_filtered > 0:
         print(
-            f"Procesados {faces_processed} rostros, filtrados {faces_filtered} por baja calidad"
+            f"Procesados {faces_processed} rostros, "
+            f"filtrados {faces_filtered} por baja calidad"
         )
 
     return face_crops
@@ -529,7 +550,8 @@ def identify_all_faces(image_path: str) -> List[Dict[str, Any]]:
                     "overall_score", "N/A"
                 )
                 print(
-                    f"Rostro {face_index}: Identificado como {matched_face} (calidad: {quality_score})"
+                    f"Rostro {face_index}: Identificado como {matched_face} "
+                    f"(calidad: {quality_score})"
                 )
             else:
                 results.append(

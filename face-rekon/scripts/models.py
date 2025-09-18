@@ -51,6 +51,15 @@ def create_models(api: Api) -> Dict[str, Any]:
             "faces": fields.List(
                 fields.Nested(face_result_model), description="List of detected faces"
             ),
+            "event_id": fields.String(
+                description="Event identifier for tracking", example="event-123"
+            ),
+            "processing_method": fields.String(
+                description="Processing method used", example="face_extraction_crops"
+            ),
+            "error": fields.String(
+                description="Error message if processing failed", required=False
+            ),
         },
     )
 
