@@ -292,6 +292,98 @@ def loadSnapshot() -> Any:
     return send_from_directory(ui_dir, "loadSnapshot.html")
 
 
+@app.route("/debug/test-webp", methods=["POST"])
+def debug_test_webp() -> Any:
+    """Debug endpoint to test WEBP processing without decorators"""
+    import traceback
+
+    try:
+        logger.info("🔍 Debug WEBP test endpoint called")
+
+        # Get raw JSON data
+        data = request.get_json()
+        if not data:
+            return {"error": "No JSON data"}, 400
+
+        if "image_base64" not in data:
+            return {"error": "Missing image_base64"}, 400
+
+        image_base64 = data["image_base64"]
+
+        logger.info(f"📊 Received base64 length: {len(image_base64)}")
+
+        # Decode base64
+        try:
+            image_data = base64.b64decode(image_base64)
+            logger.info(f"✅ Base64 decoded: {len(image_data)} bytes")
+        except Exception as e:
+            logger.error(f"❌ Base64 decode failed: {e}")
+            return {"error": f"Base64 decode failed: {str(e)}"}, 400
+
+        # Check format
+        if image_data.startswith(b"RIFF") and b"WEBP" in image_data[:12]:
+            extension = ".webp"
+            logger.info("🖼️ Format: WEBP")
+        elif image_data.startswith(b"\xFF\xD8\xFF"):
+            extension = ".jpg"
+            logger.info("🖼️ Format: JPEG")
+        else:
+            extension = ".png"
+            logger.info("🖼️ Format: Other/PNG")
+
+        # Save temporarily
+        tmp_dir = "/app/data/tmp"
+        os.makedirs(tmp_dir, exist_ok=True)
+        tmp_path = os.path.join(tmp_dir, f"debug-{uuid.uuid4().hex}{extension}")
+
+        with open(tmp_path, "wb") as f:
+            f.write(image_data)
+        logger.info(f"💾 Saved to: {tmp_path}")
+
+        # Test face recognition
+        try:
+            results = clasificador.identify_all_faces(tmp_path)
+            logger.info(f"🎉 Face recognition OK: {len(results)} faces")
+
+            return {
+                "status": "success",
+                "message": "Debug test completed successfully",
+                "faces_count": len(results),
+                "faces": results,
+                "format": extension,
+                "file_size": len(image_data),
+            }
+
+        except Exception as e:
+            logger.error(f"❌ Face recognition failed: {e}")
+            logger.exception("Face recognition exception:")
+            return {
+                "status": "error",
+                "message": f"Face recognition failed: {str(e)}",
+                "format": extension,
+                "file_size": len(image_data),
+                "traceback": traceback.format_exc(),
+            }
+
+        finally:
+            # Cleanup
+            try:
+                if os.path.exists(tmp_path):
+                    os.remove(tmp_path)
+                    logger.info(f"🗑️ Cleaned up: {tmp_path}")
+            except Exception:
+                pass
+
+    except Exception as e:
+        logger.error(f"❌ Debug endpoint failed: {e}")
+        logger.exception("Debug endpoint exception:")
+        return {
+            "status": "error",
+            "message": f"Debug endpoint failed: {str(e)}",
+            "traceback": traceback.format_exc(),
+        }
+
+
 @app.route("/images/<string:face_id>", methods=["GET"])
 def serve_face_image(face_id: str) -> Any:
     """Serve face thumbnail images by face ID
