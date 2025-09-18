@@ -23,9 +23,15 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Configuración de rutas (con soporte para variables de entorno para testing)
-BASE_PATH = os.environ.get("FACE_REKON_BASE_PATH", "/config/face-rekon/faces")
-UNKNOWN_PATH = os.environ.get("FACE_REKON_UNKNOWN_PATH", "/config/face-rekon/unknowns")
-DB_PATH = os.environ.get("FACE_REKON_DB_PATH", "/config/face-rekon/db/tinydb.json")
+BASE_PATH = os.environ.get(
+    "FACE_REKON_BASE_PATH", "/config/face-rekon/faces"
+)  # noqa: E501
+UNKNOWN_PATH = os.environ.get(
+    "FACE_REKON_UNKNOWN_PATH", "/config/face-rekon/unknowns"
+)  # noqa: E501
+DB_PATH = os.environ.get(
+    "FACE_REKON_DB_PATH", "/config/face-rekon/db/tinydb.json"
+)  # noqa: E501
 FAISS_INDEX_PATH = os.environ.get(
     "FACE_REKON_FAISS_INDEX_PATH", "/config/face-rekon/db/faiss_index.index"
 )
@@ -156,7 +162,9 @@ def assess_face_quality(
 
     # Face should be at least 2% of image area for good quality
     size_ratio = face_area / image_area
-    size_score = min(1.0, size_ratio / 0.02)  # Normalize to 0.02 = perfect score
+    size_score = min(
+        1.0, size_ratio / 0.02
+    )  # Normalize to 0.02 = perfect score  # noqa: E501
 
     # Also check minimum absolute size
     min_dimension = min(face_width, face_height)
@@ -185,7 +193,9 @@ def assess_face_quality(
 
     # 4. Overall Score - Weighted combination
     # Size: 30%, Blur: 40%, Detection: 30%
-    overall_score = (size_score * 0.3) + (blur_score * 0.4) + (detection_score * 0.3)
+    overall_score = (
+        (size_score * 0.3) + (blur_score * 0.4) + (detection_score * 0.3)
+    )  # noqa: E501
 
     return {
         "size_score": round(size_score, 3),
@@ -197,7 +207,7 @@ def assess_face_quality(
 
 # Extraer crops individuales de rostros con metadatos
 def load_image_robust(image_path: str):
-    """Load image using multiple methods to support all formats including WEBP"""
+    """Load image using multiple methods to support all formats including WEBP"""  # noqa: E501
     import logging
 
     logger = logging.getLogger(__name__)
@@ -234,7 +244,7 @@ def load_image_robust(image_path: str):
 def extract_face_crops(
     image_path: str, filter_quality: bool = True
 ) -> List[Dict[str, Any]]:
-    """Extract individual face crops from image with metadata and quality filtering
+    """Extract individual face crops from image with metadata and quality filtering  # noqa: E501
 
     Args:
         image_path: Path to the image file
@@ -265,14 +275,14 @@ def extract_face_crops(
     # Llama a InsightFace con el array
     logger.info(f"🔍 Running InsightFace detection on image: {img_rgb.shape}")
     logger.info(
-        f"📊 Image dtype: {img_rgb.dtype}, min: {img_rgb.min()}, max: {img_rgb.max()}"
+        f"📊 Image dtype: {img_rgb.dtype}, min: {img_rgb.min()}, max: {img_rgb.max()}"  # noqa: E501
     )
 
     try:
         faces = app.get(img_rgb)
         logger.info(f"👥 InsightFace detected {len(faces)} faces")
         logger.info(
-            f"📊 Faces details: {[getattr(f, 'bbox', 'no bbox') for f in faces]}"
+            f"📊 Faces details: {[getattr(f, 'bbox', 'no bbox') for f in faces]}"  # noqa: E501
         )
     except Exception as e:
         logger.error(f"❌ InsightFace detection failed: {e}")
@@ -299,7 +309,9 @@ def extract_face_crops(
         faces_processed += 1
 
         # Filtrar por calidad si está habilitado
-        if filter_quality and quality_metrics["overall_score"] < MIN_QUALITY_SCORE:
+        if (
+            filter_quality and quality_metrics["overall_score"] < MIN_QUALITY_SCORE
+        ):  # noqa: E501
             faces_filtered += 1
             print(
                 f"Rostro {i} filtrado por baja calidad: "
@@ -386,7 +398,7 @@ def generate_thumbnail(image_path: str) -> str:
     return base64.b64encode(buffered.getvalue()).decode("utf-8")
 
 
-# Guardar rostro desconocido (legacy function - maintains backward compatibility)
+# Guardar rostro desconocido (legacy function - maintains backward compatibility)  # noqa: E501
 def save_unknown_face(image_path: str, event_id: str) -> None:
     embedding = extract_face_embedding(image_path)
     if embedding is None:
@@ -456,7 +468,9 @@ def save_multiple_faces(image_path: str, event_id: str) -> List[str]:
                 "timestamp": timestamp,
                 "image_path": image_path,
                 "embedding": face_data["embedding"].tolist(),
-                "thumbnail": face_data["face_crop"],  # Now contains cropped face
+                "thumbnail": face_data[
+                    "face_crop"
+                ],  # Now contains cropped face  # noqa: E501
                 "name": None,
                 "relationship": "unknown",
                 "confidence": "unknown",
@@ -479,7 +493,9 @@ def save_multiple_faces(image_path: str, event_id: str) -> List[str]:
     faiss.write_index(index, FAISS_INDEX_PATH)
     np.save(MAPPING_PATH, np.array(id_map))
 
-    print(f"Total de {len(saved_face_ids)} rostros guardados para evento {event_id}")
+    print(
+        f"Total de {len(saved_face_ids)} rostros guardados para evento {event_id}"
+    )  # noqa: E501
     return saved_face_ids
 
 
@@ -490,7 +506,9 @@ def identify_face(image_path: str) -> Optional[Dict[str, Any]]:
         print("No se detectó rostro.")
         return None
 
-    distances, indices = index.search(np.array([embedding], dtype=np.float32), 1)
+    distances, indices = index.search(
+        np.array([embedding], dtype=np.float32), 1
+    )  # noqa: E501
     if distances[0][0] < 0.5:
         face_id = id_map[indices[0][0]]
         matched = db.get(Face.face_id == face_id)
@@ -529,7 +547,9 @@ def identify_all_faces(image_path: str) -> List[Dict[str, Any]]:
         face_index = face_data["face_index"]
 
         # Search for matches in FAISS index
-        distances, indices = index.search(np.array([embedding], dtype=np.float32), 1)
+        distances, indices = index.search(
+            np.array([embedding], dtype=np.float32), 1
+        )  # noqa: E501
         if distances[0][0] < 0.5:
             face_id = id_map[indices[0][0]]
             matched = db.get(Face.face_id == face_id)
@@ -542,7 +562,9 @@ def identify_all_faces(image_path: str) -> List[Dict[str, Any]]:
                         "confidence": float(1.0 - distances[0][0]),
                         "face_bbox": face_data["face_bbox"],
                         "face_crop": face_data["face_crop"],
-                        "quality_metrics": face_data.get("quality_metrics", {}),
+                        "quality_metrics": face_data.get(
+                            "quality_metrics", {}
+                        ),  # noqa: E501
                     }
                 )
                 matched_face = matched.get("name", matched["face_id"])
@@ -562,14 +584,16 @@ def identify_all_faces(image_path: str) -> List[Dict[str, Any]]:
                         "confidence": 0.0,
                         "face_bbox": face_data["face_bbox"],
                         "face_crop": face_data["face_crop"],
-                        "quality_metrics": face_data.get("quality_metrics", {}),
+                        "quality_metrics": face_data.get(
+                            "quality_metrics", {}
+                        ),  # noqa: E501
                     }
                 )
                 quality_score = face_data.get("quality_metrics", {}).get(
                     "overall_score", "N/A"
                 )
                 print(
-                    f"Rostro {face_index}: No identificado (calidad: {quality_score})"
+                    f"Rostro {face_index}: No identificado (calidad: {quality_score})"  # noqa: E501
                 )
         else:
             results.append(
@@ -586,7 +610,9 @@ def identify_all_faces(image_path: str) -> List[Dict[str, Any]]:
             quality_score = face_data.get("quality_metrics", {}).get(
                 "overall_score", "N/A"
             )
-            print(f"Rostro {face_index}: No identificado (calidad: {quality_score})")
+            print(
+                f"Rostro {face_index}: No identificado (calidad: {quality_score})"
+            )  # noqa: E501
 
     return results
 
@@ -652,12 +678,18 @@ def test_face_quality(image_path: str) -> None:
         print(f"  Calidad general: {quality.get('overall_score', 'N/A'):.3f}")
         print(f"  Score de tamaño: {quality.get('size_score', 'N/A'):.3f}")
         print(f"  Score de nitidez: {quality.get('blur_score', 'N/A'):.3f}")
-        print(f"  Score de detección: {quality.get('detection_score', 'N/A'):.3f}")
+        print(
+            f"  Score de detección: {quality.get('detection_score', 'N/A'):.3f}"
+        )  # noqa: E501
 
         if quality.get("overall_score", 0) < MIN_QUALITY_SCORE:
-            print(f"  ❌ FILTRADO: Calidad inferior al umbral ({MIN_QUALITY_SCORE})")
+            print(
+                f"  ❌ FILTRADO: Calidad inferior al umbral ({MIN_QUALITY_SCORE})"
+            )  # noqa: E501
         else:
-            print(f"  ✅ ACEPTADO: Calidad superior al umbral ({MIN_QUALITY_SCORE})")
+            print(
+                f"  ✅ ACEPTADO: Calidad superior al umbral ({MIN_QUALITY_SCORE})"
+            )  # noqa: E501
 
     # Ahora extraer con filtro habilitado
     print("\n--- Extracción con filtro de calidad habilitado ---")

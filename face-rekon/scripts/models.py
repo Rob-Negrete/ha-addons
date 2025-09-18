@@ -27,7 +27,8 @@ def create_models(api: Api) -> Dict[str, Any]:
         "FaceResult",
         {
             "status": fields.String(
-                description="Recognition status (known/unknown)", example="known"
+                description="Recognition status (known/unknown)",
+                example="known",  # noqa: E501
             ),
             "name": fields.String(
                 description="Person name if recognized", example="John Doe"
@@ -49,16 +50,20 @@ def create_models(api: Api) -> Dict[str, Any]:
                 description="Number of faces detected", example=1
             ),
             "faces": fields.List(
-                fields.Nested(face_result_model), description="List of detected faces"
+                fields.Nested(face_result_model),
+                description="List of detected faces",  # noqa: E501
             ),
             "event_id": fields.String(
-                description="Event identifier for tracking", example="event-123"
+                description="Event identifier for tracking",
+                example="event-123",  # noqa: E501
             ),
             "processing_method": fields.String(
-                description="Processing method used", example="face_extraction_crops"
+                description="Processing method used",
+                example="face_extraction_crops",  # noqa: E501
             ),
             "error": fields.String(
-                description="Error message if processing failed", required=False
+                description="Error message if processing failed",
+                required=False,  # noqa: E501
             ),
         },
     )
@@ -81,14 +86,18 @@ def create_models(api: Api) -> Dict[str, Any]:
         "FaceUpdate",
         {
             "name": fields.String(description="Person name to assign to face"),
-            "notes": fields.String(description="Additional notes about the person"),
+            "notes": fields.String(
+                description="Additional notes about the person"
+            ),  # noqa: E501
         },
     )
 
     update_response_model = api.model(
         "UpdateResponse",
         {
-            "status": fields.String(description="Update status", example="success"),
+            "status": fields.String(
+                description="Update status", example="success"
+            ),  # noqa: E501
             "message": fields.String(description="Status message"),
         },
     )

@@ -116,8 +116,10 @@ class Recognize(Resource):
                                 f"🚫 Detected JSON error response: {json_data}"
                             )
                             return {
-                                "error": "Invalid image data - received error response",
-                                "details": json_data.get("message", "Unknown error"),
+                                "error": "Invalid image data - received error response",  # noqa: E501
+                                "details": json_data.get(
+                                    "message", "Unknown error"
+                                ),  # noqa: E501
                             }, 400
                     except (json.JSONDecodeError, UnicodeDecodeError):
                         # Not JSON, continue with image processing
@@ -162,7 +164,9 @@ class Recognize(Resource):
             logger.info(f"📊 File size: {os.path.getsize(tmp_path)} bytes")
 
             results = clasificador.identify_all_faces(tmp_path)
-            logger.info(f"🎉 Face recognition completed. Found {len(results)} faces")
+            logger.info(
+                f"🎉 Face recognition completed. Found {len(results)} faces"
+            )  # noqa: E501
             logger.info(f"📊 Results details: {results}")
 
             # Save unknown faces using the new multi-face function
@@ -267,7 +271,9 @@ def home() -> Any:
     import os
 
     # Get absolute path to ensure it works regardless of working directory
-    ui_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "ui"))
+    ui_dir = os.path.abspath(
+        os.path.join(os.path.dirname(__file__), "..", "ui")
+    )  # noqa: E501
     return send_from_directory(ui_dir, "index.html")
 
 
@@ -288,7 +294,9 @@ def loadSnapshot() -> Any:
     import os
 
     # Get absolute path to ensure it works regardless of working directory
-    ui_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "ui"))
+    ui_dir = os.path.abspath(
+        os.path.join(os.path.dirname(__file__), "..", "ui")
+    )  # noqa: E501
     return send_from_directory(ui_dir, "loadSnapshot.html")
 
 
@@ -334,7 +342,9 @@ def debug_test_webp() -> Any:
         # Save temporarily
         tmp_dir = "/app/data/tmp"
         os.makedirs(tmp_dir, exist_ok=True)
-        tmp_path = os.path.join(tmp_dir, f"debug-{uuid.uuid4().hex}{extension}")
+        tmp_path = os.path.join(
+            tmp_dir, f"debug-{uuid.uuid4().hex}{extension}"
+        )  # noqa: E501
 
         with open(tmp_path, "wb") as f:
             f.write(image_data)
