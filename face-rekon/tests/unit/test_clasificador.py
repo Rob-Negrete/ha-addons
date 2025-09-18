@@ -302,9 +302,19 @@ class TestClasificadorFunctionality:
 
         clasificador.app = Mock()
         clasificador.app.get.return_value = [mock_face1, mock_face2]
-        clasificador.cv2 = Mock()
-        clasificador.cv2.imread.return_value = np.random.randint(
-            0, 255, (480, 640, 3), dtype=np.uint8
+
+        # Mock the new robust image loading function
+        mock_image = np.random.randint(0, 255, (480, 640, 3), dtype=np.uint8)
+        clasificador.load_image_robust = Mock(return_value=mock_image)
+
+        # Mock quality assessment to avoid OpenCV blur detection issues in tests
+        clasificador.assess_face_quality = Mock(
+            return_value={
+                "size_score": 0.8,
+                "blur_score": 0.9,
+                "detection_score": 0.95,
+                "overall_score": 0.88,
+            }
         )
 
         # Mock the face thumbnail generation
