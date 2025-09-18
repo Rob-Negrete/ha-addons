@@ -235,7 +235,7 @@ def recover_database_data(db_path: str) -> list:
                 if record_start != -1 and record_end != -1:
                     try:
                         potential_record = surrounding_content[
-                            record_start : record_end + 1
+                            record_start : record_end + 1  # noqa: E203
                         ]
                         import json
 
