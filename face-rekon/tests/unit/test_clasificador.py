@@ -365,7 +365,7 @@ class TestClasificadorFunctionality:
         mock_buffered = Mock()
         mock_buffered.getvalue.return_value = b"fake_jpeg_data"
 
-        # Mock the generate_face_thumbnail function directly since we can't patch dependencies easily
+        # Mock generate_face_thumbnail function since we can't patch deps easily
         clasificador.generate_face_thumbnail = Mock(
             return_value="base64_thumbnail_data"
         )
