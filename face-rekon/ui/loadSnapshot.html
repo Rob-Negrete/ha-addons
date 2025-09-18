@@ -11,17 +11,17 @@
             margin: 20px auto;
             padding: 20px;
         }
-        
+
         .form-group {
             margin-bottom: 15px;
         }
-        
+
         label {
             display: block;
             margin-bottom: 5px;
             font-weight: bold;
         }
-        
+
         input[type="text"] {
             width: 100%;
             padding: 10px;
@@ -29,7 +29,7 @@
             border-radius: 4px;
             box-sizing: border-box;
         }
-        
+
         button {
             background-color: #007bff;
             color: white;
@@ -41,24 +41,24 @@
             margin-right: 10px;
             margin-bottom: 5px;
         }
-        
+
         button:hover {
             background-color: #0056b3;
         }
-        
+
         button:disabled {
             background-color: #6c757d;
             cursor: not-allowed;
         }
-        
+
         #recognizeBtn {
             background-color: #28a745;
         }
-        
+
         #recognizeBtn:hover {
             background-color: #1e7e34;
         }
-        
+
         textarea {
             width: 100%;
             height: 200px;
@@ -70,13 +70,13 @@
             box-sizing: border-box;
             resize: vertical;
         }
-        
+
         .error {
             color: #dc3545;
             margin-top: 5px;
             font-size: 14px;
         }
-        
+
         .loading {
             color: #007bff;
             margin-top: 5px;
@@ -86,30 +86,30 @@
 </head>
 <body>
     <h1>Image to Base64 Converter</h1>
-    
+
     <form id="imageForm">
         <div class="form-group">
             <label for="url">Image URL:</label>
-            <input type="text" id="url" placeholder="Enter image URL (e.g., https://example.com/image.jpg)" required>
+            <input type="text" id="url" placeholder="Enter image URL (e.g., http://localhost:5001/assets/images/snapshot.jpg)" required>
         </div>
-        
+
         <div class="form-group">
             <button type="submit" id="submitBtn">Convert to Base64</button>
             <button type="button" id="recognizeBtn" onclick="recognize();">Recognize Image</button>
             <div id="status"></div>
         </div>
-        
+
         <div class="form-group">
             <label for="outputImage">Base64 Output:</label>
             <textarea id="outputImage" placeholder="Base64 string will appear here..." readonly></textarea>
         </div>
-        
+
         <div class="form-group">
             <label for="recognitionResult">Recognition Result:</label>
             <textarea id="recognitionResult" placeholder="Recognition results will appear here..." readonly></textarea>
         </div>
     </form>
-  
+
     <!-- Cargar el script -->
   <script>
         async function getSnapshot() {
@@ -117,51 +117,51 @@
             const outputTextarea = document.getElementById('outputImage');
             const submitBtn = document.getElementById('submitBtn');
             const status = document.getElementById('status');
-            
+
             const imageUrl = urlInput.value.trim();
-            
+
             // Clear previous results
             outputTextarea.value = '';
             status.innerHTML = '';
-            
+
             // Validate URL
             if (!imageUrl) {
                 status.innerHTML = '<div class="error">Please enter an image URL</div>';
                 return;
             }
-            
+
             try {
                 // Show loading state
                 submitBtn.disabled = true;
                 submitBtn.textContent = 'Converting...';
                 status.innerHTML = '<div class="loading">Fetching image...</div>';
-                
+
                 // Method 1: Try direct fetch first
                 let response = await fetch(imageUrl, {
                     mode: 'cors',
                     method: 'GET'
                 });
-                
+
                 // If we get a CORS error (status 0) or opaque response, try alternative method
                 if (response.status === 0 || response.type === 'opaque') {
                     throw new Error('CORS_ERROR');
                 }
-                
+
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
-                
+
                 // Check if response is actually an image
                 const contentType = response.headers.get('content-type');
                 if (!contentType || !contentType.startsWith('image/')) {
                     throw new Error('URL does not point to a valid image');
                 }
-                
+
                 status.innerHTML = '<div class="loading">Converting to Base64...</div>';
-                
+
                 // Get the blob from response
                 const blob = await response.blob();
-                
+
                 // Convert blob to base64
                 const base64String = await new Promise((resolve, reject) => {
                     const reader = new FileReader();
@@ -173,14 +173,14 @@
                     reader.onerror = reject;
                     reader.readAsDataURL(blob);
                 });
-                
+
                 // Write base64 string to textarea
                 outputTextarea.value = base64String;
                 status.innerHTML = '<div style="color: #28a745;">Conversion successful!</div>';
-                
+
             } catch (error) {
                 console.error('Error:', error);
-                
+
                 if (error.message === 'CORS_ERROR' || error.message.includes('CORS') || error.message.includes('status: 0')) {
                     // Try alternative method using Image element
                     try {
@@ -203,28 +203,28 @@
                 submitBtn.textContent = 'Convert to Base64';
             }
         }
-        
+
         // Alternative method using Canvas (works for some CORS cases)
         async function loadImageViaCanvas(imageUrl, outputTextarea, status) {
             return new Promise((resolve, reject) => {
                 const img = new Image();
                 img.crossOrigin = 'anonymous'; // Request CORS
-                
+
                 img.onload = function() {
                     try {
                         // Create canvas and draw image
                         const canvas = document.createElement('canvas');
                         const ctx = canvas.getContext('2d');
-                        
+
                         canvas.width = img.width;
                         canvas.height = img.height;
-                        
+
                         ctx.drawImage(img, 0, 0);
-                        
+
                         // Get base64 from canvas (removes data URL prefix)
                         const dataURL = canvas.toDataURL();
                         const base64 = dataURL.split(',')[1];
-                        
+
                         outputTextarea.value = base64;
                         status.innerHTML = '<div style="color: #28a745;">Conversion successful! (via Canvas)</div>';
                         resolve();
@@ -232,48 +232,49 @@
                         reject(e);
                     }
                 };
-                
+
                 img.onerror = function() {
                     reject(new Error('Failed to load image via Canvas method'));
                 };
-                
+
                 img.src = imageUrl;
             });
         }
-        
+
         async function recognize() {
             const outputTextarea = document.getElementById('outputImage');
             const recognizeBtn = document.getElementById('recognizeBtn');
             const status = document.getElementById('status');
             const recognitionResult = document.getElementById('recognitionResult');
-            
+
             const base64String = outputTextarea.value.trim();
-            
+
             // Clear previous recognition results
             recognitionResult.value = '';
-            
+
             // Validate base64 input
             if (!base64String) {
                 status.innerHTML = '<div class="error">No base64 string found. Please convert an image first.</div>';
                 return;
             }
-            
+
             // Get server configuration (you can modify these values)
             const serverHost = 'localhost'; // Change to your server host
             const serverPort = '5001';      // Change to your server port
-            const endpoint = `http://${serverHost}:${serverPort}/face-rekon/recognize`;
-            
+            const endpoint = `http://${serverHost}:${serverPort}/api/face-rekon/recognize`;
+
             try {
                 // Show loading state
                 recognizeBtn.disabled = true;
                 recognizeBtn.textContent = 'Recognizing...';
                 status.innerHTML = '<div class="loading">Sending image for recognition...</div>';
-                
+
                 // Prepare the payload
                 const payload = {
-                    image_base64: base64String
+                    image_base64: base64String,
+                    event_id: "1758111899.510693-nyay9d"
                 };
-                
+
                 // Send POST request to recognition endpoint
                 const response = await fetch(endpoint, {
                     method: 'POST',
@@ -282,23 +283,23 @@
                     },
                     body: JSON.stringify(payload)
                 });
-                
+
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status} - ${response.statusText}`);
                 }
-                
+
                 // Get the response
                 const result = await response.json();
-                
+
                 // Display the recognition result
                 recognitionResult.value = JSON.stringify(result, null, 2);
                 status.innerHTML = '<div style="color: #28a745;">Recognition completed successfully!</div>';
-                
+
             } catch (error) {
                 console.error('Recognition Error:', error);
-                
+
                 let errorMessage = error.message;
-                
+
                 // Handle specific error cases
                 if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
                     errorMessage = `Network error: Cannot connect to ${endpoint}. Please check:\n• Server is running\n• Correct host and port\n• CORS is enabled on server`;
@@ -307,23 +308,23 @@
                 } else if (error.message.includes('500')) {
                     errorMessage = 'Server error: The recognition service encountered an internal error.';
                 }
-                
+
                 status.innerHTML = `<div class="error">Recognition Error: ${errorMessage}</div>`;
                 recognitionResult.value = `Error: ${errorMessage}`;
-                
+
             } finally {
                 // Reset button state
                 recognizeBtn.disabled = false;
                 recognizeBtn.textContent = 'Recognize Image';
             }
         }
-        
+
         // Handle form submission
         document.getElementById('imageForm').addEventListener('submit', function(e) {
             e.preventDefault();
             getSnapshot();
         });
-        
+
         // Optional: Handle Enter key in URL input
         document.getElementById('url').addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {

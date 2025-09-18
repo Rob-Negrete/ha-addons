@@ -88,18 +88,24 @@ class Recognize(Resource):
         event_id = data["event_id"]
 
         try:
-            # Always process all faces in the image
+            # Always process all faces in the image with face crops
             results = clasificador.identify_all_faces(tmp_path)
 
-            # Save unknown faces for later classification
-            has_unknown = any(result["status"] == "unknown" for result in results)
-            if has_unknown:
-                clasificador.save_unknown_face(tmp_path, event_id)
+            # Save unknown faces using the new multi-face function
+            unknown_faces = [
+                result for result in results if result["status"] == "unknown"
+            ]
+            if unknown_faces:
+                # Use the new save_multiple_faces function for better handling
+                saved_face_ids = clasificador.save_multiple_faces(tmp_path, event_id)
+                print(f"Saved {len(saved_face_ids)} unknown faces for event {event_id}")
 
             return {
                 "status": "success" if results else "no_faces_detected",
                 "faces_count": len(results),
                 "faces": results,
+                "event_id": event_id,
+                "processing_method": "face_extraction_crops",
             }
 
         except Exception as e:
@@ -177,10 +183,14 @@ def serve_assets(filename: str) -> Any:
     return send_from_directory(ui_assets_dir, filename)
 
 
-@app.route("/snapshot", methods=["GET"])
-def snapshot() -> Any:
-    """Serve snapshot image for testing purposes"""
-    return send_from_directory("./", "snapshot.jpg")
+@app.route("/loadSnapshot", methods=["GET"])
+def loadSnapshot() -> Any:
+    """Serve the main UI page"""
+    import os
+
+    # Get absolute path to ensure it works regardless of working directory
+    ui_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "ui"))
+    return send_from_directory(ui_dir, "loadSnapshot.html")
 
 
 @app.route("/images/<string:face_id>", methods=["GET"])
