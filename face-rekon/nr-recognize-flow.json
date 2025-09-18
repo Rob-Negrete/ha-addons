@@ -41,7 +41,23 @@
     "headers": [],
     "x": 2080,
     "y": 140,
-    "wires": [["cbefc72830af9dfd", "04ebbea88995185a"]]
+    "wires": [["validate_snapshot", "04ebbea88995185a"]]
+  },
+  {
+    "id": "validate_snapshot",
+    "type": "function",
+    "z": "a44a393e17d4857b",
+    "name": "Validar Snapshot",
+    "func": "// Solo procesar si la descarga fue exitosa (200 OK)\nif (!msg.statusCode || msg.statusCode !== 200) {\n    node.warn(`🚫 Skipping processing - HTTP ${msg.statusCode || 'unknown'} for event ${msg.eventId}`);\n    node.warn(`URL: ${msg.url}`);\n    return null;\n}\n\n// Verificar que tenemos datos de imagen válidos\nif (!msg.payload || msg.payload.length === 0) {\n    node.warn(`🚫 Empty payload received for event ${msg.eventId}`);\n    return null;\n}\n\n// Verificación adicional: detectar respuestas JSON de error pequeñas\nif (msg.payload.length < 200) {\n    try {\n        const payloadText = msg.payload.toString('utf-8');\n        const jsonData = JSON.parse(payloadText);\n        \n        if (jsonData && jsonData.success === false) {\n            node.warn(`🚫 Detected JSON error response: ${jsonData.message || 'Unknown error'}`);\n            node.warn(`Event ID: ${msg.eventId}`);\n            return null;\n        }\n    } catch (e) {\n        // No es JSON válido, continuar con procesamiento de imagen\n    }\n}\n\n// ✅ Snapshot válido - procesar\nnode.log(`✅ Valid snapshot (${msg.statusCode}): ${msg.payload.length} bytes for event ${msg.eventId}`);\nreturn msg;",
+    "outputs": 1,
+    "timeout": "",
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 2320,
+    "y": 140,
+    "wires": [["cbefc72830af9dfd"]]
   },
   {
     "id": "cbefc72830af9dfd",
@@ -60,7 +76,7 @@
         "module": "form-data"
       }
     ],
-    "x": 2460,
+    "x": 2580,
     "y": 140,
     "wires": [["6f3ae5597ac84bdd", "2b02e05d7ec8cbce"]]
   },
@@ -87,7 +103,7 @@
         "valueValue": "application/json"
       }
     ],
-    "x": 2690,
+    "x": 2810,
     "y": 140,
     "wires": [["f1270fdd9eb1c645", "3bea9abd897cf129"]]
   },
@@ -104,7 +120,7 @@
     "targetType": "msg",
     "statusVal": "",
     "statusType": "auto",
-    "x": 2910,
+    "x": 3030,
     "y": 140,
     "wires": []
   },
@@ -138,7 +154,7 @@
     "targetType": "full",
     "statusVal": "",
     "statusType": "auto",
-    "x": 2640,
+    "x": 2760,
     "y": 280,
     "wires": []
   },
@@ -212,7 +228,7 @@
     "targetType": "msg",
     "statusVal": "",
     "statusType": "auto",
-    "x": 3010,
+    "x": 3130,
     "y": 280,
     "wires": []
   },
