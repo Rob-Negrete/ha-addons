@@ -66,7 +66,8 @@ class Recognize(Resource):
         """Recognize faces from uploaded image
 
         Processes a base64-encoded image to detect and identify faces.
-        Returns information about all detected faces including recognition status.
+        Returns information about all detected faces including recognition
+        status.
         Unknown faces are automatically saved for later classification.
         """
         logger.info("🎯 Received face recognition request")
@@ -81,7 +82,9 @@ class Recognize(Resource):
             logger.info(f"📝 Processing event_id: {event_id}")
 
             image_base64 = data["image_base64"]
-            logger.info(f"📊 Received image data length: {len(image_base64)} characters")
+            logger.info(
+                f"📊 Received image data length: {len(image_base64)} characters"
+            )
 
             # Handle data URI format (e.g., "data:image/jpeg;base64,..."
             # or "image/jpg;data:...")
@@ -136,7 +139,9 @@ class Recognize(Resource):
             # Always process all faces in the image with face crops
             logger.info(f"🔍 Starting face recognition on: {tmp_path}")
             results = clasificador.identify_all_faces(tmp_path)
-            logger.info(f"🎉 Face recognition completed. Found {len(results)} faces")
+            logger.info(
+                f"🎉 Face recognition completed. Found {len(results)} faces"
+            )
 
             # Save unknown faces using the new multi-face function
             unknown_faces = [
@@ -145,9 +150,12 @@ class Recognize(Resource):
             if unknown_faces:
                 logger.info(f"💾 Saving {len(unknown_faces)} unknown faces")
                 # Use the new save_multiple_faces function for better handling
-                saved_face_ids = clasificador.save_multiple_faces(tmp_path, event_id)
+                saved_face_ids = clasificador.save_multiple_faces(
+                    tmp_path, event_id
+                )
                 logger.info(
-                    f"✅ Saved {len(saved_face_ids)} unknown faces for event {event_id}"
+                    f"✅ Saved {len(saved_face_ids)} unknown faces for "
+                    f"event {event_id}"
                 )
 
             response = {
@@ -158,7 +166,8 @@ class Recognize(Resource):
                 "processing_method": "face_extraction_crops",
             }
             logger.info(
-                f"📤 Returning response: {response['status']}, {response['faces_count']} faces"
+                f"📤 Returning response: {response['status']}, "
+                f"{response['faces_count']} faces"
             )
             return response
 
@@ -182,7 +191,8 @@ class UnclassifiedFaces(Resource):
     def get(self) -> List[Dict[str, Any]]:
         """Get list of unclassified faces
 
-        Returns all faces that have been detected but not yet assigned to a person.
+        Returns all faces that have been detected but not yet assigned to a
+        person.
         These faces can be classified using the PATCH endpoint.
         """
         unclassified_faces = clasificador.get_unclassified_faces()
@@ -229,7 +239,9 @@ def home() -> Any:
     import os
 
     # Get absolute path to ensure it works regardless of working directory
-    ui_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "ui"))
+    ui_dir = os.path.abspath(
+        os.path.join(os.path.dirname(__file__), "..", "ui")
+    )
     return send_from_directory(ui_dir, "index.html")
 
 
@@ -250,7 +262,9 @@ def loadSnapshot() -> Any:
     import os
 
     # Get absolute path to ensure it works regardless of working directory
-    ui_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "ui"))
+    ui_dir = os.path.abspath(
+        os.path.join(os.path.dirname(__file__), "..", "ui")
+    )
     return send_from_directory(ui_dir, "loadSnapshot.html")
 
 
@@ -280,7 +294,8 @@ def serve_face_image(face_id: str) -> Any:
 
     # Basic UUID format check
     uuid_pattern = re.compile(
-        r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$", re.IGNORECASE
+        r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+        re.IGNORECASE,
     )
     if not uuid_pattern.match(face_id):
         return {"error": "Invalid face ID format"}, 400

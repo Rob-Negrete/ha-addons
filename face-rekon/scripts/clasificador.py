@@ -638,7 +638,7 @@ def test_face_quality(image_path: str) -> None:
             print(f"  ✅ ACEPTADO: Calidad superior al umbral ({MIN_QUALITY_SCORE})")
 
     # Ahora extraer con filtro habilitado
-    print(f"\n--- Extracción con filtro de calidad habilitado ---")
+    print("\n--- Extracción con filtro de calidad habilitado ---")
     filtered_faces = extract_face_crops(image_path, filter_quality=True)
     print(f"Rostros aceptados después del filtro: {len(filtered_faces)}")
 

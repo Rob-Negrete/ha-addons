@@ -362,8 +362,6 @@ class TestClasificadorFunctionality:
         test_bbox = [100, 150, 200, 250]  # x1, y1, x2, y2
 
         # Mock PIL operations
-        mock_pil_image = Mock()
-        mock_square_image = Mock()
         mock_buffered = Mock()
         mock_buffered.getvalue.return_value = b"fake_jpeg_data"
 
@@ -630,7 +628,7 @@ class TestClasificadorFunctionality:
     def test_face_size_quality_assessment(self):
         """Test face size quality scoring"""
         # Test different face sizes relative to image
-        image_size = (480, 640)  # height, width
+        # image_size = (480, 640)  # height, width
         image_area = 480 * 640
 
         test_cases = [
