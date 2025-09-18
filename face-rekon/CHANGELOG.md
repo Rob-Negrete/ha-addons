@@ -2,6 +2,13 @@
 
 All notable changes to the Face Rekon Home Assistant add-on will be documented in this file.
 
+## [1.2.5](https://github.com/Rob-Negrete/ha-addons/compare/face-rekon-v1.2.4...face-rekon-v1.2.5) (2025-09-18)
+
+
+### 🧹 Chores
+
+* optimize TinyDB storage with file-based thumbnails and embedding deduplication ([04bf067](https://github.com/Rob-Negrete/ha-addons/commit/04bf06724093bdfe13f7f698e5c0b6b42a8797c7))
+
 ## [1.2.4](https://github.com/Rob-Negrete/ha-addons/compare/face-rekon-v1.2.3...face-rekon-v1.2.4) (2025-09-18)
 
 
