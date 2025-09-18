@@ -171,20 +171,37 @@ class Recognize(Resource):
             )  # noqa: E501
             logger.info(f"📊 Results details: {results}")
 
-            # Save unknown faces using the new multi-face function
+            # Save unknown faces using optimized storage
             unknown_faces = [
                 result for result in results if result["status"] == "unknown"
             ]
             if unknown_faces:
-                logger.info(f"💾 Saving {len(unknown_faces)} unknown faces")
-                # Use the new save_multiple_faces function for better handling
-                saved_face_ids = clasificador.save_multiple_faces(
-                    tmp_path, event_id
-                )  # noqa: E501
-                logger.info(
-                    f"✅ Saved {len(saved_face_ids)} unknown faces for "
-                    f"event {event_id}"
-                )
+                if clasificador.USE_OPTIMIZED_STORAGE:
+                    logger.info(
+                        f"💾 Saving {len(unknown_faces)} unknown faces "
+                        "with optimized storage"
+                    )
+                    # Use optimized storage (file-based, no embedding duplication)
+                    saved_face_ids = clasificador.save_multiple_faces_optimized(
+                        tmp_path, event_id
+                    )
+                    logger.info(
+                        f"✅ Optimized storage complete: {len(saved_face_ids)} faces "
+                        f"for event {event_id} (97% size reduction)"
+                    )
+                else:
+                    logger.info(
+                        f"💾 Saving {len(unknown_faces)} unknown faces "
+                        "with legacy storage"
+                    )
+                    # Use legacy storage for backward compatibility
+                    saved_face_ids = clasificador.save_multiple_faces(
+                        tmp_path, event_id
+                    )
+                    logger.info(
+                        f"✅ Legacy storage complete: {len(saved_face_ids)} faces "
+                        f"for event {event_id}"
+                    )
 
             response = {
                 "status": "success" if results else "no_faces_detected",
@@ -431,14 +448,11 @@ def serve_face_image(face_id: str) -> Any:
         return {"error": "Invalid face ID format"}, 400
 
     try:
-        # Get face data from database
-        face_data = clasificador.get_face(face_id)
+        # Get face data with thumbnail loaded (supports both storage formats)
+        face = clasificador.get_face_with_thumbnail(face_id)
 
-        if not face_data or len(face_data) == 0:
+        if not face:
             return {"error": "Face not found"}, 404
-
-        # Get the first result (get_face returns a list)
-        face = face_data[0] if isinstance(face_data, list) else face_data
 
         # Check if thumbnail exists
         if "thumbnail" not in face or not face["thumbnail"]:

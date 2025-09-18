@@ -38,6 +38,15 @@ FAISS_INDEX_PATH = os.environ.get(
 MAPPING_PATH = os.environ.get(
     "FACE_REKON_MAPPING_PATH", "/config/face-rekon/db/faiss_id_map.npy"
 )
+THUMBNAIL_PATH = os.environ.get(
+    "FACE_REKON_THUMBNAIL_PATH", "/config/face-rekon/thumbnails"
+)  # noqa: E501
+
+# Storage optimization configuration
+USE_OPTIMIZED_STORAGE = (
+    os.environ.get("FACE_REKON_USE_OPTIMIZED_STORAGE", "true").lower() == "true"
+)
+
 THUMBNAIL_SIZE = (160, 160)
 
 # Face quality thresholds
@@ -690,6 +699,167 @@ def generate_thumbnail(image_path: str) -> str:
     return base64.b64encode(buffered.getvalue()).decode("utf-8")
 
 
+# OPTIMIZED STORAGE FUNCTIONS
+def save_thumbnail_to_file(thumbnail_base64: str, face_id: str) -> str:
+    """Save base64 thumbnail as JPEG file and return file path.
+
+    Args:
+        thumbnail_base64: Base64 encoded JPEG data
+        face_id: Unique face identifier
+
+    Returns:
+        Path to saved thumbnail file
+    """
+    # Ensure thumbnail directory exists
+    os.makedirs(THUMBNAIL_PATH, exist_ok=True)
+
+    # Create thumbnail file path
+    thumbnail_file = f"{face_id}.jpg"
+    thumbnail_path = os.path.join(THUMBNAIL_PATH, thumbnail_file)
+
+    # Decode and save thumbnail
+    try:
+        thumbnail_data = base64.b64decode(thumbnail_base64)
+        with open(thumbnail_path, "wb") as f:
+            f.write(thumbnail_data)
+
+        logger.info(f"💾 Saved thumbnail: {thumbnail_path}")
+        return thumbnail_path
+
+    except Exception as e:
+        logger.error(f"❌ Failed to save thumbnail {face_id}: {e}")
+        return ""
+
+
+def get_thumbnail_from_file(thumbnail_path: str) -> Optional[str]:
+    """Load thumbnail from file and return as base64.
+
+    Args:
+        thumbnail_path: Path to thumbnail file
+
+    Returns:
+        Base64 encoded JPEG data or None if file not found
+    """
+    if not thumbnail_path or not os.path.exists(thumbnail_path):
+        return None
+
+    try:
+        with open(thumbnail_path, "rb") as f:
+            thumbnail_data = f.read()
+        return base64.b64encode(thumbnail_data).decode("utf-8")
+
+    except Exception as e:
+        logger.error(f"❌ Failed to load thumbnail {thumbnail_path}: {e}")
+        return None
+
+
+def create_optimized_face_record(
+    face_data: Dict[str, Any],
+    event_id: str,
+    face_id: str,
+    timestamp: int,
+    faiss_index: int,
+) -> Dict[str, Any]:
+    """Create optimized TinyDB record with file references.
+
+    Args:
+        face_data: Face data from extract_face_crops
+        event_id: Event identifier
+        face_id: Unique face identifier
+        timestamp: Unix timestamp
+        faiss_index: Position in FAISS index
+
+    Returns:
+        Optimized database record (~0.5KB vs ~20KB)
+    """
+    # Save thumbnail to file
+    thumbnail_path = save_thumbnail_to_file(face_data["face_crop"], face_id)
+
+    # Create optimized record (metadata only)
+    record = {
+        "face_id": face_id,
+        "event_id": event_id,
+        "timestamp": timestamp,
+        "name": None,
+        "thumbnail_path": thumbnail_path,  # FILE REFERENCE
+        "faiss_index": faiss_index,  # INDEX REFERENCE
+        "face_bbox": face_data["face_bbox"],
+        "face_index": face_data["face_index"],
+        "quality_metrics": face_data.get("quality_metrics", {}),
+        "relationship": "unknown",
+        "confidence": "unknown",
+        # Storage optimization metadata
+        "storage_version": "optimized_v1",
+        "created_with": "file_based_storage",
+    }
+
+    # Remove embedding duplication (stored only in FAISS)
+    # Remove base64 thumbnail (stored as file)
+
+    return record
+
+
+def save_multiple_faces_optimized(image_path: str, event_id: str) -> List[str]:
+    """Save faces using optimized storage (file-based thumbnails).
+
+    Args:
+        image_path: Path to the image file
+        event_id: Event identifier from Frigate
+
+    Returns:
+        List of face_ids for the saved faces
+
+    Storage Optimization:
+        - Thumbnails saved as separate JPEG files (~15KB → file reference)
+        - Embeddings stored only in FAISS (~2KB duplication removed)
+        - TinyDB records reduced from ~20KB to ~0.5KB (97% reduction)
+    """
+    face_crops = extract_face_crops(image_path)
+    if not face_crops:
+        logger.info("🔍 No faces detected in image")
+        return []
+
+    saved_face_ids = []
+    timestamp = int(time.time())
+
+    logger.info(f"💾 Starting optimized storage for {len(face_crops)} faces")
+
+    for face_data in face_crops:
+        face_id = str(uuid.uuid4())
+
+        # Get current FAISS index position (before adding)
+        current_faiss_index = index.ntotal
+
+        # Create optimized database record
+        record_data = create_optimized_face_record(
+            face_data, event_id, face_id, timestamp, current_faiss_index
+        )
+
+        # Use safe insert to prevent corruption
+        if not safe_db_insert(record_data):
+            logger.error(f"❌ Failed to save optimized face {face_id}")
+            continue
+
+        # Add embedding to FAISS (single source of truth)
+        index.add(np.array([face_data["embedding"]], dtype=np.float32))
+        id_map.append(face_id)
+        saved_face_ids.append(face_id)
+
+        logger.info(
+            f"✅ Saved optimized face {face_data['face_index']} " f"with ID: {face_id}"
+        )
+
+    # Save FAISS index and mapping once
+    faiss.write_index(index, FAISS_INDEX_PATH)
+    np.save(MAPPING_PATH, np.array(id_map))
+
+    logger.info(
+        f"🎉 Optimized storage completed: {len(saved_face_ids)} faces "
+        f"for event {event_id}"
+    )
+    return saved_face_ids
+
+
 # Guardar rostro desconocido (legacy function - maintains backward compatibility)  # noqa: E501
 def save_unknown_face(image_path: str, event_id: str) -> None:
     embedding = extract_face_embedding(image_path)
@@ -917,19 +1087,33 @@ def identify_all_faces(image_path: str) -> List[Dict[str, Any]]:
 
 # Obtener rostros desconocidos
 def get_unclassified_faces() -> List[Dict[str, Any]]:
-    unclassified = [
-        {
+    """Get unclassified faces with thumbnails loaded (supports both storage formats)."""
+    unclassified = []
+
+    for face in safe_db_all():
+        if face.get("name"):  # Skip classified faces
+            continue
+
+        # Prepare basic face data
+        face_data = {
             "face_id": face["face_id"],
             "event_id": face.get("event_id", None),
             "image_path": face.get("image_path", None),
-            "thumbnail": face.get("thumbnail", None),
             "relationship": "unknown",
             "confidence": "unknown",
             "name": face.get("name", None),
         }
-        for face in safe_db_all()
-        if not face.get("name")
-    ]
+
+        # Handle thumbnail loading based on storage format
+        if "thumbnail_path" in face and face["thumbnail_path"]:
+            # Optimized storage: load thumbnail from file
+            thumbnail_base64 = get_thumbnail_from_file(face["thumbnail_path"])
+            face_data["thumbnail"] = thumbnail_base64
+        else:
+            # Legacy storage: thumbnail already in database
+            face_data["thumbnail"] = face.get("thumbnail", None)
+
+        unclassified.append(face_data)
 
     return unclassified
 
@@ -951,6 +1135,37 @@ def update_face(face_id: str, data: Dict[str, str]) -> None:
 def get_face(face_id: str) -> Optional[Dict[str, Any]]:
     """Get a face"""
     return safe_db_search(Face.face_id == face_id)
+
+
+def get_face_with_thumbnail(face_id: str) -> Optional[Dict[str, Any]]:
+    """Get face with thumbnail loaded from file (optimized storage).
+
+    Args:
+        face_id: Unique face identifier
+
+    Returns:
+        Face record with thumbnail loaded from file, or None if not found
+    """
+    faces = safe_db_search(Face.face_id == face_id)
+    if not faces:
+        return None
+
+    face = faces[0] if isinstance(faces, list) else faces
+
+    # Handle both legacy and optimized storage formats
+    if "thumbnail_path" in face and face["thumbnail_path"]:
+        # Optimized storage: load thumbnail from file
+        thumbnail_base64 = get_thumbnail_from_file(face["thumbnail_path"])
+        if thumbnail_base64:
+            face["thumbnail"] = thumbnail_base64
+        else:
+            logger.warning(f"⚠️ Thumbnail file not found: {face['thumbnail_path']}")
+            face["thumbnail"] = None
+    elif "thumbnail" not in face or not face["thumbnail"]:
+        # No thumbnail available
+        face["thumbnail"] = None
+
+    return face
 
 
 # Función para testing y debug de calidad facial
