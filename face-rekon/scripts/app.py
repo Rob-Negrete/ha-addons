@@ -82,9 +82,7 @@ class Recognize(Resource):
             logger.info(f"📝 Processing event_id: {event_id}")
 
             image_base64 = data["image_base64"]
-            logger.info(
-                f"📊 Received image data length: {len(image_base64)} characters"
-            )
+            logger.info(f"📊 Received image data length: {len(image_base64)} characters")
 
             # Handle data URI format (e.g., "data:image/jpeg;base64,..."
             # or "image/jpg;data:...")
@@ -103,6 +101,28 @@ class Recognize(Resource):
             try:
                 image_data = base64.b64decode(image_base64)
                 logger.info(f"✅ Decoded image data: {len(image_data)} bytes")
+
+                # Check if decoded data looks like JSON error response
+                if len(image_data) < 100:  # Typical error responses are small
+                    try:
+                        # Try to decode as JSON to detect error responses
+                        import json
+
+                        json_data = json.loads(image_data.decode("utf-8"))
+                        if isinstance(json_data, dict) and not json_data.get(
+                            "success", True
+                        ):
+                            logger.warning(
+                                f"🚫 Detected JSON error response: {json_data}"
+                            )
+                            return {
+                                "error": "Invalid image data - received error response",
+                                "details": json_data.get("message", "Unknown error"),
+                            }, 400
+                    except (json.JSONDecodeError, UnicodeDecodeError):
+                        # Not JSON, continue with image processing
+                        pass
+
             except Exception as e:
                 logger.error(f"❌ Failed to decode base64 image: {e}")
                 return {"error": "Invalid base64 image data"}, 400
@@ -139,9 +159,7 @@ class Recognize(Resource):
             # Always process all faces in the image with face crops
             logger.info(f"🔍 Starting face recognition on: {tmp_path}")
             results = clasificador.identify_all_faces(tmp_path)
-            logger.info(
-                f"🎉 Face recognition completed. Found {len(results)} faces"
-            )
+            logger.info(f"🎉 Face recognition completed. Found {len(results)} faces")
 
             # Save unknown faces using the new multi-face function
             unknown_faces = [
@@ -150,9 +168,7 @@ class Recognize(Resource):
             if unknown_faces:
                 logger.info(f"💾 Saving {len(unknown_faces)} unknown faces")
                 # Use the new save_multiple_faces function for better handling
-                saved_face_ids = clasificador.save_multiple_faces(
-                    tmp_path, event_id
-                )
+                saved_face_ids = clasificador.save_multiple_faces(tmp_path, event_id)
                 logger.info(
                     f"✅ Saved {len(saved_face_ids)} unknown faces for "
                     f"event {event_id}"
@@ -239,9 +255,7 @@ def home() -> Any:
     import os
 
     # Get absolute path to ensure it works regardless of working directory
-    ui_dir = os.path.abspath(
-        os.path.join(os.path.dirname(__file__), "..", "ui")
-    )
+    ui_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "ui"))
     return send_from_directory(ui_dir, "index.html")
 
 
@@ -262,9 +276,7 @@ def loadSnapshot() -> Any:
     import os
 
     # Get absolute path to ensure it works regardless of working directory
-    ui_dir = os.path.abspath(
-        os.path.join(os.path.dirname(__file__), "..", "ui")
-    )
+    ui_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "ui"))
     return send_from_directory(ui_dir, "loadSnapshot.html")
 
 
