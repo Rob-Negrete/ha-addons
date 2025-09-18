@@ -2,6 +2,14 @@
 
 All notable changes to the Face Rekon Home Assistant add-on will be documented in this file.
 
+## [1.2.0](https://github.com/Rob-Negrete/ha-addons/compare/face-rekon-v1.1.0...face-rekon-v1.2.0) (2025-09-18)
+
+
+### ✨ Features
+
+* **face-rekon:** implement face extraction and quality filtering for issue [#19](https://github.com/Rob-Negrete/ha-addons/issues/19) ([336b763](https://github.com/Rob-Negrete/ha-addons/commit/336b7636b334496a68f2066b1232df74f3710100))
+* Implement local image serving for face thumbnails ([#17](https://github.com/Rob-Negrete/ha-addons/issues/17)) ([d0e9df5](https://github.com/Rob-Negrete/ha-addons/commit/d0e9df58949b38f8acb0d975749ee9a8abb9955b))
+
 ## [1.1.0](https://github.com/Rob-Negrete/ha-addons/compare/face-rekon-v1.0.21...face-rekon-v1.1.0) (2025-09-17)
 
 
