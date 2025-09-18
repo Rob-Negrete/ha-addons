@@ -66,9 +66,300 @@ except Exception as e:
     logger.exception("InsightFace initialization exception:")
     raise
 
-# TinyDB
-db = TinyDB(DB_PATH)
-Face = Query()
+
+# TinyDB with robust error handling and recovery
+def initialize_database_with_recovery():
+    """Initialize TinyDB with corruption recovery mechanism"""
+    global db, Face
+
+    # Ensure database directory exists
+    os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
+
+    try:
+        # Try to initialize normally
+        logger.info(f"🔍 Initializing database: {DB_PATH}")
+        db = TinyDB(DB_PATH)
+
+        # Test if database is readable by attempting to read all records
+        _ = db.all()
+        logger.info("✅ Database initialized successfully")
+
+    except Exception as e:
+        logger.error(f"❌ Database initialization failed: {e}")
+        logger.info("🔧 Attempting database recovery...")
+
+        # Create backup of corrupted file
+        backup_path = f"{DB_PATH}.corrupted.{int(time.time())}"
+        try:
+            if os.path.exists(DB_PATH):
+                import shutil
+
+                shutil.copy2(DB_PATH, backup_path)
+                logger.info(
+                    f"📦 Backed up corrupted database to: {backup_path}"
+                )  # noqa: E501
+        except Exception as backup_error:
+            logger.warning(
+                f"⚠️ Failed to backup corrupted database: {backup_error}"
+            )  # noqa: E501
+
+        # Try to recover data from corrupted JSON
+        recovered_data = recover_database_data(DB_PATH)
+
+        # Remove corrupted file and create fresh database
+        try:
+            if os.path.exists(DB_PATH):
+                os.remove(DB_PATH)
+                logger.info("🗑️ Removed corrupted database file")
+        except Exception as remove_error:
+            logger.warning(
+                f"⚠️ Failed to remove corrupted file: {remove_error}"
+            )  # noqa: E501
+
+        # Initialize fresh database
+        db = TinyDB(DB_PATH)
+        logger.info("🆕 Created fresh database")
+
+        # Restore recovered data if any
+        if recovered_data:
+            logger.info(
+                f"🔄 Restoring {len(recovered_data)} recovered records..."
+            )  # noqa: E501
+            for record in recovered_data:
+                try:
+                    db.insert(record)
+                except Exception as insert_error:
+                    logger.warning(
+                        f"⚠️ Failed to restore record: {insert_error}"
+                    )  # noqa: E501
+            logger.info("✅ Database recovery completed")
+        else:
+            logger.warning(
+                "⚠️ No data could be recovered - starting with empty database"
+            )
+
+    Face = Query()
+
+
+def recover_database_data(db_path: str) -> list:
+    """Attempt to recover data from corrupted JSON database"""
+    recovered_records = []
+
+    if not os.path.exists(db_path):
+        return recovered_records
+
+    try:
+        logger.info("🔍 Attempting to recover data from corrupted database...")
+
+        # Read the raw file content
+        with open(db_path, "r", encoding="utf-8") as f:
+            content = f.read()
+
+        # Try to find the last valid JSON structure
+        # Look for complete record patterns
+        import re
+
+        # Look for individual face records that might be valid
+        # Pattern matches face records with required fields
+        # face_pattern = (
+        #     r'"face_id":\s*"[^"]+"|"event_id":\s*"[^"]+"|"embedding":\s*\[[^\]]+\]'
+        # )
+        # Try to extract the _default table if it exists and is valid
+        default_match = re.search(
+            r'"_default":\s*\{([^}]+(?:\{[^}]*\}[^}]*)*)\}', content
+        )
+        if default_match:
+            logger.info("🔍 Found _default table structure")
+
+            # Try to parse individual records within _default
+            records_content = default_match.group(1)
+
+            # Look for complete record entries (numbered keys with full record objects)  # noqa: E501
+            record_pattern = r'"(\d+)":\s*\{([^}]+(?:\{[^}]*\}[^}]*)*)\}'  # noqa: E501
+            record_matches = re.finditer(record_pattern, records_content)
+
+            for match in record_matches:
+                try:
+                    record_json = "{" + match.group(2) + "}"
+                    # Try to parse this individual record
+                    import json
+
+                    record_data = json.loads(record_json)
+
+                    # Validate that it has required fields
+                    if all(
+                        field in record_data
+                        for field in ["face_id", "event_id", "embedding"]
+                    ):
+                        recovered_records.append(record_data)
+                        logger.info(
+                            f"✅ Recovered record: {record_data.get('face_id', 'unknown')}"  # noqa: E501
+                        )
+
+                except json.JSONDecodeError:
+                    continue
+                except Exception as e:
+                    logger.warning(f"⚠️ Failed to parse potential record: {e}")
+                    continue
+
+        # If no structured recovery worked, try simpler pattern matching
+        if not recovered_records:
+            logger.info("🔍 Trying simple pattern-based recovery...")
+
+            # Look for face_id patterns and try to extract surrounding data
+            face_id_matches = re.finditer(r'"face_id":\s*"([^"]+)"', content)
+            for match in face_id_matches:
+                face_id = match.group(1)
+                # Look around this face_id for a complete record
+                start_pos = max(0, match.start() - 1000)
+                end_pos = min(len(content), match.end() + 1000)
+                surrounding_content = content[start_pos:end_pos]
+
+                # Try to find record boundaries
+                record_start = surrounding_content.rfind(
+                    "{", 0, match.start() - start_pos
+                )
+                record_end = surrounding_content.find(  # noqa: E501
+                    "}", match.end() - start_pos
+                )
+
+                if record_start != -1 and record_end != -1:
+                    try:
+                        potential_record = surrounding_content[
+                            record_start : record_end + 1
+                        ]
+                        import json
+
+                        record_data = json.loads(potential_record)
+
+                        if (
+                            "face_id" in record_data
+                            and record_data["face_id"] == face_id
+                        ):
+                            recovered_records.append(record_data)
+                            logger.info(
+                                f"✅ Pattern-recovered record: {face_id}"
+                            )  # noqa: E501
+
+                    except Exception:
+                        continue
+
+        logger.info(
+            f"🎯 Recovery completed: {len(recovered_records)} records recovered"
+        )  # noqa: E501
+
+    except Exception as e:
+        logger.error(f"❌ Data recovery failed: {e}")
+
+    return recovered_records
+
+
+# Initialize database with recovery
+initialize_database_with_recovery()
+
+
+# Safe database operations to prevent corruption
+def safe_db_insert(record_data: dict) -> bool:
+    """Safely insert a record into the database with error handling"""
+    max_retries = 3
+    retry_delay = 0.1
+
+    for attempt in range(max_retries):
+        try:
+            # Validate record has required fields
+            required_fields = ["face_id", "event_id", "embedding"]
+            if not all(field in record_data for field in required_fields):
+                logger.error(
+                    f"❌ Record missing required fields: {required_fields}"
+                )  # noqa: E501
+                return False
+
+            # Insert the record
+            doc_id = db.insert(record_data)
+            logger.info(
+                f"✅ Successfully inserted record {record_data.get('face_id')} with doc_id {doc_id}"  # noqa: E501
+            )
+            return True
+
+        except Exception as e:
+            logger.warning(f"⚠️ Insert attempt {attempt + 1} failed: {e}")
+            if attempt < max_retries - 1:
+                time.sleep(retry_delay)
+                retry_delay *= 2  # Exponential backoff
+            else:
+                logger.error(
+                    f"❌ Failed to insert record after {max_retries} attempts"
+                )  # noqa: E501
+
+                # If all retries failed, try to recover database
+                logger.info(
+                    "🔧 Triggering database recovery due to insert failure..."
+                )  # noqa: E501
+                try:
+                    initialize_database_with_recovery()
+                    # Try one more time with fresh database
+                    doc_id = db.insert(record_data)
+                    logger.info("✅ Insert succeeded after database recovery")
+                    return True
+                except Exception as recovery_error:
+                    logger.error(
+                        f"❌ Insert failed even after recovery: {recovery_error}"  # noqa: E501
+                    )
+
+    return False
+
+
+def safe_db_all() -> list:
+    """Safely retrieve all records from database with error handling"""
+    try:
+        return db.all()
+    except Exception as e:
+        logger.error(f"❌ Failed to read all records: {e}")
+        logger.info("🔧 Triggering database recovery due to read failure...")
+
+        try:
+            initialize_database_with_recovery()
+            return db.all()
+        except Exception as recovery_error:
+            logger.error(
+                f"❌ Read failed even after recovery: {recovery_error}"
+            )  # noqa: E501
+            return []
+
+
+def safe_db_search(query) -> list:
+    """Safely search database with error handling"""
+    try:
+        return db.search(query)
+    except Exception as e:
+        logger.error(f"❌ Failed to search database: {e}")
+        logger.info("🔧 Triggering database recovery due to search failure...")
+
+        try:
+            initialize_database_with_recovery()
+            return db.search(query)
+        except Exception as recovery_error:
+            logger.error(
+                f"❌ Search failed even after recovery: {recovery_error}"
+            )  # noqa: E501
+            return []
+
+
+def safe_db_get(query):
+    """Safely get a single record from database with error handling"""
+    try:
+        return db.get(query)
+    except Exception as e:
+        logger.error(f"❌ Failed to get record from database: {e}")
+        logger.info("🔧 Triggering database recovery due to get failure...")
+
+        try:
+            initialize_database_with_recovery()
+            return db.get(query)
+        except Exception as recovery_error:
+            logger.error(f"❌ Get failed even after recovery: {recovery_error}")
+            return None
+
 
 # Cargar o crear índice FAISS
 dimension = 512
@@ -310,8 +601,9 @@ def extract_face_crops(
 
         # Filtrar por calidad si está habilitado
         if (
-            filter_quality and quality_metrics["overall_score"] < MIN_QUALITY_SCORE
-        ):  # noqa: E501
+            filter_quality
+            and quality_metrics["overall_score"] < MIN_QUALITY_SCORE  # noqa: E501
+        ):
             faces_filtered += 1
             print(
                 f"Rostro {i} filtrado por baja calidad: "
@@ -409,23 +701,26 @@ def save_unknown_face(image_path: str, event_id: str) -> None:
     timestamp = int(time.time())
     face_id = str(uuid.uuid4())
 
-    # Insertar en TinyDB with legacy schema
-    db.insert(
-        {
-            "face_id": face_id,
-            "event_id": event_id,
-            "timestamp": timestamp,
-            "image_path": image_path,
-            "embedding": embedding.tolist(),
-            "thumbnail": thumbnail,
-            "name": None,
-            "relationship": "unknown",
-            "confidence": "unknown",
-            # New fields for backward compatibility
-            "face_bbox": None,
-            "face_index": 0,
-        }
-    )
+    # Insertar en TinyDB with legacy schema using safe operation
+    record_data = {
+        "face_id": face_id,
+        "event_id": event_id,
+        "timestamp": timestamp,
+        "image_path": image_path,
+        "embedding": embedding.tolist(),
+        "thumbnail": thumbnail,
+        "name": None,
+        "relationship": "unknown",
+        "confidence": "unknown",
+        # New fields for backward compatibility
+        "face_bbox": None,
+        "face_index": 0,
+    }
+
+    # Use safe insert to prevent corruption
+    if not safe_db_insert(record_data):
+        logger.error(f"❌ Failed to save legacy face {face_id} to database")
+        return
 
     # Insertar en FAISS e ID map
     index.add(np.array([embedding], dtype=np.float32))
@@ -460,27 +755,30 @@ def save_multiple_faces(image_path: str, event_id: str) -> List[str]:
     for face_data in face_crops:
         face_id = str(uuid.uuid4())
 
-        # Insertar en TinyDB with enhanced schema
-        db.insert(
-            {
-                "face_id": face_id,
-                "event_id": event_id,
-                "timestamp": timestamp,
-                "image_path": image_path,
-                "embedding": face_data["embedding"].tolist(),
-                "thumbnail": face_data[
-                    "face_crop"
-                ],  # Now contains cropped face  # noqa: E501
-                "name": None,
-                "relationship": "unknown",
-                "confidence": "unknown",
-                # New fields for face extraction
-                "face_bbox": face_data["face_bbox"],
-                "face_index": face_data["face_index"],
-                # Quality metrics
-                "quality_metrics": face_data.get("quality_metrics", {}),
-            }
-        )
+        # Insertar en TinyDB with enhanced schema using safe operation
+        record_data = {
+            "face_id": face_id,
+            "event_id": event_id,
+            "timestamp": timestamp,
+            "image_path": image_path,
+            "embedding": face_data["embedding"].tolist(),
+            "thumbnail": face_data[
+                "face_crop"
+            ],  # Now contains cropped face  # noqa: E501
+            "name": None,
+            "relationship": "unknown",
+            "confidence": "unknown",
+            # New fields for face extraction
+            "face_bbox": face_data["face_bbox"],
+            "face_index": face_data["face_index"],
+            # Quality metrics
+            "quality_metrics": face_data.get("quality_metrics", {}),
+        }
+
+        # Use safe insert to prevent corruption
+        if not safe_db_insert(record_data):
+            logger.error(f"❌ Failed to save face {face_id} to database")
+            continue
 
         # Insertar en FAISS e ID map
         index.add(np.array([face_data["embedding"]], dtype=np.float32))
@@ -494,7 +792,7 @@ def save_multiple_faces(image_path: str, event_id: str) -> List[str]:
     np.save(MAPPING_PATH, np.array(id_map))
 
     print(
-        f"Total de {len(saved_face_ids)} rostros guardados para evento {event_id}"
+        f"Total de {len(saved_face_ids)} rostros guardados para evento {event_id}"  # noqa: E501
     )  # noqa: E501
     return saved_face_ids
 
@@ -511,7 +809,7 @@ def identify_face(image_path: str) -> Optional[Dict[str, Any]]:
     )  # noqa: E501
     if distances[0][0] < 0.5:
         face_id = id_map[indices[0][0]]
-        matched = db.get(Face.face_id == face_id)
+        matched = safe_db_get(Face.face_id == face_id)
         if matched:
             print(f"Identificado: {matched.get('name', matched['face_id'])}")
             return matched
@@ -552,7 +850,7 @@ def identify_all_faces(image_path: str) -> List[Dict[str, Any]]:
         )  # noqa: E501
         if distances[0][0] < 0.5:
             face_id = id_map[indices[0][0]]
-            matched = db.get(Face.face_id == face_id)
+            matched = safe_db_get(Face.face_id == face_id)
             if matched:
                 results.append(
                     {
@@ -611,7 +909,7 @@ def identify_all_faces(image_path: str) -> List[Dict[str, Any]]:
                 "overall_score", "N/A"
             )
             print(
-                f"Rostro {face_index}: No identificado (calidad: {quality_score})"
+                f"Rostro {face_index}: No identificado (calidad: {quality_score})"  # noqa: E501
             )  # noqa: E501
 
     return results
@@ -629,7 +927,7 @@ def get_unclassified_faces() -> List[Dict[str, Any]]:
             "confidence": "unknown",
             "name": face.get("name", None),
         }
-        for face in db.all()
+        for face in safe_db_all()
         if not face.get("name")
     ]
 
@@ -652,7 +950,7 @@ def update_face(face_id: str, data: Dict[str, str]) -> None:
 # Obtiene un rostro por su id
 def get_face(face_id: str) -> Optional[Dict[str, Any]]:
     """Get a face"""
-    return db.search(Face.face_id == face_id)
+    return safe_db_search(Face.face_id == face_id)
 
 
 # Función para testing y debug de calidad facial
@@ -679,16 +977,16 @@ def test_face_quality(image_path: str) -> None:
         print(f"  Score de tamaño: {quality.get('size_score', 'N/A'):.3f}")
         print(f"  Score de nitidez: {quality.get('blur_score', 'N/A'):.3f}")
         print(
-            f"  Score de detección: {quality.get('detection_score', 'N/A'):.3f}"
+            f"  Score de detección: {quality.get('detection_score', 'N/A'):.3f}"  # noqa: E501
         )  # noqa: E501
 
         if quality.get("overall_score", 0) < MIN_QUALITY_SCORE:
             print(
-                f"  ❌ FILTRADO: Calidad inferior al umbral ({MIN_QUALITY_SCORE})"
+                f"  ❌ FILTRADO: Calidad inferior al umbral ({MIN_QUALITY_SCORE})"  # noqa: E501
             )  # noqa: E501
         else:
             print(
-                f"  ✅ ACEPTADO: Calidad superior al umbral ({MIN_QUALITY_SCORE})"
+                f"  ✅ ACEPTADO: Calidad superior al umbral ({MIN_QUALITY_SCORE})"  # noqa: E501
             )  # noqa: E501
 
     # Ahora extraer con filtro habilitado

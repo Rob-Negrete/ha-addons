@@ -82,7 +82,9 @@ class Recognize(Resource):
             logger.info(f"📝 Processing event_id: {event_id}")
 
             image_base64 = data["image_base64"]
-            logger.info(f"📊 Received image data length: {len(image_base64)} characters")
+            logger.info(
+                f"📊 Received image data length: {len(image_base64)} characters"
+            )  # noqa: E501
 
             # Handle data URI format (e.g., "data:image/jpeg;base64,..."
             # or "image/jpg;data:...")
@@ -176,7 +178,9 @@ class Recognize(Resource):
             if unknown_faces:
                 logger.info(f"💾 Saving {len(unknown_faces)} unknown faces")
                 # Use the new save_multiple_faces function for better handling
-                saved_face_ids = clasificador.save_multiple_faces(tmp_path, event_id)
+                saved_face_ids = clasificador.save_multiple_faces(
+                    tmp_path, event_id
+                )  # noqa: E501
                 logger.info(
                     f"✅ Saved {len(saved_face_ids)} unknown faces for "
                     f"event {event_id}"
