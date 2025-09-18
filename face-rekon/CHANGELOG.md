@@ -2,6 +2,13 @@
 
 All notable changes to the Face Rekon Home Assistant add-on will be documented in this file.
 
+## [1.2.4](https://github.com/Rob-Negrete/ha-addons/compare/face-rekon-v1.2.3...face-rekon-v1.2.4) (2025-09-18)
+
+
+### 🐛 Bug Fixes
+
+* implement robust database recovery mechanism for TinyDB corruption ([ce832f2](https://github.com/Rob-Negrete/ha-addons/commit/ce832f2589b115f18ce2022df3bbecb1f81fca72))
+
 ## [1.2.3](https://github.com/Rob-Negrete/ha-addons/compare/face-rekon-v1.2.2...face-rekon-v1.2.3) (2025-09-18)
 
 
