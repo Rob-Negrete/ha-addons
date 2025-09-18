@@ -2,6 +2,15 @@
 
 All notable changes to the Face Rekon Home Assistant add-on will be documented in this file.
 
+## [1.2.1](https://github.com/Rob-Negrete/ha-addons/compare/face-rekon-v1.2.0...face-rekon-v1.2.1) (2025-09-18)
+
+
+### 🐛 Bug Fixes
+
+* add comprehensive logging and WEBP support for face recognition ([d6524b4](https://github.com/Rob-Negrete/ha-addons/commit/d6524b469c04bd90d5a0012f0de4d0d9c4e1f910))
+* resolve critical formatting issues and improve code quality ([50ddc43](https://github.com/Rob-Negrete/ha-addons/commit/50ddc437c0d39f1816ddf11d32be491ebeeff164))
+* update test mocks for robust image loading ([c42a2d1](https://github.com/Rob-Negrete/ha-addons/commit/c42a2d146846b75e8c5fa1afd41c173f1569aaa6))
+
 ## [1.2.0](https://github.com/Rob-Negrete/ha-addons/compare/face-rekon-v1.1.0...face-rekon-v1.2.0) (2025-09-18)
 
 
