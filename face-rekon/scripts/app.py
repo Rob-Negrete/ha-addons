@@ -1,5 +1,7 @@
 import base64
+import logging
 import os
+import sys
 import uuid
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -8,6 +10,14 @@ from flask import Flask, request, send_from_directory
 from flask_cors import CORS
 from flask_restx import Api, Namespace, Resource
 from models import create_models
+
+# Configure logging to stdout for Home Assistant
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    stream=sys.stdout,
+)
+logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 CORS(app)
@@ -59,59 +69,110 @@ class Recognize(Resource):
         Returns information about all detected faces including recognition status.
         Unknown faces are automatically saved for later classification.
         """
-        data = request.get_json()
-        if not data or "image_base64" not in data:
-            return {"error": "Missing image_base64"}, 400
+        logger.info("🎯 Received face recognition request")
 
-        image_base64 = data["image_base64"]
+        try:
+            data = request.get_json()
+            if not data or "image_base64" not in data:
+                logger.error("❌ Missing image_base64 in request")
+                return {"error": "Missing image_base64"}, 400
 
-        # Handle data URI format (e.g., "data:image/jpeg;base64,..."
-        # or "image/jpg;data:...")
-        if "data:" in image_base64:
-            image_base64 = image_base64.split(",", 1)[
-                1
-            ]  # Remove "data:image/jpeg;base64," prefix
-        elif ";data:" in image_base64:
-            image_base64 = image_base64.split(";data:", 1)[
-                1
-            ]  # Remove "image/jpg;data:" prefix
+            event_id = data.get("event_id", "unknown")
+            logger.info(f"📝 Processing event_id: {event_id}")
 
-        image_data = base64.b64decode(image_base64)
+            image_base64 = data["image_base64"]
+            logger.info(f"📊 Received image data length: {len(image_base64)} characters")
 
-        tmp_dir = "/app/data/tmp"
-        os.makedirs(tmp_dir, exist_ok=True)
-        tmp_path = os.path.join(tmp_dir, f"{uuid.uuid4().hex}.jpeg")
+            # Handle data URI format (e.g., "data:image/jpeg;base64,..."
+            # or "image/jpg;data:...")
+            if "data:" in image_base64:
+                image_base64 = image_base64.split(",", 1)[
+                    1
+                ]  # Remove "data:image/jpeg;base64," prefix
+                logger.info("🔧 Removed data URI prefix")
+            elif ";data:" in image_base64:
+                image_base64 = image_base64.split(";data:", 1)[
+                    1
+                ]  # Remove "image/jpg;data:" prefix
+                logger.info("🔧 Removed custom data prefix")
 
-        with open(tmp_path, "wb") as f:
-            f.write(image_data)
+            # Decode base64 image
+            try:
+                image_data = base64.b64decode(image_base64)
+                logger.info(f"✅ Decoded image data: {len(image_data)} bytes")
+            except Exception as e:
+                logger.error(f"❌ Failed to decode base64 image: {e}")
+                return {"error": "Invalid base64 image data"}, 400
 
-        event_id = data["event_id"]
+            # Save image to temporary file
+            tmp_dir = "/app/data/tmp"
+            os.makedirs(tmp_dir, exist_ok=True)
+
+            # Detect image format from header
+            if image_data.startswith(b"RIFF") and b"WEBP" in image_data[:12]:
+                extension = ".webp"
+                logger.info("🖼️ Detected WEBP format")
+            elif image_data.startswith(b"\xFF\xD8\xFF"):
+                extension = ".jpg"
+                logger.info("🖼️ Detected JPEG format")
+            elif image_data.startswith(b"\x89PNG"):
+                extension = ".png"
+                logger.info("🖼️ Detected PNG format")
+            else:
+                extension = ".jpg"  # Default fallback
+                logger.warning("⚠️ Unknown image format, defaulting to .jpg")
+
+            tmp_path = os.path.join(tmp_dir, f"{uuid.uuid4().hex}{extension}")
+
+            with open(tmp_path, "wb") as f:
+                f.write(image_data)
+            logger.info(f"💾 Saved image to: {tmp_path}")
+
+        except Exception as e:
+            logger.error(f"❌ Error in request preprocessing: {e}")
+            return {"error": f"Request processing failed: {str(e)}"}, 500
 
         try:
             # Always process all faces in the image with face crops
+            logger.info(f"🔍 Starting face recognition on: {tmp_path}")
             results = clasificador.identify_all_faces(tmp_path)
+            logger.info(f"🎉 Face recognition completed. Found {len(results)} faces")
 
             # Save unknown faces using the new multi-face function
             unknown_faces = [
                 result for result in results if result["status"] == "unknown"
             ]
             if unknown_faces:
+                logger.info(f"💾 Saving {len(unknown_faces)} unknown faces")
                 # Use the new save_multiple_faces function for better handling
                 saved_face_ids = clasificador.save_multiple_faces(tmp_path, event_id)
-                print(f"Saved {len(saved_face_ids)} unknown faces for event {event_id}")
+                logger.info(
+                    f"✅ Saved {len(saved_face_ids)} unknown faces for event {event_id}"
+                )
 
-            return {
+            response = {
                 "status": "success" if results else "no_faces_detected",
                 "faces_count": len(results),
                 "faces": results,
                 "event_id": event_id,
                 "processing_method": "face_extraction_crops",
             }
+            logger.info(
+                f"📤 Returning response: {response['status']}, {response['faces_count']} faces"
+            )
+            return response
 
         except Exception as e:
+            logger.error(f"❌ Error in face recognition: {e}")
+            logger.exception("Full exception details:")
             return {"error": str(e)}, 500
         finally:
-            os.remove(tmp_path)
+            try:
+                if os.path.exists(tmp_path):
+                    os.remove(tmp_path)
+                    logger.info(f"🗑️ Cleaned up temporary file: {tmp_path}")
+            except Exception as e:
+                logger.warning(f"⚠️ Failed to clean up temp file: {e}")
 
 
 @ns.route("/")

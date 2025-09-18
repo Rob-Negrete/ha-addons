@@ -1,6 +1,8 @@
 import base64
 import io
+import logging
 import os
+import sys
 import time
 import uuid
 from typing import Any, Dict, List, Optional
@@ -11,6 +13,14 @@ import numpy as np
 from insightface.app import FaceAnalysis
 from PIL import Image
 from tinydb import Query, TinyDB
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    stream=sys.stdout,
+)
+logger = logging.getLogger(__name__)
 
 # Configuración de rutas (con soporte para variables de entorno para testing)
 BASE_PATH = os.environ.get("FACE_REKON_BASE_PATH", "/config/face-rekon/faces")
@@ -178,6 +188,41 @@ def assess_face_quality(
 
 
 # Extraer crops individuales de rostros con metadatos
+def load_image_robust(image_path: str):
+    """Load image using multiple methods to support all formats including WEBP"""
+    import logging
+
+    logger = logging.getLogger(__name__)
+
+    # Try OpenCV first (fastest)
+    try:
+        img_bgr = cv2.imread(image_path)
+        if img_bgr is not None:
+            logger.info(f"✅ Loaded image with OpenCV: {image_path}")
+            return cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)
+    except Exception as e:
+        logger.warning(f"⚠️ OpenCV failed to load {image_path}: {e}")
+
+    # Try PIL/Pillow as fallback (supports WEBP)
+    try:
+        import numpy as np
+        from PIL import Image
+
+        pil_image = Image.open(image_path)
+        # Convert to RGB if not already
+        if pil_image.mode != "RGB":
+            pil_image = pil_image.convert("RGB")
+
+        # Convert PIL to numpy array
+        img_rgb = np.array(pil_image)
+        logger.info(f"✅ Loaded image with PIL: {image_path}")
+        return img_rgb
+
+    except Exception as e:
+        logger.error(f"❌ PIL failed to load {image_path}: {e}")
+        return None
+
+
 def extract_face_crops(
     image_path: str, filter_quality: bool = True
 ) -> List[Dict[str, Any]]:
@@ -195,18 +240,26 @@ def extract_face_crops(
         - embedding: Face embedding vector
         - quality_metrics: Quality assessment scores
     """
-    # Carga la imagen desde disco
-    img_bgr = cv2.imread(image_path)
-    if img_bgr is None:
+    import logging
+
+    logger = logging.getLogger(__name__)
+
+    # Load image with robust method that supports WEBP
+    img_rgb = load_image_robust(image_path)
+    if img_rgb is None:
+        logger.error(f"❌ Failed to load image: {image_path}")
         print(f"No se pudo leer la imagen: {image_path}")
         return []
 
-    # Convierte BGR (OpenCV) a RGB (InsightFace)
-    img_rgb = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)
+    logger.info(f"🖼️ Image loaded successfully: {img_rgb.shape}")
+    print(f"Imagen cargada: {img_rgb.shape}")
 
     # Llama a InsightFace con el array
+    logger.info(f"🔍 Running InsightFace detection on image: {img_rgb.shape}")
     faces = app.get(img_rgb)
+    logger.info(f"👥 InsightFace detected {len(faces)} faces")
     if not faces:
+        logger.warning("⚠️ No faces detected by InsightFace")
         return []
 
     face_crops = []
