@@ -158,8 +158,12 @@ class Recognize(Resource):
         try:
             # Always process all faces in the image with face crops
             logger.info(f"🔍 Starting face recognition on: {tmp_path}")
+            logger.info(f"📊 File exists: {os.path.exists(tmp_path)}")
+            logger.info(f"📊 File size: {os.path.getsize(tmp_path)} bytes")
+
             results = clasificador.identify_all_faces(tmp_path)
             logger.info(f"🎉 Face recognition completed. Found {len(results)} faces")
+            logger.info(f"📊 Results details: {results}")
 
             # Save unknown faces using the new multi-face function
             unknown_faces = [
@@ -190,7 +194,15 @@ class Recognize(Resource):
         except Exception as e:
             logger.error(f"❌ Error in face recognition: {e}")
             logger.exception("Full exception details:")
-            return {"error": str(e)}, 500
+            error_response = {
+                "error": str(e),
+                "event_id": event_id,
+                "status": "error",
+                "faces_count": 0,
+                "faces": [],
+            }
+            logger.error(f"🚨 Returning error response: {error_response}")
+            return error_response, 500
         finally:
             try:
                 if os.path.exists(tmp_path):
