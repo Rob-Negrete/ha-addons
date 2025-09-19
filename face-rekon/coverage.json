@@ -1,0 +1,1049 @@
+{
+  "meta": {
+    "format": 3,
+    "version": "7.10.6",
+    "timestamp": "2025-09-18T16:19:26.577576",
+    "branch_coverage": false,
+    "show_contexts": false
+  },
+  "files": {
+    "scripts/app.py": {
+      "executed_lines": [
+        1, 2, 3, 4, 5, 6, 8, 9, 10, 11, 12, 15, 20, 22, 23, 26, 36, 41, 44, 47,
+        48, 49, 50, 51, 58, 59, 60, 61, 62, 63, 64, 65, 240, 241, 242, 243, 244,
+        255, 256, 257, 258, 259, 267, 268, 269, 270, 271, 289, 290, 301, 302,
+        312, 313, 324, 325, 418, 419, 484
+      ],
+      "summary": {
+        "covered_lines": 58,
+        "num_statements": 231,
+        "percent_covered": 25.10822510822511,
+        "percent_covered_display": "25",
+        "missing_lines": 173,
+        "excluded_lines": 0
+      },
+      "missing_lines": [
+        55, 73, 75, 76, 77, 78, 79, 81, 82, 84, 85, 91, 92, 95, 96, 97, 100,
+        103, 104, 105, 108, 109, 111, 113, 114, 117, 120, 126, 128, 130, 131,
+        132, 135, 136, 139, 140, 141, 142, 143, 144, 145, 146, 147, 149, 150,
+        152, 154, 155, 156, 158, 159, 160, 162, 164, 165, 166, 168, 169, 172,
+        175, 178, 179, 180, 185, 188, 193, 198, 201, 206, 213, 217, 219, 220,
+        221, 222, 229, 230, 232, 233, 234, 235, 236, 237, 251, 252, 264, 265,
+        277, 279, 280, 281, 285, 286, 292, 295, 298, 304, 306, 309, 315, 318,
+        321, 327, 329, 330, 333, 334, 335, 337, 338, 340, 342, 345, 346, 347,
+        348, 349, 350, 353, 354, 355, 356, 357, 358, 360, 361, 364, 365, 366,
+        370, 371, 372, 375, 376, 377, 379, 388, 389, 390, 391, 401, 402, 403,
+        404, 405, 406, 408, 409, 410, 411, 433, 434, 436, 439, 440, 443, 447,
+        448, 450, 452, 454, 455, 458, 459, 462, 463, 464, 465, 468, 478, 480,
+        481, 485
+      ],
+      "excluded_lines": [],
+      "functions": {
+        "Ping.get": {
+          "executed_lines": [],
+          "summary": {
+            "covered_lines": 0,
+            "num_statements": 1,
+            "percent_covered": 0.0,
+            "percent_covered_display": "0",
+            "missing_lines": 1,
+            "excluded_lines": 0
+          },
+          "missing_lines": [55],
+          "excluded_lines": []
+        },
+        "Recognize.post": {
+          "executed_lines": [],
+          "summary": {
+            "covered_lines": 0,
+            "num_statements": 82,
+            "percent_covered": 0.0,
+            "percent_covered_display": "0",
+            "missing_lines": 82,
+            "excluded_lines": 0
+          },
+          "missing_lines": [
+            73, 75, 76, 77, 78, 79, 81, 82, 84, 85, 91, 92, 95, 96, 97, 100,
+            103, 104, 105, 108, 109, 111, 113, 114, 117, 120, 126, 128, 130,
+            131, 132, 135, 136, 139, 140, 141, 142, 143, 144, 145, 146, 147,
+            149, 150, 152, 154, 155, 156, 158, 159, 160, 162, 164, 165, 166,
+            168, 169, 172, 175, 178, 179, 180, 185, 188, 193, 198, 201, 206,
+            213, 217, 219, 220, 221, 222, 229, 230, 232, 233, 234, 235, 236, 237
+          ],
+          "excluded_lines": []
+        },
+        "UnclassifiedFaces.get": {
+          "executed_lines": [],
+          "summary": {
+            "covered_lines": 0,
+            "num_statements": 2,
+            "percent_covered": 0.0,
+            "percent_covered_display": "0",
+            "missing_lines": 2,
+            "excluded_lines": 0
+          },
+          "missing_lines": [251, 252],
+          "excluded_lines": []
+        },
+        "Face.get": {
+          "executed_lines": [],
+          "summary": {
+            "covered_lines": 0,
+            "num_statements": 2,
+            "percent_covered": 0.0,
+            "percent_covered_display": "0",
+            "missing_lines": 2,
+            "excluded_lines": 0
+          },
+          "missing_lines": [264, 265],
+          "excluded_lines": []
+        },
+        "Face.patch": {
+          "executed_lines": [],
+          "summary": {
+            "covered_lines": 0,
+            "num_statements": 6,
+            "percent_covered": 0.0,
+            "percent_covered_display": "0",
+            "missing_lines": 6,
+            "excluded_lines": 0
+          },
+          "missing_lines": [277, 279, 280, 281, 285, 286],
+          "excluded_lines": []
+        },
+        "home": {
+          "executed_lines": [],
+          "summary": {
+            "covered_lines": 0,
+            "num_statements": 3,
+            "percent_covered": 0.0,
+            "percent_covered_display": "0",
+            "missing_lines": 3,
+            "excluded_lines": 0
+          },
+          "missing_lines": [292, 295, 298],
+          "excluded_lines": []
+        },
+        "serve_assets": {
+          "executed_lines": [],
+          "summary": {
+            "covered_lines": 0,
+            "num_statements": 3,
+            "percent_covered": 0.0,
+            "percent_covered_display": "0",
+            "missing_lines": 3,
+            "excluded_lines": 0
+          },
+          "missing_lines": [304, 306, 309],
+          "excluded_lines": []
+        },
+        "loadSnapshot": {
+          "executed_lines": [],
+          "summary": {
+            "covered_lines": 0,
+            "num_statements": 3,
+            "percent_covered": 0.0,
+            "percent_covered_display": "0",
+            "missing_lines": 3,
+            "excluded_lines": 0
+          },
+          "missing_lines": [315, 318, 321],
+          "excluded_lines": []
+        },
+        "debug_test_webp": {
+          "executed_lines": [],
+          "summary": {
+            "covered_lines": 0,
+            "num_statements": 48,
+            "percent_covered": 0.0,
+            "percent_covered_display": "0",
+            "missing_lines": 48,
+            "excluded_lines": 0
+          },
+          "missing_lines": [
+            327, 329, 330, 333, 334, 335, 337, 338, 340, 342, 345, 346, 347,
+            348, 349, 350, 353, 354, 355, 356, 357, 358, 360, 361, 364, 365,
+            366, 370, 371, 372, 375, 376, 377, 379, 388, 389, 390, 391, 401,
+            402, 403, 404, 405, 406, 408, 409, 410, 411
+          ],
+          "excluded_lines": []
+        },
+        "serve_face_image": {
+          "executed_lines": [],
+          "summary": {
+            "covered_lines": 0,
+            "num_statements": 22,
+            "percent_covered": 0.0,
+            "percent_covered_display": "0",
+            "missing_lines": 22,
+            "excluded_lines": 0
+          },
+          "missing_lines": [
+            433, 434, 436, 439, 440, 443, 447, 448, 450, 452, 454, 455, 458,
+            459, 462, 463, 464, 465, 468, 478, 480, 481
+          ],
+          "excluded_lines": []
+        },
+        "": {
+          "executed_lines": [
+            1, 2, 3, 4, 5, 6, 8, 9, 10, 11, 12, 15, 20, 22, 23, 26, 36, 41, 44,
+            47, 48, 49, 50, 51, 58, 59, 60, 61, 62, 63, 64, 65, 240, 241, 242,
+            243, 244, 255, 256, 257, 258, 259, 267, 268, 269, 270, 271, 289,
+            290, 301, 302, 312, 313, 324, 325, 418, 419, 484
+          ],
+          "summary": {
+            "covered_lines": 58,
+            "num_statements": 59,
+            "percent_covered": 98.30508474576271,
+            "percent_covered_display": "98",
+            "missing_lines": 1,
+            "excluded_lines": 0
+          },
+          "missing_lines": [485],
+          "excluded_lines": []
+        }
+      },
+      "classes": {
+        "Ping": {
+          "executed_lines": [],
+          "summary": {
+            "covered_lines": 0,
+            "num_statements": 1,
+            "percent_covered": 0.0,
+            "percent_covered_display": "0",
+            "missing_lines": 1,
+            "excluded_lines": 0
+          },
+          "missing_lines": [55],
+          "excluded_lines": []
+        },
+        "Recognize": {
+          "executed_lines": [],
+          "summary": {
+            "covered_lines": 0,
+            "num_statements": 82,
+            "percent_covered": 0.0,
+            "percent_covered_display": "0",
+            "missing_lines": 82,
+            "excluded_lines": 0
+          },
+          "missing_lines": [
+            73, 75, 76, 77, 78, 79, 81, 82, 84, 85, 91, 92, 95, 96, 97, 100,
+            103, 104, 105, 108, 109, 111, 113, 114, 117, 120, 126, 128, 130,
+            131, 132, 135, 136, 139, 140, 141, 142, 143, 144, 145, 146, 147,
+            149, 150, 152, 154, 155, 156, 158, 159, 160, 162, 164, 165, 166,
+            168, 169, 172, 175, 178, 179, 180, 185, 188, 193, 198, 201, 206,
+            213, 217, 219, 220, 221, 222, 229, 230, 232, 233, 234, 235, 236, 237
+          ],
+          "excluded_lines": []
+        },
+        "UnclassifiedFaces": {
+          "executed_lines": [],
+          "summary": {
+            "covered_lines": 0,
+            "num_statements": 2,
+            "percent_covered": 0.0,
+            "percent_covered_display": "0",
+            "missing_lines": 2,
+            "excluded_lines": 0
+          },
+          "missing_lines": [251, 252],
+          "excluded_lines": []
+        },
+        "Face": {
+          "executed_lines": [],
+          "summary": {
+            "covered_lines": 0,
+            "num_statements": 8,
+            "percent_covered": 0.0,
+            "percent_covered_display": "0",
+            "missing_lines": 8,
+            "excluded_lines": 0
+          },
+          "missing_lines": [264, 265, 277, 279, 280, 281, 285, 286],
+          "excluded_lines": []
+        },
+        "": {
+          "executed_lines": [
+            1, 2, 3, 4, 5, 6, 8, 9, 10, 11, 12, 15, 20, 22, 23, 26, 36, 41, 44,
+            47, 48, 49, 50, 51, 58, 59, 60, 61, 62, 63, 64, 65, 240, 241, 242,
+            243, 244, 255, 256, 257, 258, 259, 267, 268, 269, 270, 271, 289,
+            290, 301, 302, 312, 313, 324, 325, 418, 419, 484
+          ],
+          "summary": {
+            "covered_lines": 58,
+            "num_statements": 138,
+            "percent_covered": 42.028985507246375,
+            "percent_covered_display": "42",
+            "missing_lines": 80,
+            "excluded_lines": 0
+          },
+          "missing_lines": [
+            292, 295, 298, 304, 306, 309, 315, 318, 321, 327, 329, 330, 333,
+            334, 335, 337, 338, 340, 342, 345, 346, 347, 348, 349, 350, 353,
+            354, 355, 356, 357, 358, 360, 361, 364, 365, 366, 370, 371, 372,
+            375, 376, 377, 379, 388, 389, 390, 391, 401, 402, 403, 404, 405,
+            406, 408, 409, 410, 411, 433, 434, 436, 439, 440, 443, 447, 448,
+            450, 452, 454, 455, 458, 459, 462, 463, 464, 465, 468, 478, 480,
+            481, 485
+          ],
+          "excluded_lines": []
+        }
+      }
+    },
+    "scripts/clasificador.py": {
+      "executed_lines": [
+        1, 2, 3, 4, 5, 6, 7, 8, 10, 11, 12, 13, 14, 15, 18, 23, 26, 29, 32, 35,
+        38, 41, 46, 50, 53, 56, 59, 62, 67, 68, 69, 70, 71, 72, 80, 85, 86, 87,
+        88, 90, 91, 93, 95, 96, 164, 278, 282, 284, 285, 287, 288, 290, 291,
+        298, 299, 302, 332, 334, 335, 350, 352, 353, 368, 370, 371, 385, 386,
+        390, 391, 395, 397, 398, 399, 400, 403, 406, 407, 408, 409, 413, 415,
+        416, 421, 424, 425, 429, 448, 520, 555, 572, 574, 577, 578, 583, 584,
+        587, 588, 592, 593, 594, 595, 602, 603, 604, 606, 607, 608, 610, 612,
+        615, 618, 620, 623, 637, 639, 649, 655, 659, 705, 714, 755, 777, 823,
+        885, 886, 887, 888, 889, 891, 892, 893, 896, 912, 917, 918, 921, 922,
+        924, 928, 938, 939, 940, 941, 943, 944, 946, 947, 950, 970, 975, 976,
+        977, 979, 982, 983, 985, 988, 992, 993, 994, 995, 996, 998, 1001, 1002,
+        1003, 1004, 1005, 1006, 1007, 1008, 1012, 1028, 1029, 1030, 1031, 1033,
+        1034, 1035, 1036, 1039, 1042, 1043, 1044, 1045, 1046, 1059, 1060, 1063,
+        1088, 1099, 1102, 1106, 1110, 1112, 1114, 1115, 1116, 1119, 1129, 1135,
+        1137, 1139, 1143, 1145, 1156, 1158, 1161, 1193, 1234
+      ],
+      "summary": {
+        "covered_lines": 210,
+        "num_statements": 530,
+        "percent_covered": 39.62264150943396,
+        "percent_covered_display": "40",
+        "missing_lines": 320,
+        "excluded_lines": 0
+      },
+      "missing_lines": [
+        73, 74, 75, 76, 98, 100, 101, 104, 105, 107, 108, 109, 112, 113, 114,
+        115, 117, 118, 121, 122, 127, 130, 131, 132, 133, 134, 135, 140, 141,
+        144, 145, 148, 149, 150, 151, 152, 155, 157, 161, 166, 168, 169, 171,
+        172, 175, 176, 180, 188, 191, 192, 195, 198, 199, 201, 202, 203, 205,
+        207, 210, 214, 215, 219, 220, 221, 222, 223, 226, 227, 230, 231, 232,
+        234, 235, 236, 239, 242, 246, 247, 248, 251, 253, 255, 259, 260, 264,
+        265, 267, 271, 272, 274, 292, 295, 304, 305, 306, 307, 308, 310, 315,
+        318, 319, 321, 322, 323, 324, 325, 329, 336, 337, 338, 340, 341, 342,
+        343, 344, 347, 354, 355, 356, 358, 359, 360, 361, 362, 365, 372, 373,
+        374, 376, 377, 378, 379, 380, 381, 387, 388, 417, 418, 439, 442, 444,
+        465, 466, 469, 470, 471, 472, 475, 476, 481, 482, 483, 487, 488, 489,
+        490, 491, 493, 495, 496, 498, 500, 503, 507, 511, 522, 524, 527, 528,
+        529, 530, 531, 532, 533, 536, 537, 538, 540, 542, 543, 546, 547, 548,
+        550, 551, 552, 579, 580, 581, 598, 599, 600, 601, 627, 628, 634, 650,
+        672, 673, 676, 677, 678, 679, 682, 685, 688, 691, 694, 695, 696, 699,
+        700, 701, 706, 707, 708, 709, 710, 725, 728, 729, 730, 731, 733, 734,
+        735, 738, 739, 742, 743, 744, 745, 747, 748, 750, 751, 752, 764, 765,
+        767, 768, 769, 770, 772, 773, 774, 797, 800, 820, 838, 839, 840, 841,
+        843, 844, 846, 848, 849, 852, 855, 860, 861, 862, 865, 866, 867, 869,
+        874, 875, 877, 881, 913, 914, 971, 972, 1068, 1081, 1084, 1131, 1132,
+        1170, 1171, 1172, 1174, 1177, 1179, 1180, 1181, 1183, 1184, 1185, 1187,
+        1189, 1199, 1202, 1203, 1205, 1206, 1207, 1209, 1210, 1211, 1212, 1213,
+        1214, 1215, 1219, 1220, 1224, 1229, 1230, 1231, 1235, 1237, 1239, 1244,
+        1247, 1248, 1249, 1250
+      ],
+      "excluded_lines": [],
+      "functions": {
+        "initialize_database_with_recovery": {
+          "executed_lines": [85, 86, 87, 88, 90, 91, 93, 95, 96],
+          "summary": {
+            "covered_lines": 9,
+            "num_statements": 44,
+            "percent_covered": 20.454545454545453,
+            "percent_covered_display": "20",
+            "missing_lines": 35,
+            "excluded_lines": 0
+          },
+          "missing_lines": [
+            98, 100, 101, 104, 105, 107, 108, 109, 112, 113, 114, 115, 117, 118,
+            121, 122, 127, 130, 131, 132, 133, 134, 135, 140, 141, 144, 145,
+            148, 149, 150, 151, 152, 155, 157, 161
+          ],
+          "excluded_lines": []
+        },
+        "recover_database_data": {
+          "executed_lines": [],
+          "summary": {
+            "covered_lines": 0,
+            "num_statements": 51,
+            "percent_covered": 0.0,
+            "percent_covered_display": "0",
+            "missing_lines": 51,
+            "excluded_lines": 0
+          },
+          "missing_lines": [
+            166, 168, 169, 171, 172, 175, 176, 180, 188, 191, 192, 195, 198,
+            199, 201, 202, 203, 205, 207, 210, 214, 215, 219, 220, 221, 222,
+            223, 226, 227, 230, 231, 232, 234, 235, 236, 239, 242, 246, 247,
+            248, 251, 253, 255, 259, 260, 264, 265, 267, 271, 272, 274
+          ],
+          "excluded_lines": []
+        },
+        "safe_db_insert": {
+          "executed_lines": [284, 285, 287, 288, 290, 291, 298, 299, 302],
+          "summary": {
+            "covered_lines": 9,
+            "num_statements": 26,
+            "percent_covered": 34.61538461538461,
+            "percent_covered_display": "35",
+            "missing_lines": 17,
+            "excluded_lines": 0
+          },
+          "missing_lines": [
+            292, 295, 304, 305, 306, 307, 308, 310, 315, 318, 319, 321, 322,
+            323, 324, 325, 329
+          ],
+          "excluded_lines": []
+        },
+        "safe_db_all": {
+          "executed_lines": [334, 335],
+          "summary": {
+            "covered_lines": 2,
+            "num_statements": 11,
+            "percent_covered": 18.181818181818183,
+            "percent_covered_display": "18",
+            "missing_lines": 9,
+            "excluded_lines": 0
+          },
+          "missing_lines": [336, 337, 338, 340, 341, 342, 343, 344, 347],
+          "excluded_lines": []
+        },
+        "safe_db_search": {
+          "executed_lines": [352, 353],
+          "summary": {
+            "covered_lines": 2,
+            "num_statements": 11,
+            "percent_covered": 18.181818181818183,
+            "percent_covered_display": "18",
+            "missing_lines": 9,
+            "excluded_lines": 0
+          },
+          "missing_lines": [354, 355, 356, 358, 359, 360, 361, 362, 365],
+          "excluded_lines": []
+        },
+        "safe_db_get": {
+          "executed_lines": [370, 371],
+          "summary": {
+            "covered_lines": 2,
+            "num_statements": 11,
+            "percent_covered": 18.181818181818183,
+            "percent_covered_display": "18",
+            "missing_lines": 9,
+            "excluded_lines": 0
+          },
+          "missing_lines": [372, 373, 374, 376, 377, 378, 379, 380, 381],
+          "excluded_lines": []
+        },
+        "extract_face_embedding": {
+          "executed_lines": [397, 398, 399, 400, 403, 406, 407, 408, 409],
+          "summary": {
+            "covered_lines": 9,
+            "num_statements": 9,
+            "percent_covered": 100.0,
+            "percent_covered_display": "100",
+            "missing_lines": 0,
+            "excluded_lines": 0
+          },
+          "missing_lines": [],
+          "excluded_lines": []
+        },
+        "extract_all_face_embeddings": {
+          "executed_lines": [415, 416, 421, 424, 425],
+          "summary": {
+            "covered_lines": 5,
+            "num_statements": 7,
+            "percent_covered": 71.42857142857143,
+            "percent_covered_display": "71",
+            "missing_lines": 2,
+            "excluded_lines": 0
+          },
+          "missing_lines": [417, 418],
+          "excluded_lines": []
+        },
+        "calculate_blur_score": {
+          "executed_lines": [],
+          "summary": {
+            "covered_lines": 0,
+            "num_statements": 3,
+            "percent_covered": 0.0,
+            "percent_covered_display": "0",
+            "missing_lines": 3,
+            "excluded_lines": 0
+          },
+          "missing_lines": [439, 442, 444],
+          "excluded_lines": []
+        },
+        "assess_face_quality": {
+          "executed_lines": [],
+          "summary": {
+            "covered_lines": 0,
+            "num_statements": 24,
+            "percent_covered": 0.0,
+            "percent_covered_display": "0",
+            "missing_lines": 24,
+            "excluded_lines": 0
+          },
+          "missing_lines": [
+            465, 466, 469, 470, 471, 472, 475, 476, 481, 482, 483, 487, 488,
+            489, 490, 491, 493, 495, 496, 498, 500, 503, 507, 511
+          ],
+          "excluded_lines": []
+        },
+        "load_image_robust": {
+          "executed_lines": [],
+          "summary": {
+            "covered_lines": 0,
+            "num_statements": 21,
+            "percent_covered": 0.0,
+            "percent_covered_display": "0",
+            "missing_lines": 21,
+            "excluded_lines": 0
+          },
+          "missing_lines": [
+            522, 524, 527, 528, 529, 530, 531, 532, 533, 536, 537, 538, 540,
+            542, 543, 546, 547, 548, 550, 551, 552
+          ],
+          "excluded_lines": []
+        },
+        "extract_face_crops": {
+          "executed_lines": [
+            572, 574, 577, 578, 583, 584, 587, 588, 592, 593, 594, 595, 602,
+            603, 604, 606, 607, 608, 610, 612, 615, 618, 620, 623, 637, 639,
+            649, 655
+          ],
+          "summary": {
+            "covered_lines": 28,
+            "num_statements": 39,
+            "percent_covered": 71.7948717948718,
+            "percent_covered_display": "72",
+            "missing_lines": 11,
+            "excluded_lines": 0
+          },
+          "missing_lines": [
+            579, 580, 581, 598, 599, 600, 601, 627, 628, 634, 650
+          ],
+          "excluded_lines": []
+        },
+        "generate_face_thumbnail": {
+          "executed_lines": [],
+          "summary": {
+            "covered_lines": 0,
+            "num_statements": 16,
+            "percent_covered": 0.0,
+            "percent_covered_display": "0",
+            "missing_lines": 16,
+            "excluded_lines": 0
+          },
+          "missing_lines": [
+            672, 673, 676, 677, 678, 679, 682, 685, 688, 691, 694, 695, 696,
+            699, 700, 701
+          ],
+          "excluded_lines": []
+        },
+        "generate_thumbnail": {
+          "executed_lines": [],
+          "summary": {
+            "covered_lines": 0,
+            "num_statements": 5,
+            "percent_covered": 0.0,
+            "percent_covered_display": "0",
+            "missing_lines": 5,
+            "excluded_lines": 0
+          },
+          "missing_lines": [706, 707, 708, 709, 710],
+          "excluded_lines": []
+        },
+        "save_thumbnail_to_file": {
+          "executed_lines": [],
+          "summary": {
+            "covered_lines": 0,
+            "num_statements": 19,
+            "percent_covered": 0.0,
+            "percent_covered_display": "0",
+            "missing_lines": 19,
+            "excluded_lines": 0
+          },
+          "missing_lines": [
+            725, 728, 729, 730, 731, 733, 734, 735, 738, 739, 742, 743, 744,
+            745, 747, 748, 750, 751, 752
+          ],
+          "excluded_lines": []
+        },
+        "get_thumbnail_from_file": {
+          "executed_lines": [],
+          "summary": {
+            "covered_lines": 0,
+            "num_statements": 9,
+            "percent_covered": 0.0,
+            "percent_covered_display": "0",
+            "missing_lines": 9,
+            "excluded_lines": 0
+          },
+          "missing_lines": [764, 765, 767, 768, 769, 770, 772, 773, 774],
+          "excluded_lines": []
+        },
+        "create_optimized_face_record": {
+          "executed_lines": [],
+          "summary": {
+            "covered_lines": 0,
+            "num_statements": 3,
+            "percent_covered": 0.0,
+            "percent_covered_display": "0",
+            "missing_lines": 3,
+            "excluded_lines": 0
+          },
+          "missing_lines": [797, 800, 820],
+          "excluded_lines": []
+        },
+        "save_multiple_faces_optimized": {
+          "executed_lines": [],
+          "summary": {
+            "covered_lines": 0,
+            "num_statements": 22,
+            "percent_covered": 0.0,
+            "percent_covered_display": "0",
+            "missing_lines": 22,
+            "excluded_lines": 0
+          },
+          "missing_lines": [
+            838, 839, 840, 841, 843, 844, 846, 848, 849, 852, 855, 860, 861,
+            862, 865, 866, 867, 869, 874, 875, 877, 881
+          ],
+          "excluded_lines": []
+        },
+        "save_unknown_face": {
+          "executed_lines": [
+            886, 887, 888, 889, 891, 892, 893, 896, 912, 917, 918, 921, 922, 924
+          ],
+          "summary": {
+            "covered_lines": 14,
+            "num_statements": 16,
+            "percent_covered": 87.5,
+            "percent_covered_display": "88",
+            "missing_lines": 2,
+            "excluded_lines": 0
+          },
+          "missing_lines": [913, 914],
+          "excluded_lines": []
+        },
+        "save_multiple_faces": {
+          "executed_lines": [
+            938, 939, 940, 941, 943, 944, 946, 947, 950, 970, 975, 976, 977,
+            979, 982, 983, 985, 988
+          ],
+          "summary": {
+            "covered_lines": 18,
+            "num_statements": 20,
+            "percent_covered": 90.0,
+            "percent_covered_display": "90",
+            "missing_lines": 2,
+            "excluded_lines": 0
+          },
+          "missing_lines": [971, 972],
+          "excluded_lines": []
+        },
+        "identify_face": {
+          "executed_lines": [
+            993, 994, 995, 996, 998, 1001, 1002, 1003, 1004, 1005, 1006, 1007,
+            1008
+          ],
+          "summary": {
+            "covered_lines": 13,
+            "num_statements": 13,
+            "percent_covered": 100.0,
+            "percent_covered_display": "100",
+            "missing_lines": 0,
+            "excluded_lines": 0
+          },
+          "missing_lines": [],
+          "excluded_lines": []
+        },
+        "identify_all_faces": {
+          "executed_lines": [
+            1028, 1029, 1030, 1031, 1033, 1034, 1035, 1036, 1039, 1042, 1043,
+            1044, 1045, 1046, 1059, 1060, 1063, 1088, 1099, 1102, 1106
+          ],
+          "summary": {
+            "covered_lines": 21,
+            "num_statements": 24,
+            "percent_covered": 87.5,
+            "percent_covered_display": "88",
+            "missing_lines": 3,
+            "excluded_lines": 0
+          },
+          "missing_lines": [1068, 1081, 1084],
+          "excluded_lines": []
+        },
+        "get_unclassified_faces": {
+          "executed_lines": [
+            1112, 1114, 1115, 1116, 1119, 1129, 1135, 1137, 1139
+          ],
+          "summary": {
+            "covered_lines": 9,
+            "num_statements": 11,
+            "percent_covered": 81.81818181818181,
+            "percent_covered_display": "82",
+            "missing_lines": 2,
+            "excluded_lines": 0
+          },
+          "missing_lines": [1131, 1132],
+          "excluded_lines": []
+        },
+        "update_face": {
+          "executed_lines": [1145],
+          "summary": {
+            "covered_lines": 1,
+            "num_statements": 1,
+            "percent_covered": 100.0,
+            "percent_covered_display": "100",
+            "missing_lines": 0,
+            "excluded_lines": 0
+          },
+          "missing_lines": [],
+          "excluded_lines": []
+        },
+        "get_face": {
+          "executed_lines": [1158],
+          "summary": {
+            "covered_lines": 1,
+            "num_statements": 1,
+            "percent_covered": 100.0,
+            "percent_covered_display": "100",
+            "missing_lines": 0,
+            "excluded_lines": 0
+          },
+          "missing_lines": [],
+          "excluded_lines": []
+        },
+        "get_face_with_thumbnail": {
+          "executed_lines": [],
+          "summary": {
+            "covered_lines": 0,
+            "num_statements": 13,
+            "percent_covered": 0.0,
+            "percent_covered_display": "0",
+            "missing_lines": 13,
+            "excluded_lines": 0
+          },
+          "missing_lines": [
+            1170, 1171, 1172, 1174, 1177, 1179, 1180, 1181, 1183, 1184, 1185,
+            1187, 1189
+          ],
+          "excluded_lines": []
+        },
+        "test_face_quality": {
+          "executed_lines": [],
+          "summary": {
+            "covered_lines": 0,
+            "num_statements": 19,
+            "percent_covered": 0.0,
+            "percent_covered_display": "0",
+            "missing_lines": 19,
+            "excluded_lines": 0
+          },
+          "missing_lines": [
+            1199, 1202, 1203, 1205, 1206, 1207, 1209, 1210, 1211, 1212, 1213,
+            1214, 1215, 1219, 1220, 1224, 1229, 1230, 1231
+          ],
+          "excluded_lines": []
+        },
+        "": {
+          "executed_lines": [
+            1, 2, 3, 4, 5, 6, 7, 8, 10, 11, 12, 13, 14, 15, 18, 23, 26, 29, 32,
+            35, 38, 41, 46, 50, 53, 56, 59, 62, 67, 68, 69, 70, 71, 72, 80, 164,
+            278, 282, 332, 350, 368, 385, 386, 390, 391, 395, 413, 429, 448,
+            520, 555, 659, 705, 714, 755, 777, 823, 885, 928, 992, 1012, 1110,
+            1143, 1156, 1161, 1193, 1234
+          ],
+          "summary": {
+            "covered_lines": 67,
+            "num_statements": 81,
+            "percent_covered": 82.71604938271605,
+            "percent_covered_display": "83",
+            "missing_lines": 14,
+            "excluded_lines": 0
+          },
+          "missing_lines": [
+            73, 74, 75, 76, 387, 388, 1235, 1237, 1239, 1244, 1247, 1248, 1249,
+            1250
+          ],
+          "excluded_lines": []
+        }
+      },
+      "classes": {
+        "": {
+          "executed_lines": [
+            1, 2, 3, 4, 5, 6, 7, 8, 10, 11, 12, 13, 14, 15, 18, 23, 26, 29, 32,
+            35, 38, 41, 46, 50, 53, 56, 59, 62, 67, 68, 69, 70, 71, 72, 80, 85,
+            86, 87, 88, 90, 91, 93, 95, 96, 164, 278, 282, 284, 285, 287, 288,
+            290, 291, 298, 299, 302, 332, 334, 335, 350, 352, 353, 368, 370,
+            371, 385, 386, 390, 391, 395, 397, 398, 399, 400, 403, 406, 407,
+            408, 409, 413, 415, 416, 421, 424, 425, 429, 448, 520, 555, 572,
+            574, 577, 578, 583, 584, 587, 588, 592, 593, 594, 595, 602, 603,
+            604, 606, 607, 608, 610, 612, 615, 618, 620, 623, 637, 639, 649,
+            655, 659, 705, 714, 755, 777, 823, 885, 886, 887, 888, 889, 891,
+            892, 893, 896, 912, 917, 918, 921, 922, 924, 928, 938, 939, 940,
+            941, 943, 944, 946, 947, 950, 970, 975, 976, 977, 979, 982, 983,
+            985, 988, 992, 993, 994, 995, 996, 998, 1001, 1002, 1003, 1004,
+            1005, 1006, 1007, 1008, 1012, 1028, 1029, 1030, 1031, 1033, 1034,
+            1035, 1036, 1039, 1042, 1043, 1044, 1045, 1046, 1059, 1060, 1063,
+            1088, 1099, 1102, 1106, 1110, 1112, 1114, 1115, 1116, 1119, 1129,
+            1135, 1137, 1139, 1143, 1145, 1156, 1158, 1161, 1193, 1234
+          ],
+          "summary": {
+            "covered_lines": 210,
+            "num_statements": 530,
+            "percent_covered": 39.62264150943396,
+            "percent_covered_display": "40",
+            "missing_lines": 320,
+            "excluded_lines": 0
+          },
+          "missing_lines": [
+            73, 74, 75, 76, 98, 100, 101, 104, 105, 107, 108, 109, 112, 113,
+            114, 115, 117, 118, 121, 122, 127, 130, 131, 132, 133, 134, 135,
+            140, 141, 144, 145, 148, 149, 150, 151, 152, 155, 157, 161, 166,
+            168, 169, 171, 172, 175, 176, 180, 188, 191, 192, 195, 198, 199,
+            201, 202, 203, 205, 207, 210, 214, 215, 219, 220, 221, 222, 223,
+            226, 227, 230, 231, 232, 234, 235, 236, 239, 242, 246, 247, 248,
+            251, 253, 255, 259, 260, 264, 265, 267, 271, 272, 274, 292, 295,
+            304, 305, 306, 307, 308, 310, 315, 318, 319, 321, 322, 323, 324,
+            325, 329, 336, 337, 338, 340, 341, 342, 343, 344, 347, 354, 355,
+            356, 358, 359, 360, 361, 362, 365, 372, 373, 374, 376, 377, 378,
+            379, 380, 381, 387, 388, 417, 418, 439, 442, 444, 465, 466, 469,
+            470, 471, 472, 475, 476, 481, 482, 483, 487, 488, 489, 490, 491,
+            493, 495, 496, 498, 500, 503, 507, 511, 522, 524, 527, 528, 529,
+            530, 531, 532, 533, 536, 537, 538, 540, 542, 543, 546, 547, 548,
+            550, 551, 552, 579, 580, 581, 598, 599, 600, 601, 627, 628, 634,
+            650, 672, 673, 676, 677, 678, 679, 682, 685, 688, 691, 694, 695,
+            696, 699, 700, 701, 706, 707, 708, 709, 710, 725, 728, 729, 730,
+            731, 733, 734, 735, 738, 739, 742, 743, 744, 745, 747, 748, 750,
+            751, 752, 764, 765, 767, 768, 769, 770, 772, 773, 774, 797, 800,
+            820, 838, 839, 840, 841, 843, 844, 846, 848, 849, 852, 855, 860,
+            861, 862, 865, 866, 867, 869, 874, 875, 877, 881, 913, 914, 971,
+            972, 1068, 1081, 1084, 1131, 1132, 1170, 1171, 1172, 1174, 1177,
+            1179, 1180, 1181, 1183, 1184, 1185, 1187, 1189, 1199, 1202, 1203,
+            1205, 1206, 1207, 1209, 1210, 1211, 1212, 1213, 1214, 1215, 1219,
+            1220, 1224, 1229, 1230, 1231, 1235, 1237, 1239, 1244, 1247, 1248,
+            1249, 1250
+          ],
+          "excluded_lines": []
+        }
+      }
+    },
+    "scripts/migrate_to_optimized_storage.py": {
+      "executed_lines": [],
+      "summary": {
+        "covered_lines": 0,
+        "num_statements": 143,
+        "percent_covered": 0.0,
+        "percent_covered_display": "0",
+        "missing_lines": 143,
+        "excluded_lines": 0
+      },
+      "missing_lines": [
+        23, 24, 25, 26, 27, 28, 29, 31, 34, 39, 42, 44, 46, 48, 50, 51, 52, 55,
+        56, 58, 59, 61, 63, 67, 69, 72, 74, 75, 77, 79, 81, 92, 94, 95, 96, 99,
+        101, 103, 104, 105, 106, 108, 111, 113, 114, 116, 117, 118, 121, 125,
+        128, 129, 130, 135, 136, 137, 141, 142, 143, 146, 168, 171, 174, 175,
+        177, 179, 180, 181, 183, 184, 185, 187, 189, 190, 191, 201, 203, 204,
+        205, 207, 209, 213, 214, 216, 218, 219, 220, 222, 223, 227, 230, 233,
+        234, 236, 238, 241, 242, 243, 247, 250, 252, 254, 255, 256, 257, 259,
+        268, 269, 270, 273, 275, 278, 283, 289, 295, 298, 300, 301, 304, 307,
+        308, 309, 310, 312, 313, 316, 317, 318, 320, 321, 322, 323, 324, 325,
+        326, 327, 328, 329, 330, 331, 333, 336, 337
+      ],
+      "excluded_lines": [],
+      "functions": {
+        "analyze_current_database": {
+          "executed_lines": [],
+          "summary": {
+            "covered_lines": 0,
+            "num_statements": 24,
+            "percent_covered": 0.0,
+            "percent_covered_display": "0",
+            "missing_lines": 24,
+            "excluded_lines": 0
+          },
+          "missing_lines": [
+            44, 46, 48, 50, 51, 52, 55, 56, 58, 59, 61, 63, 67, 69, 72, 74, 75,
+            77, 79, 81, 92, 94, 95, 96
+          ],
+          "excluded_lines": []
+        },
+        "create_database_backup": {
+          "executed_lines": [],
+          "summary": {
+            "covered_lines": 0,
+            "num_statements": 12,
+            "percent_covered": 0.0,
+            "percent_covered_display": "0",
+            "missing_lines": 12,
+            "excluded_lines": 0
+          },
+          "missing_lines": [
+            101, 103, 104, 105, 106, 108, 111, 113, 114, 116, 117, 118
+          ],
+          "excluded_lines": []
+        },
+        "migrate_legacy_record": {
+          "executed_lines": [],
+          "summary": {
+            "covered_lines": 0,
+            "num_statements": 12,
+            "percent_covered": 0.0,
+            "percent_covered_display": "0",
+            "missing_lines": 12,
+            "excluded_lines": 0
+          },
+          "missing_lines": [
+            125, 128, 129, 130, 135, 136, 137, 141, 142, 143, 146, 168
+          ],
+          "excluded_lines": []
+        },
+        "perform_migration": {
+          "executed_lines": [],
+          "summary": {
+            "covered_lines": 0,
+            "num_statements": 47,
+            "percent_covered": 0.0,
+            "percent_covered_display": "0",
+            "missing_lines": 47,
+            "excluded_lines": 0
+          },
+          "missing_lines": [
+            174, 175, 177, 179, 180, 181, 183, 184, 185, 187, 189, 190, 191,
+            201, 203, 204, 205, 207, 209, 213, 214, 216, 218, 219, 220, 222,
+            223, 227, 230, 233, 234, 236, 238, 241, 242, 243, 247, 250, 252,
+            254, 255, 256, 257, 259, 268, 269, 270
+          ],
+          "excluded_lines": []
+        },
+        "main": {
+          "executed_lines": [],
+          "summary": {
+            "covered_lines": 0,
+            "num_statements": 31,
+            "percent_covered": 0.0,
+            "percent_covered_display": "0",
+            "missing_lines": 31,
+            "excluded_lines": 0
+          },
+          "missing_lines": [
+            275, 278, 283, 289, 295, 298, 300, 301, 304, 307, 308, 309, 310,
+            312, 313, 316, 317, 318, 320, 321, 322, 323, 324, 325, 326, 327,
+            328, 329, 330, 331, 333
+          ],
+          "excluded_lines": []
+        },
+        "": {
+          "executed_lines": [],
+          "summary": {
+            "covered_lines": 0,
+            "num_statements": 17,
+            "percent_covered": 0.0,
+            "percent_covered_display": "0",
+            "missing_lines": 17,
+            "excluded_lines": 0
+          },
+          "missing_lines": [
+            23, 24, 25, 26, 27, 28, 29, 31, 34, 39, 42, 99, 121, 171, 273, 336,
+            337
+          ],
+          "excluded_lines": []
+        }
+      },
+      "classes": {
+        "": {
+          "executed_lines": [],
+          "summary": {
+            "covered_lines": 0,
+            "num_statements": 143,
+            "percent_covered": 0.0,
+            "percent_covered_display": "0",
+            "missing_lines": 143,
+            "excluded_lines": 0
+          },
+          "missing_lines": [
+            23, 24, 25, 26, 27, 28, 29, 31, 34, 39, 42, 44, 46, 48, 50, 51, 52,
+            55, 56, 58, 59, 61, 63, 67, 69, 72, 74, 75, 77, 79, 81, 92, 94, 95,
+            96, 99, 101, 103, 104, 105, 106, 108, 111, 113, 114, 116, 117, 118,
+            121, 125, 128, 129, 130, 135, 136, 137, 141, 142, 143, 146, 168,
+            171, 174, 175, 177, 179, 180, 181, 183, 184, 185, 187, 189, 190,
+            191, 201, 203, 204, 205, 207, 209, 213, 214, 216, 218, 219, 220,
+            222, 223, 227, 230, 233, 234, 236, 238, 241, 242, 243, 247, 250,
+            252, 254, 255, 256, 257, 259, 268, 269, 270, 273, 275, 278, 283,
+            289, 295, 298, 300, 301, 304, 307, 308, 309, 310, 312, 313, 316,
+            317, 318, 320, 321, 322, 323, 324, 325, 326, 327, 328, 329, 330,
+            331, 333, 336, 337
+          ],
+          "excluded_lines": []
+        }
+      }
+    },
+    "scripts/models.py": {
+      "executed_lines": [1, 3, 6, 9, 14, 26, 43, 71, 85, 95, 105, 109],
+      "summary": {
+        "covered_lines": 12,
+        "num_statements": 12,
+        "percent_covered": 100.0,
+        "percent_covered_display": "100",
+        "missing_lines": 0,
+        "excluded_lines": 0
+      },
+      "missing_lines": [],
+      "excluded_lines": [],
+      "functions": {
+        "create_models": {
+          "executed_lines": [9, 14, 26, 43, 71, 85, 95, 105, 109],
+          "summary": {
+            "covered_lines": 9,
+            "num_statements": 9,
+            "percent_covered": 100.0,
+            "percent_covered_display": "100",
+            "missing_lines": 0,
+            "excluded_lines": 0
+          },
+          "missing_lines": [],
+          "excluded_lines": []
+        },
+        "": {
+          "executed_lines": [1, 3, 6],
+          "summary": {
+            "covered_lines": 3,
+            "num_statements": 3,
+            "percent_covered": 100.0,
+            "percent_covered_display": "100",
+            "missing_lines": 0,
+            "excluded_lines": 0
+          },
+          "missing_lines": [],
+          "excluded_lines": []
+        }
+      },
+      "classes": {
+        "": {
+          "executed_lines": [1, 3, 6, 9, 14, 26, 43, 71, 85, 95, 105, 109],
+          "summary": {
+            "covered_lines": 12,
+            "num_statements": 12,
+            "percent_covered": 100.0,
+            "percent_covered_display": "100",
+            "missing_lines": 0,
+            "excluded_lines": 0
+          },
+          "missing_lines": [],
+          "excluded_lines": []
+        }
+      }
+    }
+  },
+  "totals": {
+    "covered_lines": 280,
+    "num_statements": 916,
+    "percent_covered": 30.56768558951965,
+    "percent_covered_display": "31",
+    "missing_lines": 636,
+    "excluded_lines": 0
+  }
+}

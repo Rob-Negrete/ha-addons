@@ -1,4 +1,14 @@
 services:
+  qdrant:
+    image: qdrant/qdrant:latest
+    ports:
+      - "6333:6333"
+    volumes:
+      - ./config/qdrant_data:/qdrant/storage
+    environment:
+      - QDRANT__SERVICE__HTTP_PORT=6333
+      - QDRANT__LOG_LEVEL=INFO
+
   face-rekon:
     build:
       context: .
@@ -8,6 +18,12 @@ services:
       - PYTHONUNBUFFERED=1
       - FLASK_ENV=development
       - FLASK_DEBUG=1
+      - QDRANT_HOST=qdrant
+      - QDRANT_PORT=6333
+      - FACE_REKON_USE_QDRANT=true
+      - FACE_REKON_SIMILARITY_THRESHOLD=0.35
+      - FACE_REKON_BORDERLINE_THRESHOLD=0.50
+      - FACE_REKON_DEDUPLICATION_WINDOW=60
     volumes:
       - ./config:/config
       - ./tmp:/app/data/tmp # adjust as needed, depending on your local setup
@@ -15,3 +31,5 @@ services:
       - ./ui:/app/ui
     ports:
       - "5001:5001" # assuming Flask app runs on port 5001
+    depends_on:
+      - qdrant

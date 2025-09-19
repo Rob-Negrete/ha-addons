@@ -1,6 +1,15 @@
 version: "3.8"
 
 services:
+  test-qdrant:
+    image: qdrant/qdrant:latest
+    ports:
+      - "6334:6333"
+    environment:
+      - QDRANT__SERVICE__HTTP_PORT=6333
+      - QDRANT__LOG_LEVEL=WARN
+    tmpfs:
+      - /qdrant/storage
   test-runner:
     build:
       context: .
@@ -45,6 +54,12 @@ services:
       - OMP_NUM_THREADS=2
       - MKL_NUM_THREADS=2
       - NUMEXPR_MAX_THREADS=2
+      # Qdrant configuration for testing
+      - QDRANT_HOST=test-qdrant
+      - QDRANT_PORT=6333
+      - FACE_REKON_USE_QDRANT=false # Use TinyDB+FAISS for integration tests
+    depends_on:
+      - test-qdrant
     deploy:
       resources:
         limits:

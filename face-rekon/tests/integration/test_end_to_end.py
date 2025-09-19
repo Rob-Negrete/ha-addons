@@ -53,7 +53,7 @@ class TestEndToEndIntegration:
         test_face_data = {
             "face_id": "e2e_test_face",
             "event_id": "e2e_comprehensive_test",
-            "name": None,
+            "name": "unknown",
             "relationship": "unknown",
             "confidence": "unknown",
             "embedding": np.random.random(512).tolist(),
@@ -87,8 +87,8 @@ class TestEndToEndIntegration:
         response = flask_test_client.get(f"/api/face-rekon/{face_id}")
         assert response.status_code == 200
         face_details = json.loads(response.data)
-        assert len(face_details) == 1
-        assert face_details[0]["name"] == "E2E Test Person"
+        assert isinstance(face_details, dict)
+        assert face_details["name"] == "E2E Test Person"
 
     def test_error_handling_and_recovery(
         self, flask_test_client, test_images, shared_ml_models

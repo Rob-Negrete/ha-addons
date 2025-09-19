@@ -217,9 +217,9 @@ class TestFaceManagementAPIIntegration:
 
         # Add mix of classified and unclassified faces
         test_faces = [
-            {**sample_face_data, "face_id": "unclassified_api_1", "name": None},
+            {**sample_face_data, "face_id": "unclassified_api_1", "name": "unknown"},
             {**sample_face_data, "face_id": "classified_api_1", "name": "John"},
-            {**sample_face_data, "face_id": "unclassified_api_2", "name": None},
+            {**sample_face_data, "face_id": "unclassified_api_2", "name": "unknown"},
         ]
 
         for face in test_faces:
@@ -256,10 +256,9 @@ class TestFaceManagementAPIIntegration:
         assert response.status_code == 200
         data = json.loads(response.data)
 
-        assert isinstance(data, list)
-        assert len(data) == 1
+        assert isinstance(data, dict)
         # Face model uses 'face_id' field
-        assert data[0]["face_id"] == sample_face_data["face_id"]
+        assert data["face_id"] == sample_face_data["face_id"]
 
     def test_update_face_integration(
         self, flask_test_client, shared_ml_models, sample_face_data
