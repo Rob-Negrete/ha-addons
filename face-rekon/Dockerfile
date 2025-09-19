@@ -14,19 +14,19 @@ RUN apt-get update && \
         supervisor \
         && rm -rf /var/lib/apt/lists/*
 
-# Instalar Qdrant basado en la arquitectura
+# Instalar Qdrant (solo soportado en x86_64 por ahora)
 RUN ARCH=$(uname -m) && \
     if [ "$ARCH" = "x86_64" ]; then \
-        QDRANT_ARCH="x86_64-unknown-linux-musl"; \
-    elif [ "$ARCH" = "aarch64" ]; then \
-        QDRANT_ARCH="aarch64-unknown-linux-musl"; \
-    elif [ "$ARCH" = "armv7l" ]; then \
-        QDRANT_ARCH="armv7-unknown-linux-musleabihf"; \
+        wget -O /tmp/qdrant.tar.gz https://github.com/qdrant/qdrant/releases/download/v1.7.4/qdrant-x86_64-unknown-linux-gnu.tar.gz && \
+        tar -xzf /tmp/qdrant.tar.gz -C /tmp && \
+        mv /tmp/qdrant /usr/local/bin/qdrant && \
+        chmod +x /usr/local/bin/qdrant && \
+        rm -f /tmp/qdrant.tar.gz; \
     else \
-        QDRANT_ARCH="x86_64-unknown-linux-musl"; \
-    fi && \
-    wget -O /usr/local/bin/qdrant https://github.com/qdrant/qdrant/releases/download/v1.7.4/qdrant-${QDRANT_ARCH} \
-    && chmod +x /usr/local/bin/qdrant
+        echo "Warning: Qdrant binary not available for $ARCH, will fall back to FAISS only"; \
+        echo '#!/bin/bash\necho "Qdrant not available for this architecture, using FAISS fallback"\nexit 1' > /usr/local/bin/qdrant && \
+        chmod +x /usr/local/bin/qdrant; \
+    fi
 
 # Crear estructura del add-on
 WORKDIR /app
