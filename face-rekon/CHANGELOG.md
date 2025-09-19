@@ -2,6 +2,13 @@
 
 All notable changes to the Face Rekon Home Assistant add-on will be documented in this file.
 
+## [2.1.0](https://github.com/Rob-Negrete/ha-addons/compare/face-rekon-v2.0.1...face-rekon-v2.1.0) (2025-09-19)
+
+
+### ✨ Features
+
+* bump version to 2.0.2 to force Home Assistant image rebuild ([#32](https://github.com/Rob-Negrete/ha-addons/issues/32)) ([814aaf1](https://github.com/Rob-Negrete/ha-addons/commit/814aaf15996b6422c31513b8a22ab2b536c9791d))
+
 ## [2.0.1](https://github.com/Rob-Negrete/ha-addons/compare/face-rekon-v2.0.0...face-rekon-v2.0.1) (2025-09-19)
 
 
