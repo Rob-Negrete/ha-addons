@@ -2,6 +2,17 @@
 
 All notable changes to the Face Rekon Home Assistant add-on will be documented in this file.
 
+## [2.0.0](https://github.com/Rob-Negrete/ha-addons/compare/face-rekon-v1.3.0...face-rekon-v2.0.0) (2025-09-19)
+
+
+### ⚠ BREAKING CHANGES
+
+* Complete migration to Qdrant vector database architecture
+
+### ✨ Features
+
+* migrate face recognition from TinyDB+FAISS to Qdrant vector database ([9be4af7](https://github.com/Rob-Negrete/ha-addons/commit/9be4af768a6f964c0c272a365fd4aeeafa5734f1))
+
 ## [1.3.0](https://github.com/Rob-Negrete/ha-addons/compare/face-rekon-v1.2.6...face-rekon-v1.3.0) (2025-09-19)
 
 
