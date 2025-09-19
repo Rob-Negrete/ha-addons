@@ -85,13 +85,6 @@ class QdrantAdapter:
                     vectors_config=models.VectorParams(
                         size=EMBEDDING_SIZE, distance=models.Distance.COSINE
                     ),
-                    # Configure for face recognition workload
-                    optimizers_config=models.OptimizersConfig(
-                        default_segment_number=2, max_segment_size=20000
-                    ),
-                    hnsw_config=models.HnswConfig(
-                        m=16, ef_construct=100, full_scan_threshold=10000
-                    ),
                 )
                 logger.info(f"✅ Created collection {COLLECTION_NAME}")
             else:
@@ -133,11 +126,19 @@ class QdrantAdapter:
             payload = {k: v for k, v in payload.items() if v is not None}
 
             # Insert point with embedding and metadata
+            # Convert face_id to valid UUID string for Qdrant
+            try:
+                point_id = (
+                    str(uuid.UUID(face_id)) if "-" in face_id else str(uuid.uuid4())
+                )
+            except ValueError:
+                point_id = str(uuid.uuid4())
+
             self.client.upsert(
                 collection_name=COLLECTION_NAME,
                 points=[
                     models.PointStruct(
-                        id=face_id, vector=embedding.tolist(), payload=payload
+                        id=point_id, vector=embedding.tolist(), payload=payload
                     )
                 ],
             )
@@ -204,12 +205,22 @@ class QdrantAdapter:
             Face metadata dict or None if not found
         """
         try:
-            result = self.client.retrieve(
-                collection_name=COLLECTION_NAME, ids=[face_id], with_payload=True
+            # Since we may not have a direct UUID mapping, we need to search by face_id
+            results = self.client.scroll(
+                collection_name=COLLECTION_NAME,
+                scroll_filter=models.Filter(
+                    must=[
+                        models.FieldCondition(
+                            key="face_id", match=models.MatchValue(value=face_id)
+                        )
+                    ]
+                ),
+                limit=1,
+                with_payload=True,
             )
 
-            if result:
-                return result[0].payload
+            if results[0]:
+                return results[0][0].payload
             return None
 
         except Exception as e:
@@ -228,11 +239,27 @@ class QdrantAdapter:
             True if successful, False otherwise
         """
         try:
-            # Get current face data
-            current = self.get_face(face_id)
-            if not current:
+            # Get current face data and point ID
+            results = self.client.scroll(
+                collection_name=COLLECTION_NAME,
+                scroll_filter=models.Filter(
+                    must=[
+                        models.FieldCondition(
+                            key="face_id", match=models.MatchValue(value=face_id)
+                        )
+                    ]
+                ),
+                limit=1,
+                with_payload=True,
+            )
+
+            if not results[0]:
                 logger.warning(f"⚠️ Face {face_id} not found for update")
                 return False
+
+            point = results[0][0]
+            current = point.payload
+            point_id = point.id
 
             # Merge updates
             current.update(updates)
@@ -240,7 +267,7 @@ class QdrantAdapter:
 
             # Update payload (keep existing vector)
             self.client.set_payload(
-                collection_name=COLLECTION_NAME, points=[face_id], payload=current
+                collection_name=COLLECTION_NAME, points=[point_id], payload=current
             )
 
             logger.info(f"✅ Updated face {face_id}")
@@ -290,9 +317,29 @@ class QdrantAdapter:
             True if successful, False otherwise
         """
         try:
+            # Find the point ID for this face_id
+            results = self.client.scroll(
+                collection_name=COLLECTION_NAME,
+                scroll_filter=models.Filter(
+                    must=[
+                        models.FieldCondition(
+                            key="face_id", match=models.MatchValue(value=face_id)
+                        )
+                    ]
+                ),
+                limit=1,
+                with_payload=False,
+            )
+
+            if not results[0]:
+                logger.warning(f"⚠️ Face {face_id} not found for deletion")
+                return False
+
+            point_id = results[0][0].id
+
             self.client.delete(
                 collection_name=COLLECTION_NAME,
-                points_selector=models.PointIdsList(points=[face_id]),
+                points_selector=models.PointIdsList(points=[point_id]),
             )
 
             logger.info(f"🗑️ Deleted face {face_id}")
