@@ -2,6 +2,13 @@
 
 All notable changes to the Face Rekon Home Assistant add-on will be documented in this file.
 
+## [1.3.0](https://github.com/Rob-Negrete/ha-addons/compare/face-rekon-v1.2.6...face-rekon-v1.3.0) (2025-09-19)
+
+
+### ✨ Features
+
+* implement smart grouping suggestions for borderline face matches ([6220bcb](https://github.com/Rob-Negrete/ha-addons/commit/6220bcbecaecced80a709dcc48c6c03ff4a04358))
+
 ## [1.2.6](https://github.com/Rob-Negrete/ha-addons/compare/face-rekon-v1.2.5...face-rekon-v1.2.6) (2025-09-18)
 
 
