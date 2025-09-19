@@ -63,6 +63,21 @@ MIN_QUALITY_SCORE = float(
     os.environ.get("FACE_REKON_MIN_QUALITY_SCORE", "0.3")
 )  # Overall quality threshold (0.0-1.0)
 
+# Face recognition similarity threshold (lower = more permissive matching)
+FACE_SIMILARITY_THRESHOLD = float(
+    os.environ.get("FACE_REKON_SIMILARITY_THRESHOLD", "0.35")
+)  # Distance threshold for face matching (0.0-1.0, default: 0.35)
+
+# Time-based deduplication window (seconds)
+DEDUPLICATION_WINDOW = int(
+    os.environ.get("FACE_REKON_DEDUPLICATION_WINDOW", "60")
+)  # Skip saving faces detected within this window
+
+# Borderline match threshold for smart grouping suggestions
+BORDERLINE_THRESHOLD = float(
+    os.environ.get("FACE_REKON_BORDERLINE_THRESHOLD", "0.50")
+)  # Suggest grouping between SIMILARITY and BORDERLINE thresholds
+
 # Inicializar InsightFace
 logger.info("🚀 Initializing InsightFace...")
 try:
@@ -820,8 +835,41 @@ def create_optimized_face_record(
     return record
 
 
+def should_skip_recent_detection(event_id: str) -> bool:
+    """Check if we should skip saving faces due to recent detection from same event.
+
+    Args:
+        event_id: Event identifier to check
+
+    Returns:
+        True if we should skip saving (recent detection found), False otherwise
+    """
+    if not DEDUPLICATION_WINDOW or DEDUPLICATION_WINDOW <= 0:
+        return False
+
+    try:
+        # Get recent records from same event within time window
+        current_time = int(time.time())
+        recent_records = safe_db_search(
+            (Face.event_id == event_id)
+            & (Face.timestamp > current_time - DEDUPLICATION_WINDOW)
+        )
+
+        if recent_records:
+            logger.info(
+                f"🚫 Skipping face save - found {len(recent_records)} recent "
+                f"detections for event {event_id} within {DEDUPLICATION_WINDOW}s"
+            )
+            return True
+
+    except Exception as e:
+        logger.warning(f"⚠️ Error checking recent detections: {e}")
+
+    return False
+
+
 def save_multiple_faces_optimized(image_path: str, event_id: str) -> List[str]:
-    """Save faces using optimized storage (file-based thumbnails).
+    """Save faces using optimized storage with time-based deduplication.
 
     Args:
         image_path: Path to the image file
@@ -830,11 +878,16 @@ def save_multiple_faces_optimized(image_path: str, event_id: str) -> List[str]:
     Returns:
         List of face_ids for the saved faces
 
-    Storage Optimization:
-        - Thumbnails saved as separate JPEG files (~15KB → file reference)
-        - Embeddings stored only in FAISS (~2KB duplication removed)
-        - TinyDB records reduced from ~20KB to ~0.5KB (97% reduction)
+    Features:
+        - Time-based deduplication (skip if recent detection from same event)
+        - Configurable similarity threshold (default: 0.35 vs old 0.5)
+        - Storage optimization (97% size reduction)
+        - File-based thumbnails and FAISS-only embeddings
     """
+    # Check for recent detections (customer's duplicate issue)
+    if should_skip_recent_detection(event_id):
+        logger.info(f"🕒 Skipping save due to recent detection from event {event_id}")
+        return []
     face_crops = extract_face_crops(image_path)
     if not face_crops:
         logger.info("🔍 No faces detected in image")
@@ -998,7 +1051,7 @@ def identify_face(image_path: str) -> Optional[Dict[str, Any]]:
     distances, indices = index.search(
         np.array([embedding], dtype=np.float32), 1
     )  # noqa: E501
-    if distances[0][0] < 0.5:
+    if distances[0][0] < FACE_SIMILARITY_THRESHOLD:
         face_id = id_map[indices[0][0]]
         matched = safe_db_get(Face.face_id == face_id)
         if matched:
@@ -1039,7 +1092,10 @@ def identify_all_faces(image_path: str) -> List[Dict[str, Any]]:
         distances, indices = index.search(
             np.array([embedding], dtype=np.float32), 1
         )  # noqa: E501
-        if distances[0][0] < 0.5:
+        distance = distances[0][0]
+
+        if distance < FACE_SIMILARITY_THRESHOLD:
+            # Strong match - automatically identify
             face_id = id_map[indices[0][0]]
             matched = safe_db_get(Face.face_id == face_id)
             if matched:
@@ -1048,12 +1104,35 @@ def identify_all_faces(image_path: str) -> List[Dict[str, Any]]:
                         "face_index": face_index,
                         "status": "identified",
                         "face_data": matched,
-                        "confidence": float(1.0 - distances[0][0]),
+                        "confidence": float(1.0 - distance),
                         "face_bbox": face_data["face_bbox"],
                         "face_crop": face_data["face_crop"],
                         "quality_metrics": face_data.get(
                             "quality_metrics", {}
                         ),  # noqa: E501
+                    }
+                )
+        elif distance < BORDERLINE_THRESHOLD:
+            # Borderline match - suggest for manual review
+            face_id = id_map[indices[0][0]]
+            matched = safe_db_get(Face.face_id == face_id)
+            if matched:
+                results.append(
+                    {
+                        "face_index": face_index,
+                        "status": "suggestion",
+                        "face_data": matched,
+                        "confidence": float(1.0 - distance),
+                        "face_bbox": face_data["face_bbox"],
+                        "face_crop": face_data["face_crop"],
+                        "quality_metrics": face_data.get(
+                            "quality_metrics", {}
+                        ),  # noqa: E501
+                        "message": (
+                            f"Possible match with {matched.get('name', 'Unknown')} "
+                            f"(confidence: {(1.0 - distance)*100:.1f}%). "
+                            f"Review and confirm if this is the same person."
+                        ),
                     }
                 )
                 matched_face = matched.get("name", matched["face_id"])
@@ -1065,6 +1144,7 @@ def identify_all_faces(image_path: str) -> List[Dict[str, Any]]:
                     f"(calidad: {quality_score})"
                 )
             else:
+                # Suggestion without database match - treat as unknown
                 results.append(
                     {
                         "face_index": face_index,
@@ -1082,7 +1162,8 @@ def identify_all_faces(image_path: str) -> List[Dict[str, Any]]:
                     "overall_score", "N/A"
                 )
                 print(
-                    f"Rostro {face_index}: No identificado (calidad: {quality_score})"  # noqa: E501
+                    f"Rostro {face_index}: Sugerencia, pero sin datos en BD "
+                    f"(calidad: {quality_score})"
                 )
         else:
             results.append(

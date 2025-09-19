@@ -171,14 +171,16 @@ class Recognize(Resource):
             )  # noqa: E501
             logger.info(f"📊 Results details: {results}")
 
-            # Save unknown faces using optimized storage
-            unknown_faces = [
-                result for result in results if result["status"] == "unknown"
+            # Save unknown and suggestion faces using optimized storage
+            faces_to_save = [
+                result
+                for result in results
+                if result["status"] in ["unknown", "suggestion"]
             ]
-            if unknown_faces:
+            if faces_to_save:
                 if clasificador.USE_OPTIMIZED_STORAGE:
                     logger.info(
-                        f"💾 Saving {len(unknown_faces)} unknown faces "
+                        f"💾 Saving {len(faces_to_save)} faces (unknown/suggestions) "
                         "with optimized storage"
                     )
                     # Use optimized storage (file-based, no embedding duplication)
@@ -191,7 +193,7 @@ class Recognize(Resource):
                     )
                 else:
                     logger.info(
-                        f"💾 Saving {len(unknown_faces)} unknown faces "
+                        f"💾 Saving {len(faces_to_save)} faces (unknown/suggestions) "
                         "with legacy storage"
                     )
                     # Use legacy storage for backward compatibility
