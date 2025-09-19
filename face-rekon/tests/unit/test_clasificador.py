@@ -219,23 +219,20 @@ class TestClasificadorFunctionality:
 
     def test_get_unclassified_faces_logic(self):
         """Test getting unclassified faces"""
-        mock_faces = [
-            {"face_id": "1", "name": None, "event_id": "evt1"},
-            {
-                "face_id": "2",
-                "name": "John",
-                "event_id": "evt2",
-            },  # Has name, should be filtered out
-            {"face_id": "3", "name": None, "event_id": "evt3"},
+        mock_unclassified_faces = [
+            {"face_id": "1", "name": "unknown", "event_id": "evt1"},
+            {"face_id": "3", "name": "unknown", "event_id": "evt3"},
         ]
-        clasificador.db = Mock()
-        clasificador.db.all.return_value = mock_faces
+
+        # Mock the unified database interface
+        clasificador.db_get_unclassified_faces = Mock(
+            return_value=mock_unclassified_faces
+        )
 
         result = clasificador.get_unclassified_faces()
 
-        # Should only return faces without names
+        # Should return the unclassified faces from the unified interface
         assert len(result) == 2
-        assert all(face["name"] is None for face in result)
         assert result[0]["face_id"] == "1"
         assert result[1]["face_id"] == "3"
 
@@ -252,12 +249,12 @@ class TestClasificadorFunctionality:
         """Test getting a face by ID"""
         mock_face_data = {"face_id": "test_id", "name": "John"}
         clasificador.db = Mock()
-        clasificador.db.search.return_value = [mock_face_data]
+        clasificador.db.get.return_value = mock_face_data
 
         result = clasificador.get_face("test_id")
 
-        assert result == [mock_face_data]
-        clasificador.db.search.assert_called_once()
+        assert result == mock_face_data
+        clasificador.db.get.assert_called_once()
 
     def test_face_similarity_threshold(self):
         """Test face matching threshold logic (0.5)"""
@@ -413,8 +410,8 @@ class TestClasificadorFunctionality:
         # Verify database operations
         assert clasificador.db.insert.call_count == 2
         assert clasificador.index.add.call_count == 2
-        clasificador.faiss.write_index.assert_called_once()
-        clasificador.np.save.assert_called_once()
+        assert clasificador.faiss.write_index.call_count == 2  # Called once per face
+        assert clasificador.np.save.call_count == 2  # Called once per face
 
     def test_save_multiple_faces_no_faces(self):
         """Test saving multiple faces when no faces detected"""

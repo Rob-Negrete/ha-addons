@@ -5,7 +5,7 @@ import os
 import sys
 import time
 import uuid
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 import cv2
 import faiss
@@ -21,6 +21,16 @@ logging.basicConfig(
     stream=sys.stdout,
 )
 logger = logging.getLogger(__name__)
+
+# Qdrant vector database support
+try:
+    from qdrant_adapter import get_qdrant_adapter
+
+    QDRANT_AVAILABLE = True
+    logger.info("✅ Qdrant adapter available")
+except ImportError as e:
+    QDRANT_AVAILABLE = False
+    logger.warning(f"⚠️ Qdrant adapter not available: {e}")
 
 # Configuración de rutas (con soporte para variables de entorno para testing)
 BASE_PATH = os.environ.get(
@@ -45,6 +55,12 @@ THUMBNAIL_PATH = os.environ.get(
 # Storage optimization configuration
 USE_OPTIMIZED_STORAGE = (
     os.environ.get("FACE_REKON_USE_OPTIMIZED_STORAGE", "true").lower() == "true"
+)
+
+# Database backend selection
+USE_QDRANT = (
+    os.environ.get("FACE_REKON_USE_QDRANT", "true").lower() == "true"
+    and QDRANT_AVAILABLE
 )
 
 THUMBNAIL_SIZE = (160, 160)
@@ -396,14 +412,181 @@ def safe_db_get(query):
             return None
 
 
-# Cargar o crear índice FAISS
+# Database backend initialization
 dimension = 512
-if os.path.exists(FAISS_INDEX_PATH):
-    index = faiss.read_index(FAISS_INDEX_PATH)
-    id_map = np.load(MAPPING_PATH).tolist()
-else:
-    index = faiss.IndexFlatL2(dimension)
-    id_map = []
+index = None
+id_map = []
+qdrant_adapter = None
+
+
+def initialize_vector_database():
+    """Initialize vector database backend (Qdrant or FAISS)."""
+    global index, id_map, qdrant_adapter
+
+    if USE_QDRANT:
+        logger.info("🚀 Initializing Qdrant vector database")
+        try:
+            qdrant_adapter = get_qdrant_adapter()
+            logger.info("✅ Qdrant adapter initialized")
+        except Exception as e:
+            logger.error(f"❌ Failed to initialize Qdrant: {e}")
+            logger.info("🔄 Falling back to FAISS + TinyDB")
+            _initialize_faiss()
+    else:
+        logger.info("🚀 Initializing FAISS + TinyDB")
+        _initialize_faiss()
+
+
+def _initialize_faiss():
+    """Initialize FAISS index and mapping."""
+    global index, id_map
+
+    # Cargar o crear índice FAISS
+    if os.path.exists(FAISS_INDEX_PATH):
+        index = faiss.read_index(FAISS_INDEX_PATH)
+        id_map = np.load(MAPPING_PATH).tolist()
+        logger.info(f"📂 Loaded FAISS index with {len(id_map)} faces")
+    else:
+        index = faiss.IndexFlatL2(dimension)
+        id_map = []
+        logger.info("🆕 Created new FAISS index")
+
+
+# Initialize vector database
+initialize_vector_database()
+
+
+# Unified database interface functions
+def db_save_face(face_data: Dict[str, Any], embedding: np.ndarray) -> str:
+    """Save face with metadata and embedding using active backend."""
+    if USE_QDRANT and qdrant_adapter:
+        return qdrant_adapter.save_face(face_data, embedding)
+    else:
+        # FAISS + TinyDB fallback
+        return _save_face_faiss(face_data, embedding)
+
+
+def db_search_similar(
+    embedding: np.ndarray, limit: int = 1
+) -> List[Tuple[str, float, Dict[str, Any]]]:
+    """Search for similar faces using active backend."""
+    if USE_QDRANT and qdrant_adapter:
+        return qdrant_adapter.search_similar_faces(embedding, limit)
+    else:
+        # FAISS + TinyDB fallback
+        return _search_similar_faiss(embedding, limit)
+
+
+def db_get_face(face_id: str) -> Optional[Dict[str, Any]]:
+    """Get face metadata by ID using active backend."""
+    if USE_QDRANT and qdrant_adapter:
+        return qdrant_adapter.get_face(face_id)
+    else:
+        # TinyDB fallback
+        return safe_db_get(Face.face_id == face_id)
+
+
+def db_update_face(face_id: str, updates: Dict[str, Any]) -> bool:
+    """Update face metadata using active backend."""
+    if USE_QDRANT and qdrant_adapter:
+        return qdrant_adapter.update_face(face_id, updates)
+    else:
+        # TinyDB fallback
+        return _update_face_tinydb(face_id, updates)
+
+
+def db_get_unclassified_faces() -> List[Dict[str, Any]]:
+    """Get unclassified faces using active backend."""
+    if USE_QDRANT and qdrant_adapter:
+        return qdrant_adapter.get_unclassified_faces()
+    else:
+        # TinyDB fallback
+        return _get_unclassified_faces_tinydb()
+
+
+def db_check_recent_detection(event_id: str) -> bool:
+    """Check for recent detections using active backend."""
+    if USE_QDRANT and qdrant_adapter:
+        return qdrant_adapter.check_recent_detection(event_id)
+    else:
+        # TinyDB fallback
+        return _check_recent_detection_tinydb(event_id)
+
+
+# FAISS + TinyDB implementation functions
+def _save_face_faiss(face_data: Dict[str, Any], embedding: np.ndarray) -> str:
+    """Save face using FAISS + TinyDB."""
+    face_id = face_data.get("face_id", str(uuid.uuid4()))
+
+    # Add to FAISS index
+    index.add(np.array([embedding], dtype=np.float32))
+    id_map.append(face_id)
+
+    # Save metadata to TinyDB
+    if safe_db_insert(face_data):
+        # Save FAISS index and mapping
+        faiss.write_index(index, FAISS_INDEX_PATH)
+        np.save(MAPPING_PATH, np.array(id_map))
+        return face_id
+    else:
+        # Rollback FAISS changes if TinyDB fails
+        if len(id_map) > 0:
+            id_map.pop()
+            # Note: FAISS doesn't support removing last vector easily
+        raise Exception("Failed to save to TinyDB")
+
+
+def _search_similar_faiss(
+    embedding: np.ndarray, limit: int = 1
+) -> List[Tuple[str, float, Dict[str, Any]]]:
+    """Search similar faces using FAISS."""
+    distances, indices = index.search(np.array([embedding], dtype=np.float32), limit)
+
+    results = []
+    for i in range(len(distances[0])):
+        if indices[0][i] != -1:  # Valid result
+            distance = distances[0][i]
+            face_id = id_map[indices[0][i]]
+            metadata = safe_db_get(Face.face_id == face_id)
+            if metadata:
+                results.append((face_id, distance, metadata))
+
+    return results
+
+
+def _update_face_tinydb(face_id: str, updates: Dict[str, Any]) -> bool:
+    """Update face in TinyDB."""
+    try:
+        db.update(updates, Face.face_id == face_id)
+        return True
+    except Exception as e:
+        logger.error(f"❌ Failed to update face {face_id}: {e}")
+        return False
+
+
+def _get_unclassified_faces_tinydb() -> List[Dict[str, Any]]:
+    """Get unclassified faces from TinyDB."""
+    unclassified = []
+    for face in safe_db_all():
+        if face.get("name") == "unknown":
+            # Add thumbnail if using optimized storage
+            if USE_OPTIMIZED_STORAGE and face.get("thumbnail_path"):
+                face["thumbnail"] = get_thumbnail_from_file(face["thumbnail_path"])
+            unclassified.append(face)
+    return unclassified
+
+
+def _check_recent_detection_tinydb(event_id: str) -> bool:
+    """Check recent detection using TinyDB."""
+    if not DEDUPLICATION_WINDOW or DEDUPLICATION_WINDOW <= 0:
+        return False
+
+    current_time = int(time.time())
+    recent_records = safe_db_search(
+        (Face.event_id == event_id)
+        & (Face.timestamp > current_time - DEDUPLICATION_WINDOW)
+    )
+    return len(recent_records) > 0
 
 
 # Extraer vector facial
@@ -885,7 +1068,7 @@ def save_multiple_faces_optimized(image_path: str, event_id: str) -> List[str]:
         - File-based thumbnails and FAISS-only embeddings
     """
     # Check for recent detections (customer's duplicate issue)
-    if should_skip_recent_detection(event_id):
+    if db_check_recent_detection(event_id):
         logger.info(f"🕒 Skipping save due to recent detection from event {event_id}")
         return []
     face_crops = extract_face_crops(image_path)
@@ -901,31 +1084,42 @@ def save_multiple_faces_optimized(image_path: str, event_id: str) -> List[str]:
     for face_data in face_crops:
         face_id = str(uuid.uuid4())
 
-        # Get current FAISS index position (before adding)
-        current_faiss_index = index.ntotal
+        # Create face record with metadata
+        if USE_QDRANT and qdrant_adapter:
+            # For Qdrant, create a complete face record
+            record_data = {
+                "face_id": face_id,
+                "event_id": event_id,
+                "timestamp": timestamp,
+                "name": "unknown",
+                "face_bbox": face_data.get("face_bbox", []),
+                "quality_metrics": face_data.get("quality_metrics", {}),
+                "confidence": 0.0,
+                "notes": "",
+            }
 
-        # Create optimized database record
-        record_data = create_optimized_face_record(
-            face_data, event_id, face_id, timestamp, current_faiss_index
-        )
+            # Save thumbnail to file for consistency
+            if "face_crop" in face_data:
+                thumbnail_path = save_thumbnail_to_file(face_data["face_crop"], face_id)
+                record_data["thumbnail_path"] = thumbnail_path
 
-        # Use safe insert to prevent corruption
-        if not safe_db_insert(record_data):
-            logger.error(f"❌ Failed to save optimized face {face_id}")
+        else:
+            # For FAISS+TinyDB, use optimized storage format
+            current_faiss_index = index.ntotal if index else 0
+            record_data = create_optimized_face_record(
+                face_data, event_id, face_id, timestamp, current_faiss_index
+            )
+
+        # Save using unified database interface
+        try:
+            saved_face_id = db_save_face(record_data, face_data["embedding"])
+            saved_face_ids.append(saved_face_id)
+            logger.info(
+                f"✅ Saved face {face_data['face_index']} with ID: {saved_face_id}"
+            )
+        except Exception as e:
+            logger.error(f"❌ Failed to save face {face_id}: {e}")
             continue
-
-        # Add embedding to FAISS (single source of truth)
-        index.add(np.array([face_data["embedding"]], dtype=np.float32))
-        id_map.append(face_id)
-        saved_face_ids.append(face_id)
-
-        logger.info(
-            f"✅ Saved optimized face {face_data['face_index']} " f"with ID: {face_id}"
-        )
-
-    # Save FAISS index and mapping once
-    faiss.write_index(index, FAISS_INDEX_PATH)
-    np.save(MAPPING_PATH, np.array(id_map))
 
     logger.info(
         f"🎉 Optimized storage completed: {len(saved_face_ids)} faces "
@@ -999,41 +1193,39 @@ def save_multiple_faces(image_path: str, event_id: str) -> List[str]:
     for face_data in face_crops:
         face_id = str(uuid.uuid4())
 
-        # Insertar en TinyDB with enhanced schema using safe operation
+        # Create face record for legacy storage
         record_data = {
             "face_id": face_id,
             "event_id": event_id,
             "timestamp": timestamp,
             "image_path": image_path,
-            "embedding": face_data["embedding"].tolist(),
-            "thumbnail": face_data[
-                "face_crop"
-            ],  # Now contains cropped face  # noqa: E501
-            "name": None,
+            "name": "unknown",
             "relationship": "unknown",
             "confidence": "unknown",
-            # New fields for face extraction
             "face_bbox": face_data["face_bbox"],
             "face_index": face_data["face_index"],
-            # Quality metrics
             "quality_metrics": face_data.get("quality_metrics", {}),
         }
 
-        # Use safe insert to prevent corruption
-        if not safe_db_insert(record_data):
-            logger.error(f"❌ Failed to save face {face_id} to database")
+        # Handle storage based on backend
+        if USE_QDRANT and qdrant_adapter:
+            # Save thumbnail to file for Qdrant
+            if "face_crop" in face_data:
+                thumbnail_path = save_thumbnail_to_file(face_data["face_crop"], face_id)
+                record_data["thumbnail_path"] = thumbnail_path
+        else:
+            # Include embedding and thumbnail for TinyDB
+            record_data["embedding"] = face_data["embedding"].tolist()
+            record_data["thumbnail"] = face_data["face_crop"]
+
+        # Save using unified database interface
+        try:
+            saved_face_id = db_save_face(record_data, face_data["embedding"])
+            saved_face_ids.append(saved_face_id)
+            print(f"Rostro {face_data['face_index']} guardado con ID: {saved_face_id}")
+        except Exception as e:
+            logger.error(f"❌ Failed to save face {face_id}: {e}")
             continue
-
-        # Insertar en FAISS e ID map
-        index.add(np.array([face_data["embedding"]], dtype=np.float32))
-        id_map.append(face_id)
-        saved_face_ids.append(face_id)
-
-        print(f"Rostro {face_data['face_index']} guardado con ID: {face_id}")
-
-    # Guardar índice y map una sola vez
-    faiss.write_index(index, FAISS_INDEX_PATH)
-    np.save(MAPPING_PATH, np.array(id_map))
 
     print(
         f"Total de {len(saved_face_ids)} rostros guardados para evento {event_id}"  # noqa: E501
@@ -1048,15 +1240,14 @@ def identify_face(image_path: str) -> Optional[Dict[str, Any]]:
         print("No se detectó rostro.")
         return None
 
-    distances, indices = index.search(
-        np.array([embedding], dtype=np.float32), 1
-    )  # noqa: E501
-    if distances[0][0] < FACE_SIMILARITY_THRESHOLD:
-        face_id = id_map[indices[0][0]]
-        matched = safe_db_get(Face.face_id == face_id)
-        if matched:
+    # Use unified database interface
+    similar_faces = db_search_similar(embedding, limit=1)
+    if similar_faces:
+        face_id, distance, matched = similar_faces[0]
+        if distance < FACE_SIMILARITY_THRESHOLD:
             print(f"Identificado: {matched.get('name', matched['face_id'])}")
             return matched
+
     print("Rostro no identificado.")
     return None
 
@@ -1088,16 +1279,17 @@ def identify_all_faces(image_path: str) -> List[Dict[str, Any]]:
         embedding = face_data["embedding"]
         face_index = face_data["face_index"]
 
-        # Search for matches in FAISS index
-        distances, indices = index.search(
-            np.array([embedding], dtype=np.float32), 1
-        )  # noqa: E501
-        distance = distances[0][0]
+        # Search for matches using unified database interface
+        similar_faces = db_search_similar(embedding, limit=1)
+
+        if similar_faces:
+            face_id, distance, matched = similar_faces[0]
+        else:
+            distance = float("inf")
+            matched = None
 
         if distance < FACE_SIMILARITY_THRESHOLD:
             # Strong match - automatically identify
-            face_id = id_map[indices[0][0]]
-            matched = safe_db_get(Face.face_id == face_id)
             if matched:
                 results.append(
                     {
@@ -1114,8 +1306,6 @@ def identify_all_faces(image_path: str) -> List[Dict[str, Any]]:
                 )
         elif distance < BORDERLINE_THRESHOLD:
             # Borderline match - suggest for manual review
-            face_id = id_map[indices[0][0]]
-            matched = safe_db_get(Face.face_id == face_id)
             if matched:
                 results.append(
                     {
@@ -1190,11 +1380,14 @@ def identify_all_faces(image_path: str) -> List[Dict[str, Any]]:
 # Obtener rostros desconocidos
 def get_unclassified_faces() -> List[Dict[str, Any]]:
     """Get unclassified faces with thumbnails loaded (supports both storage formats)."""
-    unclassified = []
+    # Use unified database interface
+    unclassified_faces = db_get_unclassified_faces()
 
-    for face in safe_db_all():
-        if face.get("name"):  # Skip classified faces
-            continue
+    # Convert to expected format for API compatibility
+    unclassified = []
+    for face in unclassified_faces:
+        # Note: db_get_unclassified_faces already filters to unclassified faces
+        # so we don't need to filter again
 
         # Prepare basic face data
         face_data = {
@@ -1223,20 +1416,20 @@ def get_unclassified_faces() -> List[Dict[str, Any]]:
 # Guardar rostro ya identificado
 def update_face(face_id: str, data: Dict[str, str]) -> None:
     """Update a face's details"""
-    db.update(
-        {
-            "name": data["name"],
-            "relationship": data["relationship"],
-            "confidence": data["confidence"],
-        },
-        Face.face_id == face_id,
-    )
+    updates = {
+        "name": data["name"],
+        "relationship": data["relationship"],
+        "confidence": data["confidence"],
+    }
+    # Use unified database interface
+    db_update_face(face_id, updates)
 
 
 # Obtiene un rostro por su id
 def get_face(face_id: str) -> Optional[Dict[str, Any]]:
     """Get a face"""
-    return safe_db_search(Face.face_id == face_id)
+    # Use unified database interface
+    return db_get_face(face_id)
 
 
 def get_face_with_thumbnail(face_id: str) -> Optional[Dict[str, Any]]:

@@ -36,7 +36,8 @@ RUN pip install --no-cache-dir \
     onnxruntime \
     flask \
     flask-cors \
-    flask-restx
+    flask-restx \
+    qdrant-client==1.7.0
 
 # Ejecutar script de reconocimiento
 CMD ["/run.sh"]

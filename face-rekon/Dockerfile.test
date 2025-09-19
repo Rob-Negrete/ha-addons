@@ -24,7 +24,8 @@ RUN pip install --no-cache-dir \
     pillow \
     numpy \
     pytest==7.4.0 \
-    pytest-cov==4.1.0
+    pytest-cov==4.1.0 \
+    qdrant-client==1.7.0
 
 # Set working directory
 WORKDIR /app

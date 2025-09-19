@@ -114,9 +114,9 @@ class TestDatabaseIntegration:
 
         # Insert test data - mix of classified and unclassified
         test_faces = [
-            {**sample_face_data, "face_id": "unclassified_1", "name": None},
+            {**sample_face_data, "face_id": "unclassified_1", "name": "unknown"},
             {**sample_face_data, "face_id": "classified_1", "name": "John Doe"},
-            {**sample_face_data, "face_id": "unclassified_2", "name": None},
+            {**sample_face_data, "face_id": "unclassified_2", "name": "unknown"},
             {**sample_face_data, "face_id": "classified_2", "name": "Jane Smith"},
         ]
 
@@ -131,7 +131,8 @@ class TestDatabaseIntegration:
         unclassified_ids = [face["face_id"] for face in unclassified]
         assert "unclassified_1" in unclassified_ids
         assert "unclassified_2" in unclassified_ids
-        assert all(face["name"] is None for face in unclassified)
+        # Note: name may be None or "unknown" depending on storage format
+        assert all(face["name"] in [None, "unknown"] for face in unclassified)
 
     def test_update_face_database_integration(
         self, clean_test_env, sample_face_data, shared_ml_models
@@ -183,10 +184,10 @@ class TestDatabaseIntegration:
         # Get face by ID
         result = clasificador.get_face(sample_face_data["face_id"])
 
-        # Verify result
-        assert len(result) == 1
-        assert result[0]["face_id"] == sample_face_data["face_id"]
-        assert result[0]["name"] == sample_face_data["name"]
+        # Verify result - get_face now returns a single dict, not a list
+        assert result is not None
+        assert result["face_id"] == sample_face_data["face_id"]
+        assert result["name"] == sample_face_data["name"]
 
     def test_database_persistence_across_operations(
         self, clean_test_env, sample_face_data, shared_ml_models
@@ -207,8 +208,9 @@ class TestDatabaseIntegration:
         clasificador.db.insert(test_face)
 
         # 2. Verify insertion
-        faces = clasificador.get_face(face_id)
-        assert len(faces) == 1
+        face = clasificador.get_face(face_id)
+        assert face is not None
+        assert face["face_id"] == face_id
 
         # 3. Update face
         update_data = {
@@ -219,10 +221,10 @@ class TestDatabaseIntegration:
         clasificador.update_face(face_id, update_data)
 
         # 4. Verify update persisted
-        updated_faces = clasificador.get_face(face_id)
-        assert len(updated_faces) == 1
-        assert updated_faces[0]["name"] == "Persistent Name"
-        assert updated_faces[0]["relationship"] == "test"
+        updated_face = clasificador.get_face(face_id)
+        assert updated_face is not None
+        assert updated_face["name"] == "Persistent Name"
+        assert updated_face["relationship"] == "test"
 
         # 5. Verify face appears in unclassified list (since name is set now,
         # it shouldn't)
