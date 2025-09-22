@@ -23,7 +23,7 @@ with patch.dict(
     },
 ):
     with patch("clasificador.FaceAnalysis"), patch("clasificador.cv2"), patch(
-        "clasificador.get_qdrant_adapter"
+        "clasificador.get_qdrant_adapter_instance"
     ):
         import clasificador
 
@@ -153,7 +153,9 @@ class TestClasificadorFunctionality:
                 }
             ]
 
-            with patch.object(clasificador, "get_qdrant_adapter") as mock_adapter:
+            with patch.object(
+                clasificador, "get_qdrant_adapter_instance"
+            ) as mock_adapter:
                 mock_adapter.return_value.save_face.return_value = "face_123"
 
                 result = clasificador.save_multiple_faces("test_image.jpg", "event_123")
@@ -191,7 +193,9 @@ class TestClasificadorFunctionality:
         with patch.object(clasificador, "extract_faces_with_crops") as mock_extract:
             mock_extract.return_value = mock_face_crops
 
-            with patch.object(clasificador, "get_qdrant_adapter") as mock_adapter:
+            with patch.object(
+                clasificador, "get_qdrant_adapter_instance"
+            ) as mock_adapter:
                 mock_search_result = [
                     {
                         "id": "test_id",
@@ -232,7 +236,9 @@ class TestClasificadorFunctionality:
         with patch.object(clasificador, "extract_faces_with_crops") as mock_extract:
             mock_extract.return_value = mock_face_crops
 
-            with patch.object(clasificador, "get_qdrant_adapter") as mock_adapter:
+            with patch.object(
+                clasificador, "get_qdrant_adapter_instance"
+            ) as mock_adapter:
                 mock_adapter.return_value.search_similar.return_value = []  # No matches
 
                 result = clasificador.identify_all_faces("test_image.jpg")
@@ -273,7 +279,7 @@ class TestClasificadorFunctionality:
         """Test updating face information"""
         face_data = {"name": "John Doe", "relationship": "friend", "confidence": "high"}
 
-        with patch.object(clasificador, "get_qdrant_adapter") as mock_adapter:
+        with patch.object(clasificador, "get_qdrant_adapter_instance") as mock_adapter:
             mock_adapter.return_value.update_face.return_value = True
 
             clasificador.update_face("test_face_id", face_data)
@@ -286,7 +292,7 @@ class TestClasificadorFunctionality:
         """Test getting a face by ID"""
         mock_face_data = {"face_id": "test_id", "name": "John"}
 
-        with patch.object(clasificador, "get_qdrant_adapter") as mock_adapter:
+        with patch.object(clasificador, "get_qdrant_adapter_instance") as mock_adapter:
             mock_adapter.return_value.get_face.return_value = mock_face_data
 
             result = clasificador.get_face("test_id")
@@ -454,7 +460,9 @@ class TestClasificadorFunctionality:
         with patch.object(clasificador, "extract_faces_with_crops") as mock_extract:
             mock_extract.return_value = mock_face_crops
 
-            with patch.object(clasificador, "get_qdrant_adapter") as mock_adapter:
+            with patch.object(
+                clasificador, "get_qdrant_adapter_instance"
+            ) as mock_adapter:
                 mock_adapter.return_value.save_face.side_effect = ["face_1", "face_2"]
 
                 result = clasificador.save_multiple_faces("test_image.jpg", "event_123")
@@ -496,7 +504,9 @@ class TestClasificadorFunctionality:
         with patch.object(clasificador, "extract_faces_with_crops") as mock_extract:
             mock_extract.return_value = mock_face_crops
 
-            with patch.object(clasificador, "get_qdrant_adapter") as mock_adapter:
+            with patch.object(
+                clasificador, "get_qdrant_adapter_instance"
+            ) as mock_adapter:
                 # Mock Qdrant search - first face matches, second doesn't
                 mock_search_results = [
                     [

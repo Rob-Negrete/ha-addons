@@ -24,7 +24,7 @@ with patch.dict(
     },
 ):
     with patch("clasificador.FaceAnalysis"), patch("clasificador.cv2"), patch(
-        "clasificador.get_qdrant_adapter"
+        "clasificador.get_qdrant_adapter_instance"
     ):
         import clasificador
 

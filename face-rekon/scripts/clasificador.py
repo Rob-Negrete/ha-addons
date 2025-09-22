@@ -85,47 +85,54 @@ except Exception as e:
     logger.error(f"❌ Failed to initialize InsightFace: {e}")
     raise
 
-# Initialize Qdrant adapter
-logger.info("🚀 Initializing Qdrant vector database")
-try:
-    qdrant_adapter = get_qdrant_adapter()
-    logger.info("✅ Qdrant adapter initialized")
-except Exception as e:
-    logger.error(f"❌ Failed to initialize Qdrant: {e}")
-    qdrant_adapter = None
-    raise
+# Lazy initialization for Qdrant adapter
+_qdrant_adapter = None
+
+
+def get_qdrant_adapter_instance():
+    """Get Qdrant adapter instance with lazy initialization."""
+    global _qdrant_adapter
+    if _qdrant_adapter is None:
+        logger.info("🚀 Initializing Qdrant vector database")
+        try:
+            _qdrant_adapter = get_qdrant_adapter()
+            logger.info("✅ Qdrant adapter initialized")
+        except Exception as e:
+            logger.error(f"❌ Failed to initialize Qdrant: {e}")
+            raise
+    return _qdrant_adapter
 
 
 def db_save_face(face_data: Dict[str, Any], embedding: np.ndarray) -> str:
     """Save face with metadata and embedding using Qdrant."""
-    return qdrant_adapter.save_face(face_data, embedding)
+    return get_qdrant_adapter_instance().save_face(face_data, embedding)
 
 
 def db_search_similar(
     embedding: np.ndarray, limit: int = 1
 ) -> List[Tuple[str, float, Dict[str, Any]]]:
     """Search for similar faces using Qdrant."""
-    return qdrant_adapter.search_similar_faces(embedding, limit)
+    return get_qdrant_adapter_instance().search_similar_faces(embedding, limit)
 
 
 def db_get_face(face_id: str) -> Optional[Dict[str, Any]]:
     """Get face metadata by ID using Qdrant."""
-    return qdrant_adapter.get_face(face_id)
+    return get_qdrant_adapter_instance().get_face(face_id)
 
 
 def db_update_face(face_id: str, updates: Dict[str, Any]) -> bool:
     """Update face metadata using Qdrant."""
-    return qdrant_adapter.update_face(face_id, updates)
+    return get_qdrant_adapter_instance().update_face(face_id, updates)
 
 
 def db_get_unclassified_faces() -> List[Dict[str, Any]]:
     """Get unclassified faces using Qdrant."""
-    return qdrant_adapter.get_unclassified_faces()
+    return get_qdrant_adapter_instance().get_unclassified_faces()
 
 
 def db_check_recent_detection(event_id: str) -> bool:
     """Check for recent detections using Qdrant."""
-    return qdrant_adapter.check_recent_detection(event_id)
+    return get_qdrant_adapter_instance().check_recent_detection(event_id)
 
 
 def extract_face_embedding(image_path: str) -> Optional[np.ndarray]:
