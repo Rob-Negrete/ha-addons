@@ -2,6 +2,13 @@
 
 All notable changes to the Face Rekon Home Assistant add-on will be documented in this file.
 
+## [2.2.2](https://github.com/Rob-Negrete/ha-addons/compare/face-rekon-v2.2.1...face-rekon-v2.2.2) (2025-09-22)
+
+
+### 🧹 Chores
+
+* configure docker-compose for embedded Qdrant mode ([#39](https://github.com/Rob-Negrete/ha-addons/issues/39)) ([abbc04a](https://github.com/Rob-Negrete/ha-addons/commit/abbc04aef937eb159d2c96cd0d6272932c7f64be))
+
 ## [2.2.1](https://github.com/Rob-Negrete/ha-addons/compare/face-rekon-v2.2.0...face-rekon-v2.2.1) (2025-09-22)
 
 
