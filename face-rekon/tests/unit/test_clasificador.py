@@ -331,10 +331,12 @@ class TestClasificadorFunctionality:
         mock_face1 = Mock()
         mock_face1.embedding = self.test_embeddings[0]
         mock_face1.bbox = np.array([100, 150, 200, 250])  # x1, y1, x2, y2
+        mock_face1.det_score = 0.95
 
         mock_face2 = Mock()
         mock_face2.embedding = self.test_embeddings[1]
         mock_face2.bbox = np.array([300, 100, 400, 200])
+        mock_face2.det_score = 0.87
 
         clasificador.app = Mock()
         clasificador.app.get.return_value = [mock_face1, mock_face2]
@@ -345,30 +347,40 @@ class TestClasificadorFunctionality:
         clasificador.cv2.imread.return_value = mock_image
 
         # Mock quality assessment to avoid OpenCV blur detection issues in tests
-        clasificador.assess_face_quality = Mock(
+        clasificador.calculate_face_quality_metrics = Mock(
             return_value={
-                "size_score": 0.8,
-                "blur_score": 0.9,
-                "detection_score": 0.95,
-                "overall_score": 0.88,
+                "quality_score": 0.8,
+                "sharpness": 50.0,
+                "size_score": 0.9,
+                "contrast": 25.0,
+                "overall_quality": 0.85,
             }
         )
 
         # Mock the face thumbnail generation
-        clasificador.generate_face_thumbnail = Mock(return_value="base64_face_crop")
+        clasificador.create_face_thumbnail = Mock(return_value="base64_face_crop")
 
         result = clasificador.extract_faces_with_crops("test_image.jpg")
 
         assert len(result) == 2
+
+        # Check first face
         assert result[0]["face_index"] == 0
         assert result[0]["face_bbox"] == [100, 150, 200, 250]
-        assert result[0]["face_crop"] == "base64_face_crop"
+        assert result[0]["thumbnail"] == "base64_face_crop"
+        assert result[0]["detection_confidence"] == 0.95
         assert np.array_equal(result[0]["embedding"], self.test_embeddings[0])
+        assert "face_id" in result[0]
+        assert "quality_metrics" in result[0]
 
+        # Check second face
         assert result[1]["face_index"] == 1
         assert result[1]["face_bbox"] == [300, 100, 400, 200]
-        assert result[1]["face_crop"] == "base64_face_crop"
+        assert result[1]["thumbnail"] == "base64_face_crop"
+        assert result[1]["detection_confidence"] == 0.87
         assert np.array_equal(result[1]["embedding"], self.test_embeddings[1])
+        assert "face_id" in result[1]
+        assert "quality_metrics" in result[1]
 
     def test_extract_face_crops_no_faces(self):
         """Test face crops extraction when no faces detected"""
