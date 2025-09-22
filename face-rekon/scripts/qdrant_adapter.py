@@ -27,6 +27,10 @@ logger = logging.getLogger(__name__)
 # Configuration from environment variables
 QDRANT_HOST = os.environ.get("QDRANT_HOST", "localhost")
 QDRANT_PORT = int(os.environ.get("QDRANT_PORT", "6333"))
+QDRANT_PATH = os.environ.get("QDRANT_PATH", "/config/face-rekon/qdrant")
+USE_EMBEDDED_QDRANT = (
+    os.environ.get("FACE_REKON_USE_EMBEDDED_QDRANT", "true").lower() == "true"
+)
 COLLECTION_NAME = "faces"
 EMBEDDING_SIZE = 512  # InsightFace embedding dimension
 
@@ -54,23 +58,39 @@ class QdrantAdapter:
 
     def _connect_with_retry(self, max_retries: int = 5):
         """Connect to Qdrant with retry logic."""
-        for attempt in range(max_retries):
+        if USE_EMBEDDED_QDRANT:
             try:
-                self.client = QdrantClient(host=QDRANT_HOST, port=QDRANT_PORT)
-                # Test connection
-                self.client.get_collections()
-                logger.info(f"✅ Connected to Qdrant at {QDRANT_HOST}:{QDRANT_PORT}")
+                # Use embedded mode - no server needed
+                os.makedirs(QDRANT_PATH, exist_ok=True)
+                self.client = QdrantClient(path=QDRANT_PATH)
+                logger.info(f"✅ Connected to embedded Qdrant at {QDRANT_PATH}")
                 return
             except Exception as e:
-                logger.warning(
-                    f"⚠️ Qdrant connection attempt {attempt + 1}/{max_retries} "
-                    f"failed: {e}"
-                )
-                if attempt < max_retries - 1:
-                    time.sleep(2**attempt)  # Exponential backoff
-                else:
-                    logger.error("❌ Failed to connect to Qdrant after all retries")
-                    raise
+                logger.error(f"❌ Failed to initialize embedded Qdrant: {e}")
+                raise
+        else:
+            # Use remote server mode (original behavior)
+            for attempt in range(max_retries):
+                try:
+                    self.client = QdrantClient(host=QDRANT_HOST, port=QDRANT_PORT)
+                    # Test connection
+                    self.client.get_collections()
+                    logger.info(
+                        f"✅ Connected to Qdrant server at {QDRANT_HOST}:{QDRANT_PORT}"
+                    )
+                    return
+                except Exception as e:
+                    logger.warning(
+                        f"⚠️ Qdrant connection attempt {attempt + 1}/{max_retries} "
+                        f"failed: {e}"
+                    )
+                    if attempt < max_retries - 1:
+                        time.sleep(2**attempt)  # Exponential backoff
+                    else:
+                        logger.error(
+                            "❌ Failed to connect to Qdrant server after all retries"
+                        )
+                        raise
 
     def _ensure_collection(self):
         """Create the faces collection if it doesn't exist."""
