@@ -2,6 +2,13 @@
 
 All notable changes to the Face Rekon Home Assistant add-on will be documented in this file.
 
+## [2.2.0](https://github.com/Rob-Negrete/ha-addons/compare/face-rekon-v2.1.0...face-rekon-v2.2.0) (2025-09-22)
+
+
+### ✨ Features
+
+* add embedded Qdrant mode for Home Assistant OS compatibility ([#35](https://github.com/Rob-Negrete/ha-addons/issues/35)) ([98716a6](https://github.com/Rob-Negrete/ha-addons/commit/98716a6db137200d81fcf679c7b099a675c22762))
+
 ## [2.1.0](https://github.com/Rob-Negrete/ha-addons/compare/face-rekon-v2.0.1...face-rekon-v2.1.0) (2025-09-19)
 
 
