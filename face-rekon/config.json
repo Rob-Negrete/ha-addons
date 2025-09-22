@@ -1,6 +1,6 @@
 {
   "name": "Face Rekon",
-  "version": "2.0.2",
+  "version": "2.1.0",
   "slug": "face_rekon",
   "description": "AI-powered face recognition with comprehensive web UI for managing and labeling faces. Features real-time detection, FAISS similarity search, and seamless Home Assistant integration.",
   "startup": "application",
@@ -17,13 +17,15 @@
     "db_path": "/config/face-rekon/db",
     "faces_path": "/config/face-rekon/faces",
     "unknowns_path": "/config/face-rekon/unknowns",
-    "index_path": "/config/face-rekon/db/faiss_index.index"
+    "index_path": "/config/face-rekon/db/faiss_index.index",
+    "qdrant_path": "/config/face-rekon/qdrant"
   },
   "schema": {
     "db_path": "str",
     "faces_path": "str",
     "unknowns_path": "str",
-    "index_path": "str"
+    "index_path": "str",
+    "qdrant_path": "str"
   },
   "ports": {
     "5001/tcp": 5001
