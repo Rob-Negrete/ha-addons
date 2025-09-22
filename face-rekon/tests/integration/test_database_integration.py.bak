@@ -1,6 +1,6 @@
 """
 Integration tests for database operations.
-Tests real TinyDB operations with actual ML models for true integration testing.
+Tests real Qdrant operations with actual ML models for true integration testing.
 """
 import os
 
@@ -11,28 +11,24 @@ from PIL import Image
 
 @pytest.mark.integration
 class TestDatabaseIntegration:
-    """Integration tests for database operations with real TinyDB"""
+    """Integration tests for database operations with real Qdrant"""
 
     def test_database_initialization(self, clean_test_env, shared_ml_models):
         """
-        Integration test: Verify TinyDB database and FAISS index initialization
+        Integration test: Verify Qdrant database initialization
         """
         # Use the real models from session-scoped fixture
         clasificador = shared_ml_models["clasificador"]
 
-        # Verify database instance exists and is functional
-        assert clasificador.db is not None
-        assert hasattr(clasificador.db, "insert")
-        assert hasattr(clasificador.db, "search")
-
-        # Verify FAISS index exists and has correct dimensions
-        assert hasattr(clasificador, "index")
-        if clasificador.index is not None:
-            # FAISS index should be 512-dimensional for InsightFace embeddings
-            assert clasificador.index.d == 512
+        # Verify Qdrant adapter exists and is functional
+        assert hasattr(clasificador, "get_qdrant_adapter")
+        qdrant_adapter = clasificador.get_qdrant_adapter()
+        assert qdrant_adapter is not None
+        assert hasattr(qdrant_adapter, "save_face")
+        assert hasattr(qdrant_adapter, "search_face")
 
         # Verify test database directory exists
-        assert os.path.exists(os.path.dirname(clean_test_env["db_path"]))
+        assert os.path.exists(clean_test_env["qdrant_path"])
 
     def test_save_unknown_face_database_integration(
         self, clean_test_env, test_images, shared_ml_models

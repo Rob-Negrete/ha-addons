@@ -12,9 +12,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN pip install --no-cache-dir \
     onnxruntime \
     insightface==0.7.3 \
-    opencv-python-headless \
-    faiss-cpu==1.10.0 \
-    tinydb
+    opencv-python-headless
 
 # Install test dependencies
 RUN pip install --no-cache-dir \

@@ -25,18 +25,15 @@ sys.path.insert(0, scripts_path)
 test_temp_base = "/tmp/face_rekon_integration_test"
 os.environ["FACE_REKON_BASE_PATH"] = os.path.join(test_temp_base, "faces")
 os.environ["FACE_REKON_UNKNOWN_PATH"] = os.path.join(test_temp_base, "unknowns")
-os.environ["FACE_REKON_DB_PATH"] = os.path.join(test_temp_base, "db", "tinydb.json")
-os.environ["FACE_REKON_FAISS_INDEX_PATH"] = os.path.join(
-    test_temp_base, "db", "faiss_index.index"
-)
-os.environ["FACE_REKON_MAPPING_PATH"] = os.path.join(
-    test_temp_base, "db", "faiss_id_map.npy"
-)
+os.environ["FACE_REKON_THUMBNAIL_PATH"] = os.path.join(test_temp_base, "thumbnails")
+os.environ["QDRANT_PATH"] = os.path.join(test_temp_base, "qdrant")
+os.environ["FACE_REKON_USE_EMBEDDED_QDRANT"] = "true"
 
 # Create the base directories immediately
 os.makedirs(os.path.join(test_temp_base, "faces"), exist_ok=True)
 os.makedirs(os.path.join(test_temp_base, "unknowns"), exist_ok=True)
-os.makedirs(os.path.join(test_temp_base, "db"), exist_ok=True)
+os.makedirs(os.path.join(test_temp_base, "thumbnails"), exist_ok=True)
+os.makedirs(os.path.join(test_temp_base, "qdrant"), exist_ok=True)
 
 # Set memory optimization flags for ML models
 os.environ["OMP_NUM_THREADS"] = "2"
@@ -56,21 +53,15 @@ def integration_test_env():
     test_config = {
         "base_path": os.path.join(temp_base, "faces"),
         "unknown_path": os.path.join(temp_base, "unknowns"),
-        "db_path": os.path.join(temp_base, "db", "tinydb.json"),
-        "faiss_index_path": os.path.join(temp_base, "db", "faiss_index.index"),
-        "mapping_path": os.path.join(temp_base, "db", "faiss_id_map.npy"),
+        "thumbnail_path": os.path.join(temp_base, "thumbnails"),
+        "qdrant_path": os.path.join(temp_base, "qdrant"),
         "tmp_path": os.path.join(temp_base, "tmp"),
     }
 
     # Create directory structure
     for path_key, path_value in test_config.items():
-        if path_key.endswith("_path") and not path_key == "db_path":
-            os.makedirs(os.path.dirname(path_value), exist_ok=True)
-        elif path_key in ["base_path", "unknown_path", "tmp_path"]:
+        if path_key.endswith("_path"):
             os.makedirs(path_value, exist_ok=True)
-
-    # Create db directory
-    os.makedirs(os.path.dirname(test_config["db_path"]), exist_ok=True)
 
     yield test_config
 
@@ -93,8 +84,7 @@ def shared_ml_models():
         "clasificador": clasificador,
         "app": app.app,
         "insightface_app": clasificador.app,
-        "faiss_index": getattr(clasificador, "index", None),
-        "db": clasificador.db,
+        "qdrant_adapter": getattr(clasificador, "qdrant_adapter", None),
     }
 
 
@@ -106,13 +96,14 @@ def clean_test_env(integration_test_env):
     """
     config = integration_test_env.copy()
 
-    # Clean up files and databases before each test
-    for path in [config["db_path"], config["faiss_index_path"], config["mapping_path"]]:
-        if os.path.exists(path):
-            os.remove(path)
-
     # Clean up directories
-    for dir_path in [config["base_path"], config["unknown_path"], config["tmp_path"]]:
+    for dir_path in [
+        config["base_path"],
+        config["unknown_path"],
+        config["thumbnail_path"],
+        config["qdrant_path"],
+        config["tmp_path"],
+    ]:
         if os.path.exists(dir_path):
             shutil.rmtree(dir_path)
             os.makedirs(dir_path, exist_ok=True)
