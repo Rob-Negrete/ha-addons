@@ -484,4 +484,6 @@ def serve_face_image(face_id: str) -> Any:
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5001, debug=True)
+    # Disable debug mode in production to prevent Flask reloader conflicts
+    debug_mode = os.environ.get("FLASK_DEBUG", "false").lower() == "true"
+    app.run(host="0.0.0.0", port=5001, debug=debug_mode)

@@ -66,7 +66,16 @@ class QdrantAdapter:
                 logger.info(f"✅ Connected to embedded Qdrant at {QDRANT_PATH}")
                 return
             except Exception as e:
-                logger.error(f"❌ Failed to initialize embedded Qdrant: {e}")
+                # Check if it's a storage lock conflict (common during Flask reloads)
+                if "already accessed by another instance" in str(e):
+                    logger.warning(
+                        f"⚠️ Qdrant storage locked (likely Flask reload): {e}"
+                    )
+                    logger.info(
+                        "🔄 This is normal during development - falling back to FAISS"
+                    )
+                else:
+                    logger.error(f"❌ Failed to initialize embedded Qdrant: {e}")
                 raise
         else:
             # Use remote server mode (original behavior)
