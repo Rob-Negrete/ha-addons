@@ -31,8 +31,6 @@ RUN pip install --no-cache-dir \
     pillow \
     numpy \
     opencv-python-headless \
-    tinydb \
-    faiss-cpu==1.10.0 \
     onnxruntime \
     flask \
     flask-cors \

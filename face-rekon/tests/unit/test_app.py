@@ -20,14 +20,12 @@ with patch.dict(
     "sys.modules",
     {
         "insightface.app": mock_insightface,
-        "tinydb": mock_tinydb,
-        "faiss": mock_faiss,
         "cv2": mock_cv2,
     },
 ):
-    with patch("clasificador.TinyDB"), patch("clasificador.faiss"), patch(
-        "clasificador.FaceAnalysis"
-    ), patch("clasificador.cv2"):
+    with patch("clasificador.FaceAnalysis"), patch("clasificador.cv2"), patch(
+        "clasificador.get_qdrant_adapter"
+    ):
         import clasificador
 
 

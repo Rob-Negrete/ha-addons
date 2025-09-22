@@ -17,10 +17,9 @@ services:
     environment:
       - PYTHONUNBUFFERED=1
       - FLASK_ENV=development
-      - FLASK_DEBUG=1
-      - QDRANT_HOST=qdrant
-      - QDRANT_PORT=6333
-      - FACE_REKON_USE_QDRANT=true
+      - FLASK_DEBUG=false
+      - FACE_REKON_USE_EMBEDDED_QDRANT=true
+      - QDRANT_PATH=/config/face-rekon/qdrant
       - FACE_REKON_SIMILARITY_THRESHOLD=0.35
       - FACE_REKON_BORDERLINE_THRESHOLD=0.50
       - FACE_REKON_DEDUPLICATION_WINDOW=60
