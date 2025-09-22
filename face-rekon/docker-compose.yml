@@ -30,5 +30,3 @@ services:
       - ./ui:/app/ui
     ports:
       - "5001:5001" # assuming Flask app runs on port 5001
-    depends_on:
-      - qdrant

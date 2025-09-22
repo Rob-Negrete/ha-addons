@@ -1,8 +1,8 @@
 {
   "name": "Face Rekon",
-  "version": "2.2.1",
+  "version": "2.2.2",
   "slug": "face_rekon",
-  "description": "AI-powered face recognition with comprehensive web UI for managing and labeling faces. Features real-time detection, FAISS similarity search, and seamless Home Assistant integration.",
+  "description": "AI-powered face recognition with comprehensive web UI for managing and labeling faces. Features real-time detection, Qdrant vector similarity search, and seamless Home Assistant integration.",
   "startup": "application",
   "arch": ["amd64", "armv7", "aarch64"],
   "boot": "auto",
