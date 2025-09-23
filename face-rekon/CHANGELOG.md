@@ -2,6 +2,13 @@
 
 All notable changes to the Face Rekon Home Assistant add-on will be documented in this file.
 
+## [3.0.1](https://github.com/Rob-Negrete/ha-addons/compare/face-rekon-v3.0.0...face-rekon-v3.0.1) (2025-09-23)
+
+
+### 🐛 Bug Fixes
+
+* add missing thumbnail and image_path storage to Qdrant adapter ([#44](https://github.com/Rob-Negrete/ha-addons/issues/44)) ([9ff05eb](https://github.com/Rob-Negrete/ha-addons/commit/9ff05eb73a13a5e6d12cbcf68df330f74663bed4))
+
 ## [3.0.0](https://github.com/Rob-Negrete/ha-addons/compare/face-rekon-v2.2.2...face-rekon-v3.0.0) (2025-09-23)
 
 
