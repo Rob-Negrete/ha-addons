@@ -137,14 +137,13 @@ class QdrantAdapter:
         try:
             face_id = face_data.get("face_id", str(uuid.uuid4()))
 
-            # Prepare payload (metadata)
+            # Prepare payload (metadata) - file-based storage only
             payload = {
                 "face_id": face_id,
                 "name": face_data.get("name", "unknown"),
                 "event_id": face_data.get("event_id", "unknown"),
                 "timestamp": face_data.get("timestamp", int(time.time())),
                 "image_path": face_data.get("image_path"),
-                "thumbnail": face_data.get("thumbnail"),
                 "thumbnail_path": face_data.get("thumbnail_path"),
                 "notes": face_data.get("notes", ""),
                 "confidence": face_data.get("confidence", 0.0),
