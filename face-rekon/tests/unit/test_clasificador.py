@@ -363,8 +363,10 @@ class TestClasificadorFunctionality:
             }
         )
 
-        # Mock the face thumbnail generation
-        clasificador.create_face_thumbnail = Mock(return_value="base64_face_crop")
+        # Mock the file-based thumbnail saving
+        clasificador.save_face_crop_to_file = Mock(
+            return_value="/tmp/test_thumbnails/test-face-123.jpg"
+        )
 
         result = clasificador.extract_faces_with_crops("test_image.jpg")
 
@@ -373,7 +375,7 @@ class TestClasificadorFunctionality:
         # Check first face
         assert result[0]["face_index"] == 0
         assert result[0]["face_bbox"] == [100, 150, 200, 250]
-        assert result[0]["thumbnail"] == "base64_face_crop"
+        assert result[0]["thumbnail_path"] == "/tmp/test_thumbnails/test-face-123.jpg"
         assert result[0]["detection_confidence"] == 0.95
         assert np.array_equal(result[0]["embedding"], self.test_embeddings[0])
         assert "face_id" in result[0]
@@ -382,7 +384,7 @@ class TestClasificadorFunctionality:
         # Check second face
         assert result[1]["face_index"] == 1
         assert result[1]["face_bbox"] == [300, 100, 400, 200]
-        assert result[1]["thumbnail"] == "base64_face_crop"
+        assert result[1]["thumbnail_path"] == "/tmp/test_thumbnails/test-face-123.jpg"
         assert result[1]["detection_confidence"] == 0.87
         assert np.array_equal(result[1]["embedding"], self.test_embeddings[1])
         assert "face_id" in result[1]

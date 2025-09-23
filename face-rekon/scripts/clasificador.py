@@ -335,17 +335,20 @@ def extract_faces_with_crops(image_path: str) -> List[Dict[str, Any]]:
                     )
                     continue
 
-                # Create thumbnail
-                thumbnail_b64 = create_face_thumbnail(face_crop)
+                # Generate face ID
+                face_id = str(uuid.uuid4())
+
+                # Save thumbnail directly to file (no base64 step)
+                thumbnail_path = save_face_crop_to_file(face_crop, face_id)
 
                 # Prepare face data
                 face_data = {
-                    "face_id": str(uuid.uuid4()),
+                    "face_id": face_id,
                     "embedding": face.embedding,
                     "detection_confidence": float(face.det_score),
                     "face_bbox": [int(x) for x in bbox],
                     "quality_metrics": quality_metrics,
-                    "thumbnail": thumbnail_b64,
+                    "thumbnail_path": thumbnail_path,
                     "face_index": i,
                 }
 
@@ -404,8 +407,8 @@ def save_multiple_faces_optimized(image_path: str, event_id: str) -> List[str]:
                     "face_id": face_data["face_id"],
                     "name": "unknown",  # Will be classified later
                     "event_id": event_id,
-                    "timestamp": int(time.time()),
-                    "thumbnail": face_data["thumbnail"],
+                    "timestamp": int(time.time() * 1000),
+                    "thumbnail_path": face_data["thumbnail_path"],
                     "confidence": face_data["detection_confidence"],
                     "quality_metrics": face_data["quality_metrics"],
                     "face_bbox": face_data["face_bbox"],
@@ -569,10 +572,10 @@ def identify_all_faces(image_path: str) -> List[Dict[str, Any]]:
 
 
 def get_unclassified_faces() -> List[Dict[str, Any]]:
-    """Get all unclassified faces from the database.
+    """Get all unclassified faces from the database with file paths.
 
     Returns:
-        List of unclassified face dictionaries
+        List of unclassified face dictionaries with thumbnail_path for direct access
     """
     try:
         logger.info("📋 Retrieving unclassified faces")
@@ -608,9 +611,105 @@ def get_face(face_id: str) -> Optional[Dict[str, Any]]:
     return db_get_face(face_id)
 
 
-def get_face_with_thumbnail(face_id: str) -> Optional[Dict[str, Any]]:
-    """Get face metadata with thumbnail by ID.
+def save_thumbnail_to_file(thumbnail_base64: str, face_id: str) -> str:
+    """Save base64 thumbnail as JPEG file and return file path.
 
-    Since Qdrant stores thumbnails inline, this is the same as get_face.
+    Args:
+        thumbnail_base64: Base64 encoded JPEG data
+        face_id: Unique face identifier
+
+    Returns:
+        Path to saved thumbnail file
     """
-    return db_get_face(face_id)
+    # Determine thumbnail directory
+    thumbnail_dir = THUMBNAIL_PATH
+
+    # Ensure thumbnail directory exists
+    try:
+        os.makedirs(thumbnail_dir, exist_ok=True)
+    except (OSError, PermissionError) as e:
+        logger.warning(f"⚠️ Could not create thumbnail directory {thumbnail_dir}: {e}")
+        # Fallback to temp directory for testing environments
+        thumbnail_dir = os.path.join("/tmp", "face_rekon_thumbnails")
+        os.makedirs(thumbnail_dir, exist_ok=True)
+        logger.info(f"📁 Using fallback thumbnail path: {thumbnail_dir}")
+
+    # Create thumbnail file path
+    thumbnail_file = f"{face_id}.jpg"
+    thumbnail_path = os.path.join(thumbnail_dir, thumbnail_file)
+
+    # Decode and save thumbnail
+    try:
+        thumbnail_data = base64.b64decode(thumbnail_base64)
+        with open(thumbnail_path, "wb") as f:
+            f.write(thumbnail_data)
+
+        logger.info(f"💾 Saved thumbnail: {thumbnail_path}")
+        return thumbnail_path
+
+    except Exception as e:
+        logger.error(f"❌ Failed to save thumbnail {face_id}: {e}")
+        return ""
+
+
+def save_face_crop_to_file(face_crop: np.ndarray, face_id: str) -> str:
+    """Save face crop directly as JPEG file without base64 conversion.
+
+    Args:
+        face_crop: Face crop image as numpy array
+        face_id: Unique face identifier
+
+    Returns:
+        Path to saved thumbnail file
+    """
+    # Determine thumbnail directory
+    thumbnail_dir = THUMBNAIL_PATH
+
+    # Ensure thumbnail directory exists
+    try:
+        os.makedirs(thumbnail_dir, exist_ok=True)
+    except (OSError, PermissionError) as e:
+        logger.warning(f"⚠️ Could not create thumbnail directory {thumbnail_dir}: {e}")
+        # Fallback to temp directory for testing environments
+        thumbnail_dir = os.path.join("/tmp", "face_rekon_thumbnails")
+        os.makedirs(thumbnail_dir, exist_ok=True)
+        logger.info(f"📁 Using fallback thumbnail path: {thumbnail_dir}")
+
+    # Create thumbnail file path
+    thumbnail_file = f"{face_id}.jpg"
+    thumbnail_path = os.path.join(thumbnail_dir, thumbnail_file)
+
+    try:
+        # Resize to thumbnail size
+        thumbnail = cv2.resize(face_crop, THUMBNAIL_SIZE, interpolation=cv2.INTER_AREA)
+
+        # Convert BGR to RGB if needed
+        if len(thumbnail.shape) == 3:
+            # OpenCV uses BGR, convert to RGB for PIL
+            thumbnail_rgb = cv2.cvtColor(thumbnail, cv2.COLOR_BGR2RGB)
+            pil_image = Image.fromarray(thumbnail_rgb)
+        else:
+            pil_image = Image.fromarray(thumbnail)
+
+        # Save directly as JPEG
+        pil_image.save(thumbnail_path, "JPEG", quality=85, optimize=True)
+
+        logger.info(f"💾 Saved thumbnail: {thumbnail_path}")
+        return thumbnail_path
+
+    except Exception as e:
+        logger.error(f"❌ Failed to save thumbnail {face_id}: {e}")
+        return ""
+
+
+def get_face_with_thumbnail(face_id: str) -> Optional[Dict[str, Any]]:
+    """Get face metadata with thumbnail_path (no base64 conversion).
+
+    Args:
+        face_id: Face identifier
+
+    Returns:
+        Face metadata with thumbnail_path, or None if not found
+    """
+    face = db_get_face(face_id)
+    return face

@@ -421,7 +421,7 @@ def debug_test_webp() -> Any:
 def serve_face_image(face_id: str) -> Any:
     """Serve face thumbnail images by face ID
 
-    Returns face thumbnail as JPEG image from base64 data stored in TinyDB.
+    Returns face thumbnail as JPEG image directly from file system.
     Provides proper HTTP headers for caching and content type.
 
     Args:
@@ -429,13 +429,12 @@ def serve_face_image(face_id: str) -> Any:
 
     Returns:
         200: Image data with proper headers
-        404: Face ID not found
+        404: Face ID not found or thumbnail file missing
         400: Invalid face ID format
     """
-    import base64
     import re
 
-    from flask import Response
+    from flask import send_file
 
     # Validate face_id format (basic UUID validation)
     if not face_id or not isinstance(face_id, str):
@@ -450,33 +449,27 @@ def serve_face_image(face_id: str) -> Any:
         return {"error": "Invalid face ID format"}, 400
 
     try:
-        # Get face data with thumbnail loaded (supports both storage formats)
+        # Get face data to find thumbnail path
         face = clasificador.get_face_with_thumbnail(face_id)
 
         if not face:
             return {"error": "Face not found"}, 404
 
-        # Check if thumbnail exists
-        if "thumbnail" not in face or not face["thumbnail"]:
-            return {"error": "No thumbnail available"}, 404
+        # Check if thumbnail file path exists
+        thumbnail_path = face.get("thumbnail_path")
+        if not thumbnail_path or not os.path.exists(thumbnail_path):
+            return {"error": "Thumbnail file not found"}, 404
 
-        # Decode base64 thumbnail
-        try:
-            image_data = base64.b64decode(face["thumbnail"])
-        except Exception:
-            return {"error": "Invalid image data"}, 400
-
-        # Create response with proper headers
-        response = Response(
-            image_data,
+        # Serve the JPEG file directly
+        response = send_file(
+            thumbnail_path,
             mimetype="image/jpeg",
-            headers={
-                "Content-Type": "image/jpeg",
-                "Cache-Control": "public, max-age=3600",  # Cache for 1 hour
-                "Content-Length": str(len(image_data)),
-            },
+            as_attachment=False,
+            download_name=f"{face_id}.jpg",
         )
-
+        # Set cache headers manually
+        response.cache_control.max_age = 3600  # Cache for 1 hour
+        response.cache_control.public = True
         return response
 
     except Exception as e:
