@@ -73,11 +73,14 @@ def create_models(api: Api) -> Dict[str, Any]:
         {
             "face_id": fields.String(description="Face ID"),
             "name": fields.String(description="Person name"),
-            "timestamp": fields.String(description="When face was detected"),
+            "timestamp": fields.Integer(
+                description="Unix timestamp in milliseconds when face was detected"
+            ),
             "event_id": fields.String(description="Associated event ID"),
-            "image_path": fields.String(description="Path to face image"),
-            "thumbnail": fields.String(description="Path to thumbnail image"),
-            "relationship": fields.String(description="Relationship to owner"),
+            "thumbnail_path": fields.String(description="Path to thumbnail image file"),
+            "relationship": fields.String(
+                description="Social relationship (family, friend, neighbor, etc.)"
+            ),
             "confidence": fields.String(description="Confidence level"),
         },
     )
@@ -86,6 +89,9 @@ def create_models(api: Api) -> Dict[str, Any]:
         "FaceUpdate",
         {
             "name": fields.String(description="Person name to assign to face"),
+            "relationship": fields.String(
+                description="Social relationship (family, friend, neighbor, etc.)"
+            ),
             "notes": fields.String(
                 description="Additional notes about the person"
             ),  # noqa: E501

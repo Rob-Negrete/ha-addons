@@ -142,7 +142,7 @@ class QdrantAdapter:
                 "face_id": face_id,
                 "name": face_data.get("name", "unknown"),
                 "event_id": face_data.get("event_id", "unknown"),
-                "timestamp": face_data.get("timestamp", int(time.time())),
+                "timestamp": face_data.get("timestamp", int(time.time() * 1000)),
                 "image_path": face_data.get("image_path"),
                 "thumbnail_path": face_data.get("thumbnail_path"),
                 "notes": face_data.get("notes", ""),

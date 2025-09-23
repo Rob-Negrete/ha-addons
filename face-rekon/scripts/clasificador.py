@@ -407,7 +407,7 @@ def save_multiple_faces_optimized(image_path: str, event_id: str) -> List[str]:
                     "face_id": face_data["face_id"],
                     "name": "unknown",  # Will be classified later
                     "event_id": event_id,
-                    "timestamp": int(time.time()),
+                    "timestamp": int(time.time() * 1000),
                     "thumbnail_path": face_data["thumbnail_path"],
                     "confidence": face_data["detection_confidence"],
                     "quality_metrics": face_data["quality_metrics"],
@@ -572,23 +572,14 @@ def identify_all_faces(image_path: str) -> List[Dict[str, Any]]:
 
 
 def get_unclassified_faces() -> List[Dict[str, Any]]:
-    """Get all unclassified faces from the database with thumbnails loaded from files.
+    """Get all unclassified faces from the database with file paths.
 
     Returns:
-        List of unclassified face dictionaries with thumbnail data
+        List of unclassified face dictionaries with thumbnail_path for direct access
     """
     try:
         logger.info("📋 Retrieving unclassified faces")
         unclassified = db_get_unclassified_faces()
-
-        # Load thumbnails from files for each face
-        for face in unclassified:
-            if "thumbnail_path" in face and face["thumbnail_path"]:
-                thumbnail_base64 = get_thumbnail_from_file(face["thumbnail_path"])
-                face["thumbnail"] = thumbnail_base64
-            else:
-                face["thumbnail"] = None
-
         logger.info(f"📊 Found {len(unclassified)} unclassified faces")
         return unclassified
     except Exception as e:
@@ -711,50 +702,14 @@ def save_face_crop_to_file(face_crop: np.ndarray, face_id: str) -> str:
         return ""
 
 
-def get_thumbnail_from_file(thumbnail_path: str) -> Optional[str]:
-    """Load thumbnail from file and return as base64.
-
-    Args:
-        thumbnail_path: Path to thumbnail file
-
-    Returns:
-        Base64 encoded JPEG data or None if file not found
-    """
-    if not thumbnail_path or not os.path.exists(thumbnail_path):
-        return None
-
-    try:
-        with open(thumbnail_path, "rb") as f:
-            thumbnail_data = f.read()
-        return base64.b64encode(thumbnail_data).decode("utf-8")
-
-    except Exception as e:
-        logger.error(f"❌ Failed to load thumbnail {thumbnail_path}: {e}")
-        return None
-
-
 def get_face_with_thumbnail(face_id: str) -> Optional[Dict[str, Any]]:
-    """Get face metadata with thumbnail loaded from file.
+    """Get face metadata with thumbnail_path (no base64 conversion).
 
     Args:
         face_id: Face identifier
 
     Returns:
-        Face metadata with thumbnail loaded from file, or None if not found
+        Face metadata with thumbnail_path, or None if not found
     """
     face = db_get_face(face_id)
-    if not face:
-        return None
-
-    # Load thumbnail from file if path exists
-    if "thumbnail_path" in face and face["thumbnail_path"]:
-        thumbnail_base64 = get_thumbnail_from_file(face["thumbnail_path"])
-        if thumbnail_base64:
-            face["thumbnail"] = thumbnail_base64
-        else:
-            logger.warning(f"⚠️ Thumbnail file not found: {face['thumbnail_path']}")
-            face["thumbnail"] = None
-    else:
-        face["thumbnail"] = None
-
     return face
