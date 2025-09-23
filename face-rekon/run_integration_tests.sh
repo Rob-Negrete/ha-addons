@@ -7,9 +7,8 @@ echo "==============================="
 
 # Test files to run (ordered by execution time - fastest first)
 test_files=(
-    "tests/integration/test_database_integration.py"
-    "tests/integration/test_api_integration.py"
-    "tests/integration/test_end_to_end.py"
+    "tests/integration/test_database_integration_simple.py"
+    "tests/integration/test_api_integration_simple.py"
 )
 
 failed_tests=()

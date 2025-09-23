@@ -45,6 +45,11 @@ jobs:
       - name: Run unit tests with coverage
         run: |
           cd face-rekon
+          QDRANT_PATH=/tmp/ci_test_qdrant \
+          FACE_REKON_BASE_PATH=/tmp/ci_test_faces \
+          FACE_REKON_UNKNOWN_PATH=/tmp/ci_test_unknowns \
+          FACE_REKON_THUMBNAIL_PATH=/tmp/ci_test_thumbnails \
+          FACE_REKON_USE_EMBEDDED_QDRANT=true \
           python -m pytest tests/unit/ -c pytest-unit.ini -v --cov=scripts --cov-report=xml --cov-report=json --cov-report=term-missing
 
       - name: Build test container
