@@ -2,6 +2,17 @@
 
 All notable changes to the Face Rekon Home Assistant add-on will be documented in this file.
 
+## [3.0.0](https://github.com/Rob-Negrete/ha-addons/compare/face-rekon-v2.2.2...face-rekon-v3.0.0) (2025-09-23)
+
+
+### ⚠ BREAKING CHANGES
+
+* Remove FAISS and TinyDB dependencies - Migrate    to Qdrant-only architecture ([#41](https://github.com/Rob-Negrete/ha-addons/issues/41))
+
+### ✨ Features
+
+* Remove FAISS and TinyDB dependencies - Migrate    to Qdrant-only architecture ([#41](https://github.com/Rob-Negrete/ha-addons/issues/41)) ([116d887](https://github.com/Rob-Negrete/ha-addons/commit/116d887f5cd8eb1feee07cf45a2b0dc098e23009))
+
 ## [2.2.2](https://github.com/Rob-Negrete/ha-addons/compare/face-rekon-v2.2.1...face-rekon-v2.2.2) (2025-09-22)
 
 
