@@ -1,6 +1,6 @@
 {
   "name": "Face Rekon",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "slug": "face_rekon",
   "description": "AI-powered face recognition with comprehensive web UI for managing and labeling faces. Features real-time detection, Qdrant vector similarity search, and seamless Home Assistant integration.",
   "startup": "application",
