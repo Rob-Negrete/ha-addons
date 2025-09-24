@@ -114,23 +114,36 @@ jobs:
         id: coverage-report
         run: |
           if [[ -f "coverage-report.md" ]]; then
-            {
-              echo "report<<COVERAGE_REPORT_EOF"
-              cat coverage-report.md
-              echo "COVERAGE_REPORT_EOF"
-            } >> $GITHUB_OUTPUT
+            # Extract key information from the report instead of passing the whole file
+            coverage=$(grep "Current Coverage:" coverage-report.md | sed 's/.*Current Coverage:\*\* \([0-9.]*\)%.*/\1/' || echo "unknown")
+            status=$(grep "Coverage Health Check:" coverage-report.md | sed 's/.*## \(.*\) Coverage Health Check:.*/\1/' || echo "unknown")
+            echo "coverage=$coverage" >> $GITHUB_OUTPUT
+            echo "status=$status" >> $GITHUB_OUTPUT
+            echo "report_exists=true" >> $GITHUB_OUTPUT
           else
-            echo "report=Coverage report not generated" >> $GITHUB_OUTPUT
+            echo "report_exists=false" >> $GITHUB_OUTPUT
+            echo "coverage=unknown" >> $GITHUB_OUTPUT
+            echo "status=unknown" >> $GITHUB_OUTPUT
           fi
 
       - name: Create/Update PR Comment
         uses: actions/github-script@v7
         with:
           script: |
-            const coverageReport = `${{ steps.coverage-report.outputs.report }}`;
+            const coverage = '${{ steps.coverage-report.outputs.coverage }}';
+            const status = '${{ steps.coverage-report.outputs.status }}';
+            const reportExists = '${{ steps.coverage-report.outputs.report_exists }}' === 'true';
+
+            let statusIcon = '❓';
+            if (status.includes('🟢')) statusIcon = '🟢';
+            else if (status.includes('🟡')) statusIcon = '🟡';
+            else if (status.includes('🔴')) statusIcon = '🔴';
+
             const commentBody = `## 📊 Coverage Health Report
 
-            ${coverageReport}
+            ${statusIcon} **Status:** ${status.replace(/🟢|🟡|🔴/g, '').trim()}
+            📈 **Coverage:** ${coverage}%
+            📋 **Report Generated:** ${reportExists ? 'Yes' : 'No'}
 
             <details>
             <summary>About Coverage Health Checks</summary>
