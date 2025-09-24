@@ -336,7 +336,8 @@ class QdrantAdapter:
             )
 
             logger.info(
-                f"📋 Found {len(faces_sorted)} unclassified faces (sorted newest first)"
+                f"📋 Found {len(faces_sorted)} unclassified faces "
+                f"(sorted by newest first)"
             )
             return faces_sorted
 
