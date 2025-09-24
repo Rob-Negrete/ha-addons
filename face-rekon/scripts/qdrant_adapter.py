@@ -329,8 +329,16 @@ class QdrantAdapter:
             )
 
             faces = [point.payload for point in results[0]]
-            logger.info(f"📋 Found {len(faces)} unclassified faces")
-            return faces
+
+            # Sort faces by timestamp in descending order (newest first)
+            faces_sorted = sorted(
+                faces, key=lambda x: x.get("timestamp", 0), reverse=True
+            )
+
+            logger.info(
+                f"📋 Found {len(faces_sorted)} unclassified faces (sorted newest first)"
+            )
+            return faces_sorted
 
         except Exception as e:
             logger.error(f"❌ Failed to get unclassified faces: {e}")
