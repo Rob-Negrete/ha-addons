@@ -2,7 +2,7 @@
 Qdrant Vector Database Adapter for Face Recognition
 
 This module provides a unified interface to Qdrant vector database,
-replacing both TinyDB and FAISS for face embedding storage and search.
+for face embedding storage and similarity search.
 
 Key Features:
 - Unified storage for face metadata and embeddings
@@ -46,7 +46,7 @@ class QdrantAdapter:
     """
     Qdrant vector database adapter for face recognition.
 
-    Replaces TinyDB + FAISS with a single vector database that handles
+    Provides a unified vector database interface that handles
     both metadata storage and similarity search.
     """
 
@@ -72,7 +72,7 @@ class QdrantAdapter:
                         f"⚠️ Qdrant storage locked (likely Flask reload): {e}"
                     )
                     logger.info(
-                        "🔄 This is normal during development - falling back to FAISS"
+                        "🔄 This is normal during development - Qdrant storage is locked"
                     )
                 else:
                     logger.error(f"❌ Failed to initialize embedded Qdrant: {e}")

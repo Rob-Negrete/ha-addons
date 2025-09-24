@@ -1,0 +1,72 @@
+[run]
+# Configuration for coverage.py
+
+# Patterns for files to exclude from coverage reporting
+omit =
+    # Test files and test utilities
+    tests/*
+    */tests/*
+    *_test.py
+    test_*.py
+
+    # Helper scripts and utilities
+    run_*.py
+    setup.py
+    setup_*.py
+    analyze_*.py
+
+    # Development and build scripts
+    migrate_*.py
+    scripts/migrate_*.py
+
+    # Configuration and deployment files
+    config.py
+    settings.py
+
+    # Virtual environment and dependencies
+    venv/*
+    .venv/*
+    */site-packages/*
+
+    # Temporary and cache files
+    .coverage
+    htmlcov/*
+    .pytest_cache/*
+
+[report]
+# Exclude lines from coverage reporting
+exclude_lines =
+    # Have to re-enable the standard pragma
+    pragma: no cover
+
+    # Don't complain about missing debug-only code:
+    def __repr__
+    if self\.debug
+
+    # Don't complain if tests don't hit defensive assertion code:
+    raise AssertionError
+    raise NotImplementedError
+
+    # Don't complain if non-runnable code isn't run:
+    if 0:
+    if __name__ __ .__main__.:
+
+    # Don't complain about abstract methods
+    @(abc\.)?abstractmethod
+
+# Show missing lines in the report
+show_missing = True
+
+# Precision for coverage percentages
+precision = 1
+
+# Skip files with no executable code
+skip_empty = True
+
+[html]
+# Directory for HTML coverage reports
+directory = htmlcov
+
+[xml]
+# Configuration for XML reports
+output = coverage.xml
