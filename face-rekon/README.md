@@ -1,6 +1,6 @@
 # Face-Rekon Home Assistant Add-on
 
-AI-powered face recognition add-on for Home Assistant with web UI interface using InsightFace, FAISS, and Flask REST API.
+AI-powered face recognition add-on for Home Assistant with web UI interface using InsightFace, Qdrant vector database, and Flask REST API.
 
 ## 🚀 Quick Start
 
@@ -54,7 +54,7 @@ This project includes a **professional-grade testing framework**:
 
 - **Backend**: Python 3.10, Flask, OpenCV, InsightFace
 - **Frontend**: Vanilla JavaScript with SOLID principles, responsive design
-- **Database**: TinyDB with FAISS vector search
+- **Database**: Qdrant vector database for optimized similarity search
 - **API**: RESTful endpoints with Swagger documentation
 - **UI Integration**: Home Assistant ingress support
 - **Container**: Multi-architecture Docker support
@@ -63,7 +63,8 @@ This project includes a **professional-grade testing framework**:
 
 - **Web UI**: Face listing, labeling, and management interface
 - **Real-time face detection**: Recognition from base64 images
-- **Unknown face workflow**: Storage and classification of unidentified faces
+- **Unknown face workflow**: Storage and classification of unidentified faces (sorted by newest first)
+- **Vector similarity search**: Qdrant database for efficient face matching
 - **REST API**: Comprehensive documentation with Swagger
 - **Home Assistant integration**: Seamless ingress support
 - **Professional testing**: 163 comprehensive test cases

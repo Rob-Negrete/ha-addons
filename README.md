@@ -1,6 +1,6 @@
 # Home Assistant Add-ons Repository
 
-![Coverage](https://img.shields.io/badge/coverage-67%25-brightgreen)
+![Coverage](https://img.shields.io/badge/coverage-41.2%25-yellow)
 ![CI](https://github.com/Rob-Negrete/ha-addons/workflows/CI/badge.svg)
 ![Coverage Health](https://github.com/Rob-Negrete/ha-addons/workflows/Coverage%20Health%20Check/badge.svg)
 
@@ -12,9 +12,9 @@ This repository contains custom Home Assistant add-ons for enhanced home automat
 
 **AI-powered face recognition add-on**
 
-- **Version**: 1.0.21
+- **Version**: 0.1.2-alpha.1
 - **Architecture**: amd64, armv7, aarch64
-- **Description**: Advanced face recognition system using InsightFace, FAISS, and Flask REST API
+- **Description**: Advanced face recognition system using InsightFace, Qdrant vector database, and Flask REST API
 - **Port**: 5001
 
 **Key Features:**
@@ -22,8 +22,9 @@ This repository contains custom Home Assistant add-ons for enhanced home automat
 - Real-time face detection and recognition
 - Unknown face storage and classification workflow
 - REST API with Swagger documentation
-- Professional testing infrastructure (24 tests)
-- TinyDB database with FAISS vector search
+- Professional testing infrastructure with 41.2% coverage
+- Qdrant vector database for optimized face similarity search
+- Comprehensive web UI for face management
 
 **Quick Start:**
 
@@ -49,7 +50,7 @@ docker compose up
 3. Select **Repositories**
 4. Add this repository URL:
    ```
-   https://github.com/yourusername/ha-addons
+   https://github.com/Rob-Negrete/ha-addons
    ```
 5. Click **Add**
 
@@ -158,4 +159,4 @@ Individual add-ons may have their own licensing. Please check each add-on's dire
 
 **Repository Status**: Active Development
 **Minimum Home Assistant Version**: 2023.1
-**Last Updated**: 2024
+**Last Updated**: September 2025
