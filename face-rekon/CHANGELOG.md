@@ -2,6 +2,13 @@
 
 All notable changes to the Face Rekon Home Assistant add-on will be documented in this file.
 
+## [0.1.2-alpha.1](https://github.com/Rob-Negrete/ha-addons/compare/face-rekon-v0.1.1-alpha.1...face-rekon-v0.1.2-alpha.1) (2025-09-24)
+
+
+### ✨ Features
+
+* enhance UI with timestamp tooltips and source snapshot modal ([#48](https://github.com/Rob-Negrete/ha-addons/issues/48)) ([e8ad196](https://github.com/Rob-Negrete/ha-addons/commit/e8ad196bc1f668e37a5772df6d8befeb9ad684c4))
+
 ## [0.1.1-alpha.1](https://github.com/Rob-Negrete/ha-addons/compare/face-rekon-v0.1.0-alpha.1...face-rekon-v0.1.1-alpha.1) (2025-09-23)
 
 
