@@ -222,9 +222,18 @@ Coverage is below target ({self.green_threshold}%). Consider adding tests.
             "should_fail": str(report["should_fail_ci"]).lower(),
         }
 
-        # Set outputs for GitHub Actions
-        for key, value in outputs.items():
-            print(f"::set-output name={key}::{value}")
+        # Set outputs for GitHub Actions using new format
+        import os
+
+        github_output = os.getenv("GITHUB_OUTPUT")
+        if github_output:
+            with open(github_output, "a") as f:
+                for key, value in outputs.items():
+                    f.write(f"{key}={value}\n")
+        else:
+            # Fallback for local testing
+            for key, value in outputs.items():
+                print(f"{key}={value}")
 
     def create_status_check_data(
         self, report: Dict, context: str = "coverage/health"
