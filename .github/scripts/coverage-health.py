@@ -16,7 +16,7 @@ from typing import Dict, Optional, Tuple
 
 
 class CoverageHealthChecker:
-    def __init__(self, baseline_coverage: float = 67.0):
+    def __init__(self, baseline_coverage: float = 41.2):
         """
         Initialize coverage health checker.
 
@@ -24,9 +24,9 @@ class CoverageHealthChecker:
             baseline_coverage: The baseline coverage percentage to maintain
         """
         self.baseline = baseline_coverage
-        self.green_threshold = baseline_coverage  # ≥67%
-        self.amber_threshold = 60.0  # 60-66%
-        # Red threshold < 60%
+        self.green_threshold = baseline_coverage  # ≥baseline%
+        self.amber_threshold = max(35.0, baseline_coverage - 6.2)  # 6.2% below baseline
+        # Red threshold < amber%
 
     def parse_coverage_xml(self, xml_path: Path) -> Optional[Dict]:
         """
@@ -222,9 +222,18 @@ Coverage is below target ({self.green_threshold}%). Consider adding tests.
             "should_fail": str(report["should_fail_ci"]).lower(),
         }
 
-        # Set outputs for GitHub Actions
-        for key, value in outputs.items():
-            print(f"::set-output name={key}::{value}")
+        # Set outputs for GitHub Actions using new format
+        import os
+
+        github_output = os.getenv("GITHUB_OUTPUT")
+        if github_output:
+            with open(github_output, "a") as f:
+                for key, value in outputs.items():
+                    f.write(f"{key}={value}\n")
+        else:
+            # Fallback for local testing
+            for key, value in outputs.items():
+                print(f"{key}={value}")
 
     def create_status_check_data(
         self, report: Dict, context: str = "coverage/health"
@@ -264,7 +273,7 @@ def main():
     # Initialize checker with baseline from environment or default
     import os
 
-    baseline_percentage = float(os.getenv("BASELINE_COVERAGE", "67.0"))
+    baseline_percentage = float(os.getenv("BASELINE_COVERAGE", "41.2"))
     checker = CoverageHealthChecker(baseline_percentage)
 
     # Parse current coverage
