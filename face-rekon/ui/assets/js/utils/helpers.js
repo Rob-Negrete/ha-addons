@@ -6,19 +6,27 @@
 /**
  * Formats a date string or timestamp into a human-readable format
  * @param {string|number|Date} dateInput - Date to format
- * @returns {string} Formatted date string
+ * @returns {object} Object with relative time and absolute formatted date for tooltips
  */
 function formatDate(dateInput) {
     if (!dateInput) {
-        return 'Unknown date';
+        return { relative: 'Unknown date', absolute: 'Unknown date' };
     }
 
     try {
         const date = new Date(dateInput);
 
         if (isNaN(date.getTime())) {
-            return 'Invalid date';
+            return { relative: 'Invalid date', absolute: 'Invalid date' };
         }
+
+        // Create absolute formatted date (YYYY-MMM-DD HH:MI format)
+        const year = date.getFullYear();
+        const month = date.toLocaleDateString('en-US', { month: 'short' });
+        const day = String(date.getDate()).padStart(2, '0');
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        const absolute = `${year}-${month}-${day} ${hours}:${minutes}`;
 
         const now = Date.now();
         const diffMs = now - date.getTime();
@@ -26,28 +34,26 @@ function formatDate(dateInput) {
         const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
         const diffMinutes = Math.floor(diffMs / (1000 * 60));
 
+        let relative;
+
         // Relative time for recent dates
         if (diffMinutes < 1) {
-            return 'Just now';
+            relative = 'Just now';
         } else if (diffMinutes < 60) {
-            return `${diffMinutes} minute${diffMinutes !== 1 ? 's' : ''} ago`;
+            relative = `${diffMinutes} minute${diffMinutes !== 1 ? 's' : ''} ago`;
         } else if (diffHours < 24) {
-            return `${diffHours} hour${diffHours !== 1 ? 's' : ''} ago`;
+            relative = `${diffHours} hour${diffHours !== 1 ? 's' : ''} ago`;
         } else if (diffDays < 7) {
-            return `${diffDays} day${diffDays !== 1 ? 's' : ''} ago`;
+            relative = `${diffDays} day${diffDays !== 1 ? 's' : ''} ago`;
+        } else {
+            // For older dates, use the absolute format as relative too
+            relative = absolute;
         }
 
-        // Absolute date for older dates
-        return date.toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-        });
+        return { relative, absolute };
     } catch (error) {
         console.error('Error formatting date:', error);
-        return 'Invalid date';
+        return { relative: 'Invalid date', absolute: 'Invalid date' };
     }
 }
 

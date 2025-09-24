@@ -193,6 +193,7 @@ body {
     margin-bottom: 12px;
     overflow: hidden;
     border: 1px solid #e2e8f0;
+    position: relative;
 }
 
 .face-thumbnail img {
@@ -221,6 +222,11 @@ body {
     font-size: 0.9rem;
     color: #4a5568;
     margin-bottom: 8px;
+    cursor: help;
+}
+
+.face-date:hover {
+    color: #2d3748;
 }
 
 .face-status {
@@ -232,6 +238,58 @@ body {
     text-transform: uppercase;
     background: #fed7d7;
     color: #742a2a;
+}
+
+/* Source Snapshot Overlay */
+.source-overlay {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: rgba(0, 0, 0, 0.7);
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    z-index: 2;
+}
+
+.source-overlay:hover {
+    background: rgba(0, 0, 0, 0.85);
+    transform: scale(1.1);
+}
+
+.source-overlay svg {
+    width: 18px;
+    height: 18px;
+    fill: white;
+}
+
+/* Source Snapshot Modal */
+.source-snapshot-modal .modal-content {
+    max-width: 800px;
+    max-height: 90vh;
+}
+
+.source-snapshot-image {
+    width: 100%;
+    max-height: 60vh;
+    object-fit: contain;
+    border-radius: 4px;
+    background: #000;
+}
+
+.source-snapshot-info {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-top: 20px;
+    padding: 16px;
+    background: #f7fafc;
+    border-radius: 6px;
 }
 
 /* Empty State */
