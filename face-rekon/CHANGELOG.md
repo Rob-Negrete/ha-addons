@@ -2,6 +2,13 @@
 
 All notable changes to the Face Rekon Home Assistant add-on will be documented in this file.
 
+## [0.2.1-alpha.1](https://github.com/Rob-Negrete/ha-addons/compare/face-rekon-v0.2.0-alpha.1...face-rekon-v0.2.1-alpha.1) (2025-09-24)
+
+
+### 📚 Documentation
+
+* update documentation with current Qdrant architecture ([#60](https://github.com/Rob-Negrete/ha-addons/issues/60)) ([051b3ea](https://github.com/Rob-Negrete/ha-addons/commit/051b3ea0735a92fbfe0072fc6c28cc3688fe60a9))
+
 ## [0.2.0-alpha.1](https://github.com/Rob-Negrete/ha-addons/compare/face-rekon-v0.1.2-alpha.1...face-rekon-v0.2.0-alpha.1) (2025-09-24)
 
 
