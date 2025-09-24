@@ -375,7 +375,7 @@ def extract_faces_with_crops(image_path: str) -> List[Dict[str, Any]]:
 
 
 def save_multiple_faces_optimized(image_path: str, event_id: str) -> List[str]:
-    """Save multiple faces with optimized storage (no FAISS duplication).
+    """Save multiple faces with optimized storage.
 
     Args:
         image_path: Path to the source image
@@ -609,47 +609,6 @@ def update_face(face_id: str, data: Dict[str, str]) -> None:
 def get_face(face_id: str) -> Optional[Dict[str, Any]]:
     """Get face metadata by ID."""
     return db_get_face(face_id)
-
-
-def save_thumbnail_to_file(thumbnail_base64: str, face_id: str) -> str:
-    """Save base64 thumbnail as JPEG file and return file path.
-
-    Args:
-        thumbnail_base64: Base64 encoded JPEG data
-        face_id: Unique face identifier
-
-    Returns:
-        Path to saved thumbnail file
-    """
-    # Determine thumbnail directory
-    thumbnail_dir = THUMBNAIL_PATH
-
-    # Ensure thumbnail directory exists
-    try:
-        os.makedirs(thumbnail_dir, exist_ok=True)
-    except (OSError, PermissionError) as e:
-        logger.warning(f"⚠️ Could not create thumbnail directory {thumbnail_dir}: {e}")
-        # Fallback to temp directory for testing environments
-        thumbnail_dir = os.path.join("/tmp", "face_rekon_thumbnails")
-        os.makedirs(thumbnail_dir, exist_ok=True)
-        logger.info(f"📁 Using fallback thumbnail path: {thumbnail_dir}")
-
-    # Create thumbnail file path
-    thumbnail_file = f"{face_id}.jpg"
-    thumbnail_path = os.path.join(thumbnail_dir, thumbnail_file)
-
-    # Decode and save thumbnail
-    try:
-        thumbnail_data = base64.b64decode(thumbnail_base64)
-        with open(thumbnail_path, "wb") as f:
-            f.write(thumbnail_data)
-
-        logger.info(f"💾 Saved thumbnail: {thumbnail_path}")
-        return thumbnail_path
-
-    except Exception as e:
-        logger.error(f"❌ Failed to save thumbnail {face_id}: {e}")
-        return ""
 
 
 def save_face_crop_to_file(face_crop: np.ndarray, face_id: str) -> str:
