@@ -5,12 +5,13 @@ on:
     workflows: ["CI"]
     types:
       - completed
-  pull_request:
-    branches: [main]
-    paths:
-      - "face-rekon/**"
-      - ".github/workflows/coverage-health.yml"
-      - ".github/scripts/coverage-health.py"
+  # Manual trigger for testing/debugging only
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: "PR number to analyze"
+        required: true
+        type: string
 
 permissions:
   contents: read
@@ -22,10 +23,10 @@ jobs:
   coverage-health:
     name: Check Coverage Health
     runs-on: ubuntu-latest
-    # Run on workflow_run completion OR direct PR trigger (fallback)
+    # Only run when CI completes successfully OR manual workflow dispatch
     if: |
       (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') ||
-      (github.event_name == 'pull_request')
+      (github.event_name == 'workflow_dispatch')
 
     steps:
       - name: Get PR info for workflow_run events
@@ -38,17 +39,18 @@ jobs:
             echo "pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
             echo "pr_head_sha=$PR_HEAD_SHA" >> $GITHUB_OUTPUT
             echo "event_type=workflow_run" >> $GITHUB_OUTPUT
-          else
-            # For direct PR events
-            echo "pr_number=${{ github.event.number }}" >> $GITHUB_OUTPUT
-            echo "pr_head_sha=${{ github.event.pull_request.head.sha }}" >> $GITHUB_OUTPUT
-            echo "event_type=pull_request" >> $GITHUB_OUTPUT
+          elif [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            # For manual dispatch, use provided PR number and fetch SHA
+            PR_NUMBER="${{ github.event.inputs.pr_number }}"
+            echo "pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
+            echo "event_type=workflow_dispatch" >> $GITHUB_OUTPUT
+            # We'll fetch the SHA in the next step
           fi
 
       - name: Checkout PR branch
         uses: actions/checkout@v4
         with:
-          ref: ${{ steps.pr-info.outputs.pr_head_sha }}
+          ref: ${{ steps.pr-info.outputs.pr_head_sha || github.event.workflow_run.head_sha }}
           fetch-depth: 0
 
       - name: Set up Python
@@ -81,8 +83,8 @@ jobs:
             echo "⚠️  No CI coverage artifacts found"
           fi
 
-      - name: Fallback - Run comprehensive tests (PR branch)
-        if: steps.pr-info.outputs.event_type == 'pull_request'
+      - name: Fallback - Run comprehensive tests (manual dispatch)
+        if: steps.pr-info.outputs.event_type == 'workflow_dispatch'
         run: |
           echo "🔄 Fallback: Running comprehensive tests directly"
           cd face-rekon
@@ -197,7 +199,7 @@ jobs:
 
             The baseline coverage is set at **41.2%** based on the current codebase state.
 
-            Coverage includes both unit and integration tests when available from CI workflow. Falls back to unit tests if CI artifacts unavailable.
+            Coverage includes both unit and integration tests from CI workflow. This check only runs after CI completes successfully.
             </details>
 
             ---
