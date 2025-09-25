@@ -1,14 +1,15 @@
 ---
-name: Issue-Driven Development Workflow
-about: Standard template for all issues following our 8-step development workflow
+name: Issue-Driven TDD Workflow
+about: Standard template for all issues following our 8-step Test-Driven Development workflow
 title: "[feat/fix/docs/ci]: [Brief description]"
 labels: []
 assignees: ""
 ---
 
-# Issue-Driven Development Workflow
+# Issue-Driven Test-Driven Development (TDD) Workflow
 
-<!-- This template ensures every issue follows our complete 8-step development workflow -->
+<!-- This template ensures every issue follows our complete 8-step TDD-enhanced development workflow -->
+<!-- 🎯 Core TDD Principle: Every change starts with tests - Red → Green → Refactor -->
 
 ## 🎯 Step 1: Problem & Solution Definition
 
@@ -54,9 +55,25 @@ assignees: ""
 
 <!-- Any other solutions you evaluated -->
 
+### 🧪 TDD Test Strategy Planning
+
+**Test types required for this change:**
+
+- [ ] **Unit Tests** (`tests/unit/`) - Business logic testing
+- [ ] **UI Tests** (`ui/assets/js/**/__tests__/`) - Frontend component testing
+- [ ] **Integration Tests** (`tests/integration/`) - API and database testing
+- [ ] **End-to-End Tests** - Complete workflow testing
+
+**Test scenarios to implement:**
+
+- [ ] Happy path scenarios
+- [ ] Error handling and edge cases
+- [ ] Performance and boundary conditions
+- [ ] Regression tests for existing functionality
+
 ---
 
-## 🔧 Step 2: Technical Implementation Plan
+## 🔧 Step 2: TDD Implementation Plan
 
 ### Architecture & Design
 
@@ -76,86 +93,169 @@ assignees: ""
 
 <!-- Any user interface or user experience changes -->
 
-### Implementation Phases
+### TDD Implementation Phases
 
-#### Phase 1: [Phase Name] (X-Y hours)
+#### Phase 1: RED - Write Failing Tests (X-Y hours)
 
-- [ ] Task 1
-- [ ] Task 2
-- [ ] Task 3
+**🔴 Create failing tests that define expected behavior:**
 
-#### Phase 2: [Phase Name] (X-Y hours)
+- [ ] Write unit tests for new functionality (should fail initially)
+- [ ] Write integration tests for API changes (should fail initially)
+- [ ] Write UI tests for frontend changes (should fail initially)
+- [ ] Run test suites to confirm failures: `python run_tests.py unit`
+- [ ] Commit failing tests: `test: add failing tests for [feature]`
 
-- [ ] Task 1
-- [ ] Task 2
+**TDD Commands for this phase:**
 
-#### Phase 3: [Phase Name] (X-Y hours)
+```bash
+# Fast feedback during test creation
+python run_tests.py unit    # Unit tests (~0.04s)
+python run_tests.py ui      # UI tests (~5s)
+```
 
-- [ ] Task 1
-- [ ] Task 2
+#### Phase 2: GREEN - Minimal Implementation (X-Y hours)
 
-#### Phase 4: Testing & Documentation (X-Y hours)
+**🟢 Write minimal code to make tests pass:**
 
-- [ ] Comprehensive testing implementation
-- [ ] Documentation updates
-- [ ] Code review and validation
+- [ ] Implement minimal functionality to pass unit tests
+- [ ] Implement minimal API changes to pass integration tests
+- [ ] Implement minimal UI changes to pass frontend tests
+- [ ] Run tests frequently to confirm progress
+- [ ] Commit when tests pass: `feat: implement [feature] to pass tests`
+
+#### Phase 3: REFACTOR - Improve & Optimize (X-Y hours)
+
+**🔵 Improve code quality while keeping tests green:**
+
+- [ ] Refactor implementation for better design
+- [ ] Optimize performance while maintaining test passes
+- [ ] Add comprehensive error handling
+- [ ] Enhance code readability and maintainability
+- [ ] Run full test suite: `./run_integration_tests.sh`
+- [ ] Commit improvements: `refactor: improve [component] implementation`
+
+#### Phase 4: Comprehensive Validation & Documentation (X-Y hours)
+
+- [ ] Run complete test suite (163 tests): `./run_integration_tests.sh`
+- [ ] Verify test coverage meets requirements: `python run_tests.py coverage`
+- [ ] Update documentation reflecting new behavior
+- [ ] Validate all acceptance criteria met
 
 ---
 
-## ⚡ Step 3: Development Acceptance Criteria
+## ⚡ Step 3: TDD Acceptance Criteria
 
-### ✅ Core Functionality
+### ✅ Test-First Development Requirements
 
-- [ ] [Specific functional requirement 1]
-- [ ] [Specific functional requirement 2]
-- [ ] [Specific functional requirement 3]
-- [ ] Error handling for edge cases
-- [ ] Performance meets requirements
+- [ ] **All functionality is test-defined**: Every requirement has corresponding failing tests before implementation
+- [ ] **Red-Green-Refactor cycle followed**: Evidence of TDD cycle in commit history
+- [ ] **Test coverage maintained**: >90% coverage for all new/modified code
+- [ ] **Tests as documentation**: Tests clearly describe expected behavior
 
-### ✅ Code Quality & Standards
+### ✅ Core Functionality (Test-Defined)
 
-- [ ] Code follows project conventions and style
-- [ ] Proper error handling and logging
-- [ ] Security considerations addressed
-- [ ] Memory and performance optimized
-- [ ] Backward compatibility maintained (if applicable)
+- [ ] [Specific functional requirement 1] - **Test file:** `tests/unit/test_[feature].py`
+- [ ] [Specific functional requirement 2] - **Test file:** `tests/integration/test_[feature].py`
+- [ ] [Specific functional requirement 3] - **Test file:** `ui/assets/js/**/__tests__/[feature].test.js`
+- [ ] Error handling for edge cases - **Test scenarios defined and implemented**
+- [ ] Performance meets requirements - **Performance tests written and passing**
+
+### ✅ Code Quality & Standards (Test-Enforced)
+
+- [ ] Code follows project conventions and style - **Enforced by linting tests**
+- [ ] Proper error handling and logging - **Error scenarios have dedicated tests**
+- [ ] Security considerations addressed - **Security tests implemented**
+- [ ] Memory and performance optimized - **Performance benchmarks in tests**
+- [ ] Backward compatibility maintained - **Regression tests demonstrate compatibility**
 
 ---
 
-## 📝 Step 4: Testing Requirements (Mandatory)
+## 📝 Step 4: TDD Testing Implementation (Mandatory)
 
-### ✅ Unit Testing
+### ✅ TDD Unit Testing (RED → GREEN → REFACTOR)
 
-- [ ] **New Functionality Tests**: All new functions/classes have unit tests
-  - [ ] Test normal operation with valid inputs
-  - [ ] Test error handling with invalid inputs
-  - [ ] Test edge cases and boundary conditions
-  - [ ] Test performance with realistic data volumes
-- [ ] **Modified Functionality Tests**: Update tests for changed functions
-- [ ] **Test Coverage**: Maintain >90% coverage for new/modified code
+**🔴 RED Phase - Write Failing Tests First:**
 
-### ✅ Integration Testing
+- [ ] **Write failing unit tests** for all new functionality before implementation
+- [ ] **Test scenarios include:**
+  - [ ] Normal operation with valid inputs (should fail initially)
+  - [ ] Error handling with invalid inputs (should fail initially)
+  - [ ] Edge cases and boundary conditions (should fail initially)
+  - [ ] Performance with realistic data volumes (should fail initially)
+- [ ] **Run and confirm test failures**: `python run_tests.py unit`
 
-- [ ] **End-to-End Workflows**: Test complete user journeys
-- [ ] **API Integration**: Test endpoint interactions and data flow
-- [ ] **Database Integration**: Test data persistence and retrieval
-- [ ] **Component Integration**: Test interaction between system parts
-- [ ] **Performance Testing**: Test under realistic load conditions
+**🟢 GREEN Phase - Minimal Implementation:**
 
-### ✅ Frontend Testing (if applicable)
+- [ ] **Write minimal code** to make unit tests pass
+- [ ] **Iteratively run tests** during implementation: `python run_tests.py unit`
+- [ ] **All unit tests passing** before moving to refactor phase
 
-- [ ] **Component Tests**: Test UI component rendering and behavior
-- [ ] **User Interaction Tests**: Test user actions and state changes
-- [ ] **Error Handling Tests**: Test UI error states and recovery
-- [ ] **Responsive Design Tests**: Test on different screen sizes
-- [ ] **Accessibility Tests**: Test keyboard navigation and screen readers
+**🔵 REFACTOR Phase - Improve Quality:**
 
-### ✅ Regression Testing
+- [ ] **Modified Functionality Tests**: Update existing tests for changed functions
+- [ ] **Test Coverage Validation**: Maintain >90% coverage: `python run_tests.py coverage`
+- [ ] **Performance Optimization**: Tests continue passing after improvements
+
+### ✅ TDD Integration Testing
+
+**🔴 RED Phase - Write Failing Integration Tests:**
+
+- [ ] **API Integration**: Write failing tests for endpoint interactions and data flow
+- [ ] **Database Integration**: Write failing tests for data persistence and retrieval
+- [ ] **Component Integration**: Write failing tests for system part interactions
+- [ ] **End-to-End Workflows**: Write failing tests for complete user journeys
+- [ ] **Performance Testing**: Write failing tests for load conditions
+
+**🟢 GREEN Phase - Implementation:**
+
+- [ ] **Build integration functionality** to pass integration tests
+- [ ] **Run integration tests**: `python run_tests.py api`, `python run_tests.py database`
+- [ ] **Validate API endpoints** with realistic data flows
+
+**🔵 REFACTOR Phase - Full Suite Validation:**
+
+- [ ] **Run complete integration suite**: `./run_integration_tests.sh` (24 tests, ~57s)
+- [ ] **Performance benchmarks met** under realistic conditions
+
+### ✅ TDD Frontend Testing (if applicable)
+
+**🔴 RED Phase - Write Failing UI Tests:**
+
+- [ ] **Component Tests**: Write failing tests for UI component rendering and behavior
+- [ ] **User Interaction Tests**: Write failing tests for user actions and state changes
+- [ ] **Error Handling Tests**: Write failing tests for UI error states and recovery
+- [ ] **Responsive Design Tests**: Write failing tests for different screen sizes
+- [ ] **Accessibility Tests**: Write failing tests for keyboard navigation and screen readers
+
+**🟢 GREEN Phase - UI Implementation:**
+
+- [ ] **Build minimal UI components** to pass frontend tests
+- [ ] **Run UI tests**: `python run_tests.py ui` (139 tests, ~5s)
+- [ ] **Iterative development** with frequent test running
+
+**🔵 REFACTOR Phase - UI Polish:**
+
+- [ ] **Enhance user experience** while maintaining test passes
+- [ ] **Cross-browser validation** and responsive design improvements
+
+### ✅ TDD Regression Testing
+
+**🔴 RED Phase - Identify Potential Regressions:**
+
+- [ ] **Write tests for existing functionality** that might be affected
+- [ ] **Define regression scenarios** based on change impact analysis
+
+**🟢 GREEN Phase - Prevent Regressions:**
 
 - [ ] **Existing Unit Tests**: All existing tests continue to pass
-- [ ] **Integration Test Suite**: Full integration test suite passes
+- [ ] **Integration Test Suite**: Full integration test suite passes (163 total tests)
 - [ ] **Performance Benchmarks**: Performance metrics maintained
 - [ ] **Breaking Change Analysis**: No unintended breaking changes
+
+**🔵 REFACTOR Phase - Comprehensive Validation:**
+
+- [ ] **Full test suite execution**: `./run_integration_tests.sh`
+- [ ] **Memory and performance optimization** with tests validating improvements
 
 ---
 
@@ -198,47 +298,98 @@ assignees: ""
 
 ---
 
-## 🧪 Step 6: Quality Validation
+## 🧪 Step 6: TDD Quality Validation
 
-### ✅ Pre-Merge Checklist
+### ✅ TDD Pre-Merge Checklist
 
-- [ ] All tests pass (unit, integration, frontend)
-- [ ] Code coverage meets requirements (>90%)
+**🔴🟢🔵 TDD Cycle Validation:**
+
+- [ ] **TDD process followed**: Commit history shows Red → Green → Refactor pattern
+- [ ] **Test-first evidence**: All tests were written before implementation code
+- [ ] **Tests define behavior**: Tests clearly document expected functionality
+
+**🧪 Test Suite Validation:**
+
+- [ ] **All tests pass**: Complete test suite (163 tests) passes
+  ```bash
+  ./run_integration_tests.sh  # 24 integration tests (~57s)
+  python run_tests.py unit    # 10 unit tests (~0.04s)
+  python run_tests.py ui      # 139 UI tests (~5s)
+  ```
+- [ ] **Code coverage exceeds threshold**: >90% coverage maintained
+  ```bash
+  python run_tests.py coverage  # Generate coverage report
+  ```
+- [ ] **Performance benchmarks met**: All performance tests passing
+- [ ] **Regression tests pass**: No existing functionality broken
+
+**🔍 Code Quality Validation:**
+
 - [ ] Linting and formatting checks pass
 - [ ] Security scan passes (no critical vulnerabilities)
-- [ ] Performance benchmarks met
 - [ ] Documentation is complete and accurate
 
-### ✅ Code Review Requirements
+### ✅ TDD Code Review Requirements
 
-- [ ] Code follows established patterns and conventions
-- [ ] Error handling is comprehensive and appropriate
-- [ ] Security best practices are followed
-- [ ] Performance is optimized for expected usage
-- [ ] Documentation is clear and helpful
+**🧪 Test Quality Review:**
+
+- [ ] **Tests are readable and maintainable**: Test names clearly describe expected behavior
+- [ ] **Test coverage is comprehensive**: All code paths covered by tests
+- [ ] **Tests run fast**: Unit tests complete in <1 second, integration tests <60 seconds
+- [ ] **Tests are isolated**: Each test can run independently without side effects
+- [ ] **Edge cases covered**: Tests include boundary conditions and error scenarios
+
+**💡 Implementation Quality Review:**
+
+- [ ] Code follows established patterns and conventions **as enforced by tests**
+- [ ] Error handling is comprehensive and appropriate **with dedicated error tests**
+- [ ] Security best practices are followed **with security test validation**
+- [ ] Performance is optimized for expected usage **with performance test benchmarks**
+- [ ] Documentation is clear and helpful **with tests serving as behavioral documentation**
+
+**🔄 TDD Process Review:**
+
+- [ ] **Commit history shows TDD cycle**: Evidence of Red → Green → Refactor commits
+- [ ] **Tests were written first**: Timestamps and commit messages confirm test-first approach
+- [ ] **Refactoring improved design**: Code quality enhanced without changing behavior
 
 ---
 
-## ✅ Step 7: Success Metrics
+## ✅ Step 7: TDD Success Metrics
 
-### Functional Metrics
+### 🧪 TDD Process Metrics
 
-- [ ] [Specific measurable outcome 1]
-- [ ] [Specific measurable outcome 2]
-- [ ] [Specific measurable outcome 3]
+- [ ] **Test-First Adherence**: 100% of functionality implemented after tests
+- [ ] **TDD Cycle Completion**: Evidence of Red → Green → Refactor in commit history
+- [ ] **Test Execution Speed**: Unit tests <1s, integration tests <60s
+- [ ] **Test Reliability**: Zero flaky tests, 100% consistent pass rate
 
-### Quality Metrics
+### 📊 Functional Metrics (Test-Validated)
 
-- [ ] Test coverage: >90% for new/modified code
-- [ ] Zero critical security vulnerabilities
-- [ ] Documentation coverage: 100% of public APIs
-- [ ] Performance: [specific requirements]
+- [ ] [Specific measurable outcome 1] - **Validated by**: `tests/unit/test_[outcome1].py`
+- [ ] [Specific measurable outcome 2] - **Validated by**: `tests/integration/test_[outcome2].py`
+- [ ] [Specific measurable outcome 3] - **Validated by**: End-to-end test scenarios
 
-### User Experience Metrics (if applicable)
+### 🎯 Quality Metrics (Test-Enforced)
 
-- [ ] Loading time improvements
-- [ ] Error rate reductions
-- [ ] User satisfaction improvements
+- [ ] **Test coverage**: >90% for new/modified code (verified by `python run_tests.py coverage`)
+- [ ] **Test suite health**: All 163+ tests passing consistently
+- [ ] **Zero critical security vulnerabilities**: Validated by security tests
+- [ ] **Documentation coverage**: 100% of public APIs with test examples
+- [ ] **Performance requirements met**: Benchmarked by performance tests
+
+### 👥 User Experience Metrics (Test-Measured)
+
+- [ ] **Loading time improvements**: Measured by performance test benchmarks
+- [ ] **Error rate reductions**: Tracked by error handling test scenarios
+- [ ] **User satisfaction improvements**: Validated by end-to-end user workflow tests
+
+### 🔍 TDD Quality Indicators
+
+- [ ] **Regression prevention**: Zero bugs caught in production that weren't caught by tests
+- [ ] **Refactoring confidence**: Successfully improved code design without breaking functionality
+- [ ] **Test documentation value**: Tests serve as clear examples of expected behavior
+- [ ] **Development speed**: Faster development cycles due to immediate feedback from tests
 
 ---
 
@@ -249,62 +400,99 @@ assignees: ""
 **Branch Name:** `[feat/fix/docs]/[brief-description]`
 **Based on:** `main`
 
-### Files to Modify
+### TDD Files to Create/Modify
 
-<!-- List all files that will be created, modified, or deleted -->
+<!-- List test files FIRST (TDD principle), then implementation files -->
 
-- [ ] `path/to/file1.py` - [Description of changes]
-- [ ] `path/to/file2.js` - [Description of changes]
-- [ ] `tests/unit/test_*.py` - [New/updated test files]
-- [ ] `tests/integration/test_*.py` - [Integration test updates]
-- [ ] `docs/` - [Documentation updates]
+**🔴 Test Files (Created First):**
 
-### Pull Request Checklist
+- [ ] `tests/unit/test_[feature].py` - [Unit test scenarios for new functionality]
+- [ ] `tests/integration/test_[feature].py` - [Integration test scenarios]
+- [ ] `ui/assets/js/**/__tests__/[feature].test.js` - [UI component tests]
 
-- [ ] **PR Title**: Follows semantic format (feat:, fix:, docs:, etc.)
-- [ ] **PR Description**: Links to this issue and summarizes changes
-- [ ] **Testing**: All acceptance criteria met and tested
-- [ ] **Documentation**: All documentation requirements completed
-- [ ] **Code Review**: At least one review from team member
+**🟢 Implementation Files (Created After Tests):**
+
+- [ ] `path/to/file1.py` - [Description of changes to pass tests]
+- [ ] `path/to/file2.js` - [Description of changes to pass tests]
+
+**🔵 Documentation Files (Updated During Refactor):**
+
+- [ ] `docs/` - [Documentation updates reflecting new behavior]
+- [ ] `README.md` - [Updates to usage examples if needed]
+
+### TDD Pull Request Checklist
+
+- [ ] **PR Title**: Follows semantic format (feat:, fix:, docs:, etc.) and mentions TDD approach
+- [ ] **PR Description**:
+  - [ ] Links to this issue and summarizes changes
+  - [ ] Documents TDD process followed (Red → Green → Refactor)
+  - [ ] Shows test results and coverage improvements
+- [ ] **TDD Evidence**:
+  - [ ] Commit history shows test-first development
+  - [ ] All acceptance criteria met and tested
+  - [ ] Test coverage report included
+- [ ] **Testing Validation**:
+  - [ ] All 163+ tests passing: `./run_integration_tests.sh`
+  - [ ] Coverage >90%: `python run_tests.py coverage`
+  - [ ] Performance benchmarks met
+- [ ] **Documentation**: All documentation requirements completed with test examples
+- [ ] **Code Review**: At least one review from team member (including TDD process review)
 - [ ] **CI/CD**: All automated checks pass
 
 ---
 
-## 🔄 Issue Lifecycle
+## 🔄 TDD Issue Lifecycle
 
-### Ready for Development
+### Ready for TDD Development
 
-- [ ] Problem clearly defined
-- [ ] Solution approach agreed upon
-- [ ] Acceptance criteria documented
-- [ ] Testing strategy defined
+- [ ] Problem clearly defined with testable acceptance criteria
+- [ ] Solution approach agreed upon with test strategy
+- [ ] **TDD test scenarios identified** and documented
+- [ ] Testing strategy defined (Unit → Integration → E2E)
 - [ ] Documentation plan established
 
-### In Development
+### 🔴 RED Phase - In Development (Tests First)
 
 - [ ] Development branch created
-- [ ] Implementation in progress
-- [ ] Tests being written alongside code
-- [ ] Documentation being updated
+- [ ] **Failing tests written first** for all requirements
+- [ ] Test scenarios cover happy path, edge cases, and errors
+- [ ] Tests run and confirmed to fail: `python run_tests.py unit`
 
-### Ready for Review
+### 🟢 GREEN Phase - In Development (Minimal Implementation)
 
-- [ ] All acceptance criteria met
-- [ ] All tests passing
-- [ ] Documentation complete
-- [ ] Pull request created
+- [ ] **Minimal implementation** written to pass tests
+- [ ] Tests iteratively run during development
+- [ ] All tests passing before moving to refactor
+- [ ] Implementation focuses on making tests green, not perfection
 
-### Ready for Merge
+### 🔵 REFACTOR Phase - In Development (Quality Improvement)
 
-- [ ] Code review approved
+- [ ] Code quality improved while maintaining test passes
+- [ ] Performance optimized with test validation
+- [ ] Documentation being updated to reflect behavior
+- [ ] Full test suite validates refactoring: `./run_integration_tests.sh`
+
+### Ready for TDD Review
+
+- [ ] **All acceptance criteria met and test-validated**
+- [ ] **All 163+ tests passing** with >90% coverage
+- [ ] **TDD process evidence** in commit history (Red → Green → Refactor)
+- [ ] Documentation complete with test examples
+- [ ] Pull request created with TDD summary
+
+### Ready for TDD Merge
+
+- [ ] Code review approved (including TDD process review)
 - [ ] All CI/CD checks passing
+- [ ] **Test suite demonstrates quality** and regression prevention
 - [ ] Final validation complete
 
-### Done
+### Done with TDD Confidence
 
-- [ ] Changes merged to main
-- [ ] Issue closed with summary
-- [ ] Success metrics validated
+- [ ] Changes merged to main with comprehensive test coverage
+- [ ] Issue closed with summary including test metrics
+- [ ] Success metrics validated through automated tests
+- [ ] **Future changes protected** by comprehensive test suite
 
 ---
 
@@ -340,13 +528,49 @@ assignees: ""
 
 ---
 
-**This issue follows our complete 8-step Issue-Driven Development Workflow:**
+**This issue follows our complete 8-step Issue-Driven TDD Workflow:**
 
-1. ✅ **Document & Define** - Clear problem and solution definition
-2. ✅ **Plan & Design** - Technical implementation planning
-3. ✅ **Develop & Code** - Implementation with quality standards
-4. ✅ **Test & Validate** - Comprehensive testing strategy
-5. ✅ **Document & Review** - Complete documentation updates
-6. ✅ **Quality Assurance** - Pre-merge validation checklist
-7. ✅ **Deploy & Measure** - Success metrics and monitoring
-8. ✅ **Close & Retrospect** - Issue completion and learnings
+1. ✅ **Document & Define** - Clear problem and solution definition with testable criteria
+2. ✅ **TDD Plan & Design** - Technical implementation planning with test-first strategy
+3. ✅ **TDD Develop** - Red → Green → Refactor cycle implementation
+4. ✅ **TDD Test & Validate** - Test-driven comprehensive validation strategy
+5. ✅ **Document & Review** - Complete documentation with test examples
+6. ✅ **TDD Quality Assurance** - Pre-merge validation with test evidence
+7. ✅ **Deploy & Measure** - Success metrics validated by automated tests
+8. ✅ **Close & Retrospect** - Issue completion with test-driven learnings
+
+## 🧪 TDD Quick Reference Commands
+
+### Development Cycle (Fast Feedback)
+
+```bash
+# Write failing tests, run to confirm failure
+python run_tests.py unit        # Unit tests (~0.04s)
+python run_tests.py ui          # UI tests (~5s)
+
+# Implement minimal code, run tests frequently
+python run_tests.py unit        # Quick validation during GREEN phase
+```
+
+### Quality Validation (Comprehensive Testing)
+
+```bash
+# Full integration testing (24 tests, ~57s)
+./run_integration_tests.sh     # Complete validation for REFACTOR phase
+
+# Coverage analysis
+python run_tests.py coverage   # Generate coverage reports
+
+# Individual test categories
+python run_tests.py api         # API integration tests
+python run_tests.py database    # Database integration tests
+python run_tests.py e2e         # End-to-end tests
+```
+
+### Success Criteria
+
+- 🔴 **RED**: Tests fail initially (define expected behavior)
+- 🟢 **GREEN**: Tests pass with minimal implementation
+- 🔵 **REFACTOR**: Tests continue passing with improved code quality
+- 📊 **COVERAGE**: Maintain >90% test coverage
+- 🚀 **CONFIDENCE**: Deploy with comprehensive test validation
