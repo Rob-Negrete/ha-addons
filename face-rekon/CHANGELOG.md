@@ -2,6 +2,13 @@
 
 All notable changes to the Face Rekon Home Assistant add-on will be documented in this file.
 
+## [0.2.3-alpha.1](https://github.com/Rob-Negrete/ha-addons/compare/face-rekon-v0.2.2-alpha.1...face-rekon-v0.2.3-alpha.1) (2025-09-25)
+
+
+### 🧹 Chores
+
+* use high-quality snapshot-clean.png for camera icon links ([#65](https://github.com/Rob-Negrete/ha-addons/issues/65)) ([86f9241](https://github.com/Rob-Negrete/ha-addons/commit/86f92416a8dd0aa5b1d0422f0df55e447fb7eef2))
+
 ## [0.2.2-alpha.1](https://github.com/Rob-Negrete/ha-addons/compare/face-rekon-v0.2.1-alpha.1...face-rekon-v0.2.2-alpha.1) (2025-09-24)
 
 
