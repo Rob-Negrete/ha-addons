@@ -47,82 +47,38 @@ def run_unit_tests():
 
 
 def run_integration_tests():
-    """Run integration tests (slower, requires more setup)"""
-    # Check if we're in a container or have ML dependencies
+    """Run integration tests (MUST be run in Docker)"""
+    # Check if we're in a container
     if os.environ.get("PYTHONPATH") == "/app":
-        # We're in the test container - run in batches to manage memory
-        test_batches = [
-            (
-                "API Integration Tests",
-                "tests/integration/test_api_integration_simple.py",
-            ),
-            (
-                "Database Integration Tests",
-                "tests/integration/test_database_integration_simple.py",
-            ),
+        # We're in the test container - run comprehensive integration tests
+        print("🐳 Running comprehensive integration tests in Docker")
+
+        command = [
+            "python",
+            "-m",
+            "pytest",
+            "tests/integration/",
+            "--cov=scripts",
+            "--cov-report=term-missing",
+            "-v",
+            "--tb=short",
         ]
 
-        all_passed = True
-        for batch_name, batch_path in test_batches:
-            print(f"\n🔧 Running {batch_name}")
-            command = [
-                "python",
-                "-m",
-                "pytest",
-                batch_path,
-                "-c",
-                "pytest-integration.ini",
-                "-v",
-                "--tb=short",
-            ]
-            result = run_command(command, f"Running {batch_name}")
-            if not result:
-                all_passed = False
-                break  # Stop on first failure to save resources
+        return run_command(command, "Running Integration Tests")
 
-            # Force garbage collection between batches
-            import gc
+    # Not in container - integration tests MUST be run in Docker
+    print("\n❌ Integration Tests Must Be Run in Docker")
+    print("=" * 50)
+    print("Integration tests require ML dependencies (InsightFace, OpenCV, etc.)")
+    print("that are only available in the Docker environment.")
+    print("\n✅ Run integration tests with:")
+    print("   docker-compose -f docker-compose.test.yml run --rm integration-tests")
+    print("\n🚀 Or run all tests:")
+    print("   docker-compose -f docker-compose.test.yml run --rm test-runner")
+    print("\n💡 For local development, use:")
+    print("   python run_tests.py unit")
 
-            gc.collect()
-
-        return all_passed
-
-    # Check if ML dependencies are available locally
-    missing_ml_deps = []
-    ml_deps = [
-        ("insightface", "insightface"),
-        ("opencv", "cv2"),
-        ("faiss", "faiss"),
-        ("tinydb", "tinydb"),
-    ]
-
-    for dep_name, import_name in ml_deps:
-        try:
-            __import__(import_name)
-        except ImportError:
-            missing_ml_deps.append(dep_name)
-
-    if missing_ml_deps:
-        print("\n⚠️  Integration tests require ML dependencies:")
-        print(f"   Missing: {', '.join(missing_ml_deps)}")
-        print("\n🐳 Run with Docker (recommended):")
-        print("   docker compose -f docker compose.test.yml run integration-tests")
-        print("\n📦 Or install locally:")
-        print("   pip install -r requirements-integration.txt")
-        print("\n🚀 Or run unit tests instead:")
-        print("   python run_tests.py unit")
-        return False
-
-    command = [
-        "python",
-        "-m",
-        "pytest",
-        "tests/integration/",
-        "-c",
-        "pytest-integration.ini",
-        "-v",
-    ]
-    return run_command(command, "Running Integration Tests")
+    return False
 
 
 def run_api_tests():
