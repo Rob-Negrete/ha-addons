@@ -2,6 +2,13 @@
 
 All notable changes to the Face Rekon Home Assistant add-on will be documented in this file.
 
+## [0.2.4-alpha.1](https://github.com/Rob-Negrete/ha-addons/compare/face-rekon-v0.2.3-alpha.1...face-rekon-v0.2.4-alpha.1) (2025-09-25)
+
+
+### 🧹 Chores
+
+* implement Docker-first integration testing infrastructure ([#69](https://github.com/Rob-Negrete/ha-addons/issues/69)) ([b10c08e](https://github.com/Rob-Negrete/ha-addons/commit/b10c08e97e08ea3986e940a69ae49d83cad68c54))
+
 ## [0.2.3-alpha.1](https://github.com/Rob-Negrete/ha-addons/compare/face-rekon-v0.2.2-alpha.1...face-rekon-v0.2.3-alpha.1) (2025-09-25)
 
 
