@@ -57,17 +57,62 @@ jobs:
           cd face-rekon
           docker build -f Dockerfile.test -t face-rekon-test .
 
-      - name: Run integration tests in container
+      - name: Run integration tests in container with coverage
         run: |
           cd face-rekon
-          docker compose -f docker-compose.test.yml run --rm integration-tests
+          # Create a volume to persist coverage data from container
+          mkdir -p coverage-data
+          # Run integration tests with coverage output
+          docker compose -f docker-compose.test.yml run --rm \
+            -v "$(pwd)/coverage-data:/app/coverage-data" \
+            integration-tests sh -c "
+              python -m pytest tests/integration/ \
+                --cov=scripts \
+                --cov-report=xml:/app/coverage-data/coverage-integration.xml \
+                --cov-report=json:/app/coverage-data/coverage-integration.json \
+                --cov-append \
+                -c pytest-integration.ini -v --tb=short
+            "
 
-      - name: Upload coverage reports
+      - name: Combine coverage reports
+        run: |
+          cd face-rekon
+          # Install coverage tools
+          pip install coverage[toml]
+
+          # Combine unit and integration coverage
+          if [ -f "coverage-data/coverage-integration.xml" ]; then
+            # Create combined coverage report
+            cp coverage.xml coverage-unit.xml
+            cp coverage-data/coverage-integration.xml .
+
+            # Merge JSON files for more detailed analysis
+            if [ -f "coverage-data/coverage-integration.json" ]; then
+              cp coverage-data/coverage-integration.json .
+              echo "📊 Both unit and integration coverage collected"
+            else
+              echo "⚠️  Integration coverage JSON not found, using XML only"
+            fi
+          else
+            echo "⚠️  Integration coverage not found, using unit tests only"
+            cp coverage.xml coverage-combined.xml
+          fi
+
+      - name: Upload combined coverage reports
         uses: codecov/codecov-action@v3
         with:
           directory: ./face-rekon
-          files: ./coverage.xml
+          files: ./coverage.xml,./coverage-integration.xml
           fail_ci_if_error: false
+
+      - name: Upload coverage artifacts for health check
+        uses: actions/upload-artifact@v4
+        with:
+          name: ci-coverage-reports
+          path: |
+            face-rekon/coverage*.xml
+            face-rekon/coverage*.json
+          retention-days: 7
 
   docker-build:
     name: Docker Build Test

@@ -1,6 +1,10 @@
 name: Coverage Health Check
 
 on:
+  workflow_run:
+    workflows: ["CI"]
+    types:
+      - completed
   pull_request:
     branches: [main]
     paths:
@@ -18,13 +22,33 @@ jobs:
   coverage-health:
     name: Check Coverage Health
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
+    # Run on workflow_run completion OR direct PR trigger (fallback)
+    if: |
+      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') ||
+      (github.event_name == 'pull_request')
 
     steps:
+      - name: Get PR info for workflow_run events
+        id: pr-info
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_run" ]]; then
+            # For workflow_run events, get PR info from the triggering workflow
+            PR_NUMBER="${{ github.event.workflow_run.pull_requests[0].number }}"
+            PR_HEAD_SHA="${{ github.event.workflow_run.head_sha }}"
+            echo "pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
+            echo "pr_head_sha=$PR_HEAD_SHA" >> $GITHUB_OUTPUT
+            echo "event_type=workflow_run" >> $GITHUB_OUTPUT
+          else
+            # For direct PR events
+            echo "pr_number=${{ github.event.number }}" >> $GITHUB_OUTPUT
+            echo "pr_head_sha=${{ github.event.pull_request.head.sha }}" >> $GITHUB_OUTPUT
+            echo "event_type=pull_request" >> $GITHUB_OUTPUT
+          fi
+
       - name: Checkout PR branch
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.pull_request.head.sha }}
+          ref: ${{ steps.pr-info.outputs.pr_head_sha }}
           fetch-depth: 0
 
       - name: Set up Python
@@ -32,23 +56,39 @@ jobs:
         with:
           python-version: "3.10.18"
 
-      - name: Cache pip dependencies
-        uses: actions/cache@v4
+      - name: Download coverage artifacts from CI
+        if: steps.pr-info.outputs.event_type == 'workflow_run'
+        uses: actions/download-artifact@v4
         with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-coverage-${{ hashFiles('**/requirements*.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-coverage-
-            ${{ runner.os }}-pip-
+          name: ci-coverage-reports
+          path: ./coverage-artifacts/
+          run-id: ${{ github.event.workflow_run.id }}
 
-      - name: Install test dependencies
+      - name: Use CI coverage reports
+        if: steps.pr-info.outputs.event_type == 'workflow_run'
         run: |
+          echo "📥 Using comprehensive coverage from CI workflow"
+          if [ -d "coverage-artifacts" ]; then
+            # Copy CI coverage reports
+            cp coverage-artifacts/face-rekon/coverage.xml coverage-pr.xml 2>/dev/null || echo "No unit coverage XML"
+            cp coverage-artifacts/face-rekon/coverage-integration.xml coverage-integration-pr.xml 2>/dev/null || echo "No integration coverage XML"
+            cp coverage-artifacts/face-rekon/coverage.json coverage-pr.json 2>/dev/null || echo "No unit coverage JSON"
+            cp coverage-artifacts/face-rekon/coverage-integration.json coverage-integration-pr.json 2>/dev/null || echo "No integration coverage JSON"
+
+            echo "✅ Coverage reports from CI workflow downloaded"
+            ls -la coverage*
+          else
+            echo "⚠️  No CI coverage artifacts found"
+          fi
+
+      - name: Fallback - Run comprehensive tests (PR branch)
+        if: steps.pr-info.outputs.event_type == 'pull_request'
+        run: |
+          echo "🔄 Fallback: Running comprehensive tests directly"
           cd face-rekon
           pip install -r requirements-test.txt
 
-      - name: Run tests with coverage (PR branch)
-        run: |
-          cd face-rekon
+          # Run unit tests with coverage
           QDRANT_PATH=/tmp/test_qdrant_unit \
           FACE_REKON_BASE_PATH=/tmp/test_faces \
           FACE_REKON_UNKNOWN_PATH=/tmp/test_unknowns \
@@ -67,16 +107,17 @@ jobs:
           # Clean up temporary coverage files to avoid git conflicts
           rm -f .coverage .coverage.*
 
-      - name: Checkout main branch for baseline
+      - name: Get baseline coverage for main branch
         run: |
           # Clean any remaining coverage files before checkout
           rm -f face-rekon/.coverage face-rekon/.coverage.*
           git fetch origin main:main
           git checkout main
 
-      - name: Run tests with coverage (main branch)
-        run: |
           cd face-rekon
+          pip install -r requirements-test.txt || echo "Failed to install requirements on main branch"
+
+          # Run baseline tests
           QDRANT_PATH=/tmp/test_qdrant_main \
           FACE_REKON_BASE_PATH=/tmp/test_faces_main \
           FACE_REKON_UNKNOWN_PATH=/tmp/test_unknowns_main \
@@ -97,7 +138,7 @@ jobs:
 
       - name: Switch back to PR branch
         run: |
-          git checkout ${{ github.event.pull_request.head.sha }}
+          git checkout ${{ steps.pr-info.outputs.pr_head_sha }}
 
       - name: Make coverage health script executable
         run: chmod +x .github/scripts/coverage-health.py
@@ -156,17 +197,19 @@ jobs:
 
             The baseline coverage is set at **41.2%** based on the current codebase state.
 
-            Coverage is calculated from unit tests only. Integration tests require ML dependencies and run separately.
+            Coverage includes both unit and integration tests when available from CI workflow. Falls back to unit tests if CI artifacts unavailable.
             </details>
 
             ---
             *Coverage health check powered by GitHub Actions*`;
 
+            const prNumber = '${{ steps.pr-info.outputs.pr_number }}';
+
             // Find existing comment
             const comments = await github.rest.issues.listComments({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              issue_number: context.issue.number,
+              issue_number: prNumber,
             });
 
             const existingComment = comments.data.find(comment =>
@@ -186,7 +229,7 @@ jobs:
               await github.rest.issues.createComment({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                issue_number: context.issue.number,
+                issue_number: prNumber,
                 body: commentBody
               });
             }
@@ -215,7 +258,7 @@ jobs:
             await github.rest.repos.createCommitStatus({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              sha: '${{ github.event.pull_request.head.sha }}',
+              sha: '${{ steps.pr-info.outputs.pr_head_sha }}',
               state: statusData.state,
               target_url: `https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
               description: statusData.description,
