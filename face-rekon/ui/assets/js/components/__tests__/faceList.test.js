@@ -483,4 +483,123 @@ describe('FaceListComponent', () => {
       expect(faceListComponent.closeModal).not.toHaveBeenCalled();
     });
   });
+
+  describe('Source Snapshot Functionality', () => {
+
+    describe('buildSnapshotUrl', () => {
+      it('should build snapshot-clean.png URL correctly', () => {
+        const config = {
+          protocol: 'http',
+          host: '192.168.1.100',
+          port: 5000
+        };
+        const eventId = 'test-event-123';
+
+        const result = faceListComponent.buildSnapshotUrl(eventId, config);
+
+        expect(result).toBe('http://192.168.1.100:5000/api/events/test-event-123/snapshot-clean.png');
+      });
+
+      it('should handle HTTPS protocol', () => {
+        const config = {
+          protocol: 'https',
+          host: 'frigate.example.com',
+          port: 443
+        };
+        const eventId = 'secure-event-456';
+
+        const result = faceListComponent.buildSnapshotUrl(eventId, config);
+
+        expect(result).toBe('https://frigate.example.com:443/api/events/secure-event-456/snapshot-clean.png');
+      });
+
+      it('should handle custom port numbers', () => {
+        const config = {
+          protocol: 'http',
+          host: 'localhost',
+          port: 8080
+        };
+        const eventId = 'custom-port-789';
+
+        const result = faceListComponent.buildSnapshotUrl(eventId, config);
+
+        expect(result).toBe('http://localhost:8080/api/events/custom-port-789/snapshot-clean.png');
+      });
+    });
+
+    describe('handleSourceSnapshotClick', () => {
+      beforeEach(() => {
+        jest.spyOn(faceListComponent, 'getFrigateConfig').mockReturnValue({
+          protocol: 'http',
+          host: '192.168.1.100',
+          port: 5000
+        });
+        jest.spyOn(faceListComponent, 'buildSnapshotUrl').mockReturnValue('http://test.com/snapshot.png');
+        jest.spyOn(faceListComponent, 'showSourceSnapshotModal').mockImplementation(() => {});
+      });
+
+      it('should handle valid event_id', async () => {
+        const mockFace = {
+          face_id: 'face-123',
+          event_id: 'event-456'
+        };
+
+        await faceListComponent.handleSourceSnapshotClick(mockFace);
+
+        expect(faceListComponent.getFrigateConfig).toHaveBeenCalled();
+        expect(faceListComponent.buildSnapshotUrl).toHaveBeenCalledWith('event-456', {
+          protocol: 'http',
+          host: '192.168.1.100',
+          port: 5000
+        });
+        expect(faceListComponent.showSourceSnapshotModal).toHaveBeenCalledWith(
+          mockFace,
+          'http://test.com/snapshot.png'
+        );
+      });
+
+      it('should handle missing event_id', async () => {
+        mockHelpers.showNotification = jest.fn();
+        const mockFace = {
+          face_id: 'face-123',
+          event_id: 'unknown'
+        };
+
+        await faceListComponent.handleSourceSnapshotClick(mockFace);
+
+        expect(mockHelpers.showNotification).toHaveBeenCalledWith('No source event available', 'error');
+        expect(faceListComponent.showSourceSnapshotModal).not.toHaveBeenCalled();
+      });
+
+      it('should handle null event_id', async () => {
+        mockHelpers.showNotification = jest.fn();
+        const mockFace = {
+          face_id: 'face-123',
+          event_id: null
+        };
+
+        await faceListComponent.handleSourceSnapshotClick(mockFace);
+
+        expect(mockHelpers.showNotification).toHaveBeenCalledWith('No source event available', 'error');
+        expect(faceListComponent.showSourceSnapshotModal).not.toHaveBeenCalled();
+      });
+
+      it('should handle errors gracefully', async () => {
+        mockHelpers.showNotification = jest.fn();
+        jest.spyOn(faceListComponent, 'getFrigateConfig').mockImplementation(() => {
+          throw new Error('Config error');
+        });
+
+        const mockFace = {
+          face_id: 'face-123',
+          event_id: 'event-456'
+        };
+
+        await faceListComponent.handleSourceSnapshotClick(mockFace);
+
+        expect(mockHelpers.showNotification).toHaveBeenCalledWith('Error loading source snapshot: Config error', 'error');
+        expect(faceListComponent.showSourceSnapshotModal).not.toHaveBeenCalled();
+      });
+    });
+  });
 });

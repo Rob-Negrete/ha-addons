@@ -475,7 +475,9 @@ class FaceListComponent {
      * @returns {string} Snapshot URL
      */
     buildSnapshotUrl(eventId, config) {
-        return `${config.protocol}://${config.host}:${config.port}/api/events/${eventId}/thumbnail.jpg`;
+        // Use high-quality snapshot-clean.png instead of thumbnail.jpg
+        // This provides the original full-resolution image before cropping
+        return `${config.protocol}://${config.host}:${config.port}/api/events/${eventId}/snapshot-clean.png`;
     }
 
     /**
@@ -518,11 +520,19 @@ class FaceListComponent {
         });
 
         img.addEventListener('error', () => {
-            img.style.display = 'none';
-            const errorMsg = this.helpers.createElement('div', {
-                style: 'text-align: center; padding: 40px; color: #718096;'
-            }, '❌ Unable to load source snapshot<br><small>Check Frigate server connection and settings</small>');
-            body.appendChild(errorMsg);
+            // Try fallback to thumbnail.jpg if snapshot-clean.png fails
+            const fallbackUrl = snapshotUrl.replace('snapshot-clean.png', 'thumbnail.jpg');
+            if (img.src !== fallbackUrl) {
+                console.log('snapshot-clean.png failed, trying fallback to thumbnail.jpg');
+                img.src = fallbackUrl;
+            } else {
+                // Both attempts failed
+                img.style.display = 'none';
+                const errorMsg = this.helpers.createElement('div', {
+                    style: 'text-align: center; padding: 40px; color: #718096;'
+                }, '❌ Unable to load source snapshot<br><small>Check Frigate server connection and settings</small>');
+                body.appendChild(errorMsg);
+            }
         });
 
         const info = this.helpers.createElement('div', {
