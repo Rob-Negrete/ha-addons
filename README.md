@@ -1,5 +1,7 @@
 # Home Assistant Add-ons Repository
 
+<!-- Test: Verifying Coverage Health Check workflow triggering -->
+
 ![Coverage](https://img.shields.io/badge/coverage-49%25-yellow)
 ![CI](https://github.com/Rob-Negrete/ha-addons/workflows/CI/badge.svg)
 ![Coverage Health](https://github.com/Rob-Negrete/ha-addons/workflows/Coverage%20Health%20Check/badge.svg)
