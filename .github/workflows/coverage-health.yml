@@ -6,7 +6,8 @@ on:
     workflows: ["CI"]
     types:
       - completed
-    branches: ["*"]
+    # Remove branch filter to ensure all CI runs trigger this workflow
+    # The workflow_run event inherently runs on the default branch
   # Manual trigger for testing/debugging
   workflow_dispatch:
     inputs:
@@ -14,6 +15,9 @@ on:
         description: "PR number to analyze"
         required: true
         type: string
+  # Alternative trigger: when CI status check completes
+  check_run:
+    types: [completed]
 
 permissions:
   contents: read
@@ -25,35 +29,94 @@ jobs:
   coverage-health:
     name: Check Coverage Health
     runs-on: ubuntu-latest
-    # Only run when CI completes successfully OR manual workflow dispatch
+    # Only run when CI completes successfully OR manual workflow dispatch OR relevant check_run
     if: |
       (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') ||
-      (github.event_name == 'workflow_dispatch')
+      (github.event_name == 'workflow_dispatch') ||
+      (github.event_name == 'check_run' && github.event.check_run.conclusion == 'success' && contains(github.event.check_run.name, 'Test Face Rekon'))
 
     steps:
-      - name: Get PR info for workflow_run events
+      - name: Get PR info for all event types
         id: pr-info
         run: |
+          echo "🔍 Event debugging info:"
+          echo "  Event name: ${{ github.event_name }}"
+          echo "  Repository: ${{ github.repository }}"
+          echo "  Ref: ${{ github.ref }}"
+
           if [[ "${{ github.event_name }}" == "workflow_run" ]]; then
-            # For workflow_run events, get PR info from the triggering workflow
-            # Check if PR exists by testing if the array has elements
-            if [[ "${{ github.event.workflow_run.pull_requests[0].number || '' }}" != "" ]]; then
-              PR_NUMBER="${{ github.event.workflow_run.pull_requests[0].number }}"
+            echo "📊 Workflow run event details:"
+            echo "  Workflow name: ${{ github.event.workflow_run.name }}"
+            echo "  Conclusion: ${{ github.event.workflow_run.conclusion }}"
+            echo "  Head SHA: ${{ github.event.workflow_run.head_sha }}"
+            echo "  Head branch: ${{ github.event.workflow_run.head_branch }}"
+
+            # Try to get PR info from workflow run event
+            # Use jq to safely parse the pull_requests array
+            PR_COUNT=$(echo '${{ toJson(github.event.workflow_run.pull_requests) }}' | jq '. | length')
+            echo "  Pull requests count: $PR_COUNT"
+
+            if [[ "$PR_COUNT" -gt 0 ]]; then
+              PR_NUMBER=$(echo '${{ toJson(github.event.workflow_run.pull_requests) }}' | jq -r '.[0].number')
               PR_HEAD_SHA="${{ github.event.workflow_run.head_sha }}"
               echo "pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
               echo "pr_head_sha=$PR_HEAD_SHA" >> $GITHUB_OUTPUT
               echo "event_type=workflow_run" >> $GITHUB_OUTPUT
+              echo "✅ Found PR #$PR_NUMBER with SHA $PR_HEAD_SHA"
             else
-              echo "No PR associated with workflow run"
+              echo "❌ No PR associated with workflow run"
+              echo "🔍 This might be a push to main or other non-PR event"
               exit 1
             fi
+
+          elif [[ "${{ github.event_name }}" == "check_run" ]]; then
+            echo "📊 Check run event details:"
+            echo "  Check name: ${{ github.event.check_run.name }}"
+            echo "  Conclusion: ${{ github.event.check_run.conclusion }}"
+            echo "  Head SHA: ${{ github.event.check_run.head_sha }}"
+
+            # For check_run events, get PR info from the check_run context
+            # We need to find the PR associated with this check run
+            PR_HEAD_SHA="${{ github.event.check_run.head_sha }}"
+            echo "pr_head_sha=$PR_HEAD_SHA" >> $GITHUB_OUTPUT
+            echo "event_type=check_run" >> $GITHUB_OUTPUT
+            echo "needs_pr_lookup=true" >> $GITHUB_OUTPUT
+            echo "✅ Check run event processed, will lookup PR in next step"
+
           elif [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
             # For manual dispatch, use provided PR number and fetch SHA
             PR_NUMBER="${{ github.event.inputs.pr_number }}"
             echo "pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
             echo "event_type=workflow_dispatch" >> $GITHUB_OUTPUT
-            # We'll fetch the SHA in the next step
+            echo "✅ Manual dispatch for PR #$PR_NUMBER"
           fi
+
+      - name: Lookup PR for check_run events
+        if: steps.pr-info.outputs.needs_pr_lookup == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const sha = '${{ steps.pr-info.outputs.pr_head_sha }}';
+            console.log(`🔍 Looking up PR for SHA: ${sha}`);
+
+            // Search for pull requests with this head SHA
+            const { data: pulls } = await github.rest.pulls.list({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              per_page: 100
+            });
+
+            const matchingPR = pulls.find(pr => pr.head.sha === sha);
+
+            if (matchingPR) {
+              console.log(`✅ Found PR #${matchingPR.number} for SHA ${sha}`);
+              core.setOutput('pr_number', matchingPR.number.toString());
+            } else {
+              console.log(`❌ No open PR found for SHA ${sha}`);
+              core.setFailed('No open PR found for this check run');
+            }
+        id: pr-lookup
 
       - name: Checkout PR branch
         uses: actions/checkout@v4
@@ -268,7 +331,8 @@ jobs:
             ---
             *Coverage health check powered by GitHub Actions*`;
 
-            const prNumber = '${{ steps.pr-info.outputs.pr_number }}';
+            // Get PR number from either pr-info or pr-lookup steps
+            const prNumber = '${{ steps.pr-info.outputs.pr_number }}' || '${{ steps.pr-lookup.outputs.pr_number }}';
 
             // Find existing comment
             const comments = await github.rest.issues.listComments({
@@ -320,10 +384,13 @@ jobs:
               console.log('Could not read status-check.json, using default error state');
             }
 
+            // Get SHA from pr-info step (covers workflow_run, check_run, and workflow_dispatch)
+            const headSha = '${{ steps.pr-info.outputs.pr_head_sha }}' || '${{ github.event.workflow_run.head_sha }}';
+
             await github.rest.repos.createCommitStatus({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              sha: '${{ steps.pr-info.outputs.pr_head_sha }}',
+              sha: headSha,
               state: statusData.state,
               target_url: `https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
               description: statusData.description,
