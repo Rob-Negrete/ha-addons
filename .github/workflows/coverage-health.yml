@@ -99,8 +99,78 @@ jobs:
             echo "⚠️  No CI coverage artifacts found"
           fi
 
-      - name: Fallback - Run comprehensive tests (no CI artifacts available)
-        if: steps.pr-info.outputs.event_type != 'workflow_run'
+      - name: Wait for CI completion (if triggered by PR)
+        if: steps.pr-info.outputs.event_type == 'pull_request'
+        run: |
+          echo "⏳ Waiting for CI workflow to complete to get comprehensive coverage..."
+
+          # Wait up to 10 minutes for CI to complete
+          max_wait=600  # 10 minutes
+          wait_time=0
+          interval=30   # Check every 30 seconds
+
+          while [ $wait_time -lt $max_wait ]; do
+            # Check if CI workflow is complete
+            STATUS=$(gh run list --workflow=CI --branch=test/improve-coverage-to-60-percent --limit=1 --json status --jq '.[0].status')
+
+            if [ "$STATUS" = "completed" ]; then
+              echo "✅ CI workflow completed, proceeding with coverage analysis"
+              break
+            elif [ "$STATUS" = "in_progress" ] || [ "$STATUS" = "queued" ]; then
+              echo "⏳ CI still running (${wait_time}s elapsed), waiting..."
+              sleep $interval
+              wait_time=$((wait_time + interval))
+            else
+              echo "❌ CI workflow failed or in unexpected state: $STATUS"
+              break
+            fi
+          done
+
+          if [ $wait_time -ge $max_wait ]; then
+            echo "⏰ Timeout waiting for CI, proceeding with fallback"
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Download CI coverage artifacts (after wait)
+        if: steps.pr-info.outputs.event_type == 'pull_request'
+        run: |
+          echo "📥 Attempting to download CI coverage artifacts after wait..."
+
+          # Get the latest completed CI run
+          RUN_ID=$(gh run list --workflow=CI --branch=test/improve-coverage-to-60-percent --status=completed --limit=1 --json databaseId --jq '.[0].databaseId')
+
+          if [ "$RUN_ID" != "null" ] && [ -n "$RUN_ID" ]; then
+            echo "📦 Found CI run: $RUN_ID, downloading artifacts..."
+            gh run download $RUN_ID --name ci-coverage-reports --dir ./coverage-artifacts/ || echo "⚠️  Failed to download CI artifacts"
+
+            if [ -d "coverage-artifacts" ]; then
+              echo "✅ CI coverage artifacts downloaded successfully"
+              ls -la coverage-artifacts/
+            fi
+          else
+            echo "⚠️  No completed CI run found"
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Use downloaded coverage or fallback
+        if: steps.pr-info.outputs.event_type == 'pull_request'
+        run: |
+          if [ -f "coverage-artifacts/face-rekon/coverage.xml" ]; then
+            echo "📊 Using comprehensive coverage from CI"
+            cp coverage-artifacts/face-rekon/coverage.xml coverage-pr.xml 2>/dev/null || echo "No unit coverage XML"
+            cp coverage-artifacts/face-rekon/coverage-integration.xml coverage-integration-pr.xml 2>/dev/null || echo "No integration coverage XML"
+            cp coverage-artifacts/face-rekon/coverage.json coverage-pr.json 2>/dev/null || echo "No unit coverage JSON"
+            cp coverage-artifacts/face-rekon/coverage-integration.json coverage-integration-pr.json 2>/dev/null || echo "No integration coverage JSON"
+            echo "ci_coverage_used=true" >> $GITHUB_ENV
+          else
+            echo "🔄 Falling back to running unit tests only"
+            echo "ci_coverage_used=false" >> $GITHUB_ENV
+          fi
+
+      - name: Fallback - Run unit tests only
+        if: steps.pr-info.outputs.event_type == 'pull_request' && env.ci_coverage_used == 'false'
         run: |
           echo "🔄 Fallback: Running comprehensive tests directly"
           cd face-rekon
