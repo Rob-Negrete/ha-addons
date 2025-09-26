@@ -1,11 +1,14 @@
 name: Coverage Health Check
 
 on:
-  # Primary trigger: after CI completes successfully
+  # Primary trigger: after CI completes successfully (for main branch)
   workflow_run:
     workflows: ["CI"]
     types:
       - completed
+  # PR trigger: run after CI on pull requests
+  pull_request:
+    types: [opened, synchronize, reopened]
   # Manual trigger for testing/debugging
   workflow_dispatch:
     inputs:
@@ -24,13 +27,14 @@ jobs:
   coverage-health:
     name: Check Coverage Health
     runs-on: ubuntu-latest
-    # Only run when CI completes successfully OR manual workflow dispatch
+    # Only run when CI completes successfully, on PR events, or manual dispatch
     if: |
       (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') ||
+      (github.event_name == 'pull_request') ||
       (github.event_name == 'workflow_dispatch')
 
     steps:
-      - name: Get PR info for workflow_run events
+      - name: Get PR info for all event types
         id: pr-info
         run: |
           if [[ "${{ github.event_name }}" == "workflow_run" ]]; then
@@ -46,6 +50,13 @@ jobs:
               echo "No PR associated with workflow run"
               exit 1
             fi
+          elif [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            # For pull_request events, get PR info directly from the event
+            PR_NUMBER="${{ github.event.number }}"
+            PR_HEAD_SHA="${{ github.event.pull_request.head.sha }}"
+            echo "pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
+            echo "pr_head_sha=$PR_HEAD_SHA" >> $GITHUB_OUTPUT
+            echo "event_type=pull_request" >> $GITHUB_OUTPUT
           elif [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
             # For manual dispatch, use provided PR number and fetch SHA
             PR_NUMBER="${{ github.event.inputs.pr_number }}"
@@ -90,6 +101,46 @@ jobs:
           else
             echo "⚠️  No CI coverage artifacts found"
           fi
+
+      - name: Run comprehensive tests for pull_request events
+        if: steps.pr-info.outputs.event_type == 'pull_request'
+        run: |
+          echo "🔄 Running comprehensive tests for pull_request event"
+          cd face-rekon
+          pip install -r requirements-test.txt
+
+          # Run unit tests with coverage
+          QDRANT_PATH=/tmp/test_qdrant_unit \
+          FACE_REKON_BASE_PATH=/tmp/test_faces \
+          FACE_REKON_UNKNOWN_PATH=/tmp/test_unknowns \
+          FACE_REKON_THUMBNAIL_PATH=/tmp/test_thumbnails \
+          FACE_REKON_USE_EMBEDDED_QDRANT=true \
+          python -m pytest tests/unit/ -c pytest-unit.ini \
+            --cov=scripts \
+            --cov-report=xml:coverage-unit.xml \
+            --cov-report=json:coverage-unit.json \
+            --cov-report=term-missing
+
+          # Run integration tests with coverage
+          QDRANT_PATH=/tmp/test_qdrant_integration \
+          FACE_REKON_BASE_PATH=/tmp/test_faces \
+          FACE_REKON_UNKNOWN_PATH=/tmp/test_unknowns \
+          FACE_REKON_THUMBNAIL_PATH=/tmp/test_thumbnails \
+          FACE_REKON_USE_EMBEDDED_QDRANT=true \
+          python -m pytest tests/integration/test_coverage_integration.py -c pytest-integration.ini \
+            --cov=scripts \
+            --cov-report=xml:coverage-integration.xml \
+            --cov-report=json:coverage-integration.json \
+            --tb=short -q || echo "Integration tests completed with some issues"
+
+          # Move coverage files to root for the enhanced script to discover
+          mv coverage-unit.xml ../coverage-unit.xml
+          mv coverage-unit.json ../coverage-unit.json
+          mv coverage-integration.xml ../coverage-integration.xml 2>/dev/null || echo "No integration coverage XML"
+          mv coverage-integration.json ../coverage-integration.json 2>/dev/null || echo "No integration coverage JSON"
+
+          # Clean up temporary coverage files to avoid git conflicts
+          rm -f .coverage .coverage.*
 
       - name: Run comprehensive tests (fallback for manual dispatch)
         if: steps.pr-info.outputs.event_type == 'workflow_dispatch'
