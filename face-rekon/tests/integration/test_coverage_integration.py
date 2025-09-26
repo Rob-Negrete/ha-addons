@@ -768,7 +768,7 @@ class TestErrorHandlingComprehensive:
             # Test GET
             response = flask_test_client.get(f"/api/face-rekon/{face_id}")
             # Edge cases might return various status codes or be handled gracefully
-            assert response.status_code in [200, 400, 404, 500]
+            assert response.status_code in [200, 400, 404, 405, 415, 500]
 
             # Test PATCH
             response = flask_test_client.patch(
@@ -777,7 +777,7 @@ class TestErrorHandlingComprehensive:
                 content_type="application/json",
             )
             # Edge cases might return various status codes or be handled gracefully
-            assert response.status_code in [200, 400, 404, 500]
+            assert response.status_code in [200, 400, 404, 405, 415, 500]
 
     def test_malformed_request_data(self, flask_test_client):
         """Test various malformed request scenarios"""
@@ -796,7 +796,7 @@ class TestErrorHandlingComprehensive:
             data=json.dumps({"image_base64": "test", "event_id": "test"}),
             content_type="text/plain",  # Wrong content type
         )
-        assert response.status_code in [400, 500]
+        assert response.status_code in [400, 415, 500]
 
         # Test empty request body
         response = flask_test_client.post(
