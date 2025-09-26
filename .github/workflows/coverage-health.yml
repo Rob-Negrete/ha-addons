@@ -6,8 +6,7 @@ on:
     workflows: ["CI"]
     types:
       - completed
-    # Include all branches to work with PRs
-    branches-ignore: []
+    branches: ["*"]
   # Manual trigger for testing/debugging
   workflow_dispatch:
     inputs:
