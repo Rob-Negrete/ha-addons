@@ -1,11 +1,21 @@
 name: Coverage Health Check
 
 on:
+  # Primary trigger: after CI completes
   workflow_run:
     workflows: ["CI"]
     types:
       - completed
-  # Manual trigger for testing/debugging only
+    branches: [main, test/improve-coverage-to-60-percent]
+  # Backup trigger: on PR events (but will wait for CI artifacts)
+  pull_request:
+    branches: [main]
+    paths:
+      - "face-rekon/**"
+      - ".github/workflows/coverage-health.yml"
+      - ".github/scripts/coverage-health.py"
+    types: [synchronize, opened, reopened]
+  # Manual trigger for testing/debugging
   workflow_dispatch:
     inputs:
       pr_number:
@@ -23,9 +33,10 @@ jobs:
   coverage-health:
     name: Check Coverage Health
     runs-on: ubuntu-latest
-    # Only run when CI completes successfully OR manual workflow dispatch
+    # Run on successful CI completion, PR events, or manual dispatch
     if: |
       (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') ||
+      (github.event_name == 'pull_request') ||
       (github.event_name == 'workflow_dispatch')
 
     steps:
@@ -39,6 +50,11 @@ jobs:
             echo "pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
             echo "pr_head_sha=$PR_HEAD_SHA" >> $GITHUB_OUTPUT
             echo "event_type=workflow_run" >> $GITHUB_OUTPUT
+          elif [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            # For direct PR events
+            echo "pr_number=${{ github.event.number }}" >> $GITHUB_OUTPUT
+            echo "pr_head_sha=${{ github.event.pull_request.head.sha }}" >> $GITHUB_OUTPUT
+            echo "event_type=pull_request" >> $GITHUB_OUTPUT
           elif [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
             # For manual dispatch, use provided PR number and fetch SHA
             PR_NUMBER="${{ github.event.inputs.pr_number }}"
@@ -83,8 +99,8 @@ jobs:
             echo "⚠️  No CI coverage artifacts found"
           fi
 
-      - name: Fallback - Run comprehensive tests (manual dispatch)
-        if: steps.pr-info.outputs.event_type == 'workflow_dispatch'
+      - name: Fallback - Run comprehensive tests (no CI artifacts available)
+        if: steps.pr-info.outputs.event_type != 'workflow_run'
         run: |
           echo "🔄 Fallback: Running comprehensive tests directly"
           cd face-rekon
