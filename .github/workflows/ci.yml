@@ -3,8 +3,6 @@ name: CI
 # CI workflow optimized to skip release-please auto-generated branches
 # Release-please branches contain only version bumps and don't need full CI
 on:
-  push:
-    branches: [main, develop]
   pull_request:
     branches: [main]
   # Add manual workflow dispatch for testing
