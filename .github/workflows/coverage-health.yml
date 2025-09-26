@@ -93,11 +93,15 @@ jobs:
         run: |
           if [[ "${{ steps.download-artifacts.outcome }}" == "success" && -d "coverage-artifacts" ]]; then
             echo "📥 Using comprehensive coverage from CI workflow"
+            echo "📁 Contents of coverage-artifacts directory:"
+            ls -la coverage-artifacts/
+
             # Copy CI coverage reports with consistent naming for the enhanced script
-            cp coverage-artifacts/face-rekon/coverage.xml coverage-unit.xml 2>/dev/null || echo "No unit coverage XML"
-            cp coverage-artifacts/face-rekon/coverage-integration.xml coverage-integration.xml 2>/dev/null || echo "No integration coverage XML"
-            cp coverage-artifacts/face-rekon/coverage.json coverage-unit.json 2>/dev/null || echo "No unit coverage JSON"
-            cp coverage-artifacts/face-rekon/coverage-integration.json coverage-integration.json 2>/dev/null || echo "No integration coverage JSON"
+            # Files are extracted directly to coverage-artifacts/ (no face-rekon subdirectory)
+            cp coverage-artifacts/coverage.xml coverage-unit.xml 2>/dev/null || echo "No unit coverage XML"
+            cp coverage-artifacts/coverage-integration.xml coverage-integration.xml 2>/dev/null || echo "No integration coverage XML"
+            cp coverage-artifacts/coverage.json coverage-unit.json 2>/dev/null || echo "No unit coverage JSON"
+            cp coverage-artifacts/coverage-integration.json coverage-integration.json 2>/dev/null || echo "No integration coverage JSON"
 
             echo "✅ Coverage reports from CI workflow downloaded"
             echo "📊 Available coverage files:"
