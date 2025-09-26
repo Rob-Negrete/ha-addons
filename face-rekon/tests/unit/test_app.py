@@ -511,3 +511,6 @@ class TestAppFunctionality:
             assert (
                 total_estimated_memory < 1024 * 1024
             )  # Less than 1MB for our test cases
+
+
+# Removed Flask endpoint tests - using integration tests instead for better coverage
