@@ -66,19 +66,32 @@ jobs:
         with:
           python-version: "3.10.18"
 
+      - name: Debug workflow run info
+        if: steps.pr-info.outputs.event_type == 'workflow_run'
+        run: |
+          echo "🔍 Workflow run debugging info:"
+          echo "  Workflow Run ID: ${{ github.event.workflow_run.id }}"
+          echo "  Workflow Run Conclusion: ${{ github.event.workflow_run.conclusion }}"
+          echo "  Head SHA: ${{ github.event.workflow_run.head_sha }}"
+          echo "  Workflow Name: ${{ github.event.workflow_run.name }}"
+          echo "  Event Type: ${{ steps.pr-info.outputs.event_type }}"
+
       - name: Download coverage artifacts from CI
         if: steps.pr-info.outputs.event_type == 'workflow_run'
-        uses: actions/download-artifact@v4
+        uses: dawidd6/action-download-artifact@v3
         with:
           name: ci-coverage-reports
           path: ./coverage-artifacts/
-          run-id: ${{ github.event.workflow_run.id }}
+          run_id: ${{ github.event.workflow_run.id }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+        continue-on-error: true
+        id: download-artifacts
 
-      - name: Use CI coverage reports
+      - name: Use CI coverage reports or fallback
         if: steps.pr-info.outputs.event_type == 'workflow_run'
         run: |
-          echo "📥 Using comprehensive coverage from CI workflow"
-          if [ -d "coverage-artifacts" ]; then
+          if [[ "${{ steps.download-artifacts.outcome }}" == "success" && -d "coverage-artifacts" ]]; then
+            echo "📥 Using comprehensive coverage from CI workflow"
             # Copy CI coverage reports with consistent naming for the enhanced script
             cp coverage-artifacts/face-rekon/coverage.xml coverage-unit.xml 2>/dev/null || echo "No unit coverage XML"
             cp coverage-artifacts/face-rekon/coverage-integration.xml coverage-integration.xml 2>/dev/null || echo "No integration coverage XML"
@@ -89,13 +102,39 @@ jobs:
             echo "📊 Available coverage files:"
             ls -la coverage*.xml coverage*.json 2>/dev/null || echo "No coverage files found"
           else
-            echo "⚠️  No CI coverage artifacts found"
+            echo "⚠️  Unable to download CI coverage artifacts, falling back to running tests"
+            echo "📝 Artifact download outcome: ${{ steps.download-artifacts.outcome }}"
+            echo "🔄 Running comprehensive tests as fallback"
+
+            cd face-rekon
+            pip install -r requirements-test.txt
+
+            # Run unit tests with coverage
+            QDRANT_PATH=/tmp/test_qdrant_unit \
+            FACE_REKON_BASE_PATH=/tmp/test_faces \
+            FACE_REKON_UNKNOWN_PATH=/tmp/test_unknowns \
+            FACE_REKON_THUMBNAIL_PATH=/tmp/test_thumbnails \
+            FACE_REKON_USE_EMBEDDED_QDRANT=true \
+            python -m pytest tests/unit/ -c pytest-unit.ini \
+              --cov=scripts \
+              --cov-report=xml:coverage-fallback.xml \
+              --cov-report=json:coverage-fallback.json \
+              --cov-report=term-missing
+
+            # Move coverage files to root with unit naming for consistency
+            mv coverage-fallback.xml ../coverage-unit.xml
+            mv coverage-fallback.json ../coverage-unit.json
+
+            # Clean up temporary coverage files to avoid git conflicts
+            rm -f .coverage .coverage.*
+
+            echo "✅ Fallback coverage completed"
           fi
 
-      - name: Run comprehensive tests (fallback for manual dispatch)
+      - name: Run comprehensive tests (for manual dispatch)
         if: steps.pr-info.outputs.event_type == 'workflow_dispatch'
         run: |
-          echo "🔄 Fallback: Running comprehensive tests directly"
+          echo "🔄 Manual dispatch: Running comprehensive tests directly"
           cd face-rekon
           pip install -r requirements-test.txt
 
@@ -107,13 +146,13 @@ jobs:
           FACE_REKON_USE_EMBEDDED_QDRANT=true \
           python -m pytest tests/unit/ -c pytest-unit.ini \
             --cov=scripts \
-            --cov-report=xml:coverage-pr.xml \
-            --cov-report=json:coverage-pr.json \
+            --cov-report=xml:coverage-dispatch.xml \
+            --cov-report=json:coverage-dispatch.json \
             --cov-report=term-missing
 
           # Move coverage files to root with unit naming for consistency
-          mv coverage-pr.xml ../coverage-unit.xml
-          mv coverage-pr.json ../coverage-unit.json
+          mv coverage-dispatch.xml ../coverage-unit.xml
+          mv coverage-dispatch.json ../coverage-unit.json
 
           # Clean up temporary coverage files to avoid git conflicts
           rm -f .coverage .coverage.*
@@ -161,13 +200,14 @@ jobs:
         run: |
           # Use the enhanced script that auto-discovers and combines coverage files
           if [ -f "coverage-unit.xml" ]; then
-            echo "🔄 Using comprehensive coverage analysis with auto-discovery"
+            echo "🔄 Using coverage analysis with discovered files"
+            echo "📊 Available coverage files:"
+            ls -la coverage*.xml 2>/dev/null || echo "No XML coverage files found"
             python .github/scripts/coverage-health.py coverage-unit.xml coverage-main.xml
-          elif [ -f "coverage-pr.xml" ]; then
-            echo "🔄 Fallback to single coverage file"
-            python .github/scripts/coverage-health.py coverage-pr.xml coverage-main.xml
           else
-            echo "❌ No coverage files found"
+            echo "❌ No coverage files found for analysis"
+            echo "📁 Files in current directory:"
+            ls -la
             exit 1
           fi
         continue-on-error: true
