@@ -1,6 +1,6 @@
 # Home Assistant Add-ons Repository
 
-![Coverage](https://img.shields.io/badge/coverage-41.2%25-yellow)
+![Coverage](https://img.shields.io/badge/coverage-49%25-yellow)
 ![CI](https://github.com/Rob-Negrete/ha-addons/workflows/CI/badge.svg)
 ![Coverage Health](https://github.com/Rob-Negrete/ha-addons/workflows/Coverage%20Health%20Check/badge.svg)
 
@@ -22,7 +22,7 @@ This repository contains custom Home Assistant add-ons for enhanced home automat
 - Real-time face detection and recognition
 - Unknown face storage and classification workflow
 - REST API with Swagger documentation
-- Professional testing infrastructure with 41.2% coverage
+- Professional testing infrastructure with 49% coverage and automated health checks
 - Qdrant vector database for optimized face similarity search
 - Comprehensive web UI for face management
 
@@ -133,17 +133,21 @@ python run_tests.py unit
 
 ## 🚀 Release Management
 
-This repository uses automated release management:
+This repository uses automated release management with enhanced CI/CD:
 
 - **Release Please**: Automatic version bumping and changelog generation
-- **GitHub Actions**: Automated building and testing
+- **GitHub Actions**: Automated building, testing, and coverage analysis
 - **Semantic Versioning**: Standard version numbering
+- **Coverage Health Checks**: Automated test coverage monitoring with fallback mechanisms
+- **Cross-Workflow Artifacts**: Reliable artifact sharing between CI and coverage workflows
+- **Quality Gates**: Comprehensive testing with unit and integration test suites
 
 ## 📖 Documentation
 
 - **Individual Add-ons**: Each add-on contains detailed README.md
 - **Project Architecture**: See [CLAUDE.md](../CLAUDE.md) for overall project structure
 - **Contributing**: [CONTRIBUTING.md](./CONTRIBUTING.md) for development guidelines
+- **Coverage Health**: [COVERAGE-GUIDE.md](./COVERAGE-GUIDE.md) for test coverage system and troubleshooting
 
 ## 🔗 Links
 
