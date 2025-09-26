@@ -1,20 +1,11 @@
 name: Coverage Health Check
 
 on:
-  # Primary trigger: after CI completes
+  # Primary trigger: after CI completes successfully
   workflow_run:
     workflows: ["CI"]
     types:
       - completed
-    branches: [main, test/improve-coverage-to-60-percent]
-  # Backup trigger: on PR events (but will wait for CI artifacts)
-  pull_request:
-    branches: [main]
-    paths:
-      - "face-rekon/**"
-      - ".github/workflows/coverage-health.yml"
-      - ".github/scripts/coverage-health.py"
-    types: [synchronize, opened, reopened]
   # Manual trigger for testing/debugging
   workflow_dispatch:
     inputs:
@@ -33,10 +24,9 @@ jobs:
   coverage-health:
     name: Check Coverage Health
     runs-on: ubuntu-latest
-    # Run on successful CI completion, PR events, or manual dispatch
+    # Only run when CI completes successfully OR manual workflow dispatch
     if: |
       (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') ||
-      (github.event_name == 'pull_request') ||
       (github.event_name == 'workflow_dispatch')
 
     steps:
@@ -50,11 +40,6 @@ jobs:
             echo "pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
             echo "pr_head_sha=$PR_HEAD_SHA" >> $GITHUB_OUTPUT
             echo "event_type=workflow_run" >> $GITHUB_OUTPUT
-          elif [[ "${{ github.event_name }}" == "pull_request" ]]; then
-            # For direct PR events
-            echo "pr_number=${{ github.event.number }}" >> $GITHUB_OUTPUT
-            echo "pr_head_sha=${{ github.event.pull_request.head.sha }}" >> $GITHUB_OUTPUT
-            echo "event_type=pull_request" >> $GITHUB_OUTPUT
           elif [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
             # For manual dispatch, use provided PR number and fetch SHA
             PR_NUMBER="${{ github.event.inputs.pr_number }}"
@@ -99,78 +84,8 @@ jobs:
             echo "⚠️  No CI coverage artifacts found"
           fi
 
-      - name: Wait for CI completion (if triggered by PR)
-        if: steps.pr-info.outputs.event_type == 'pull_request'
-        run: |
-          echo "⏳ Waiting for CI workflow to complete to get comprehensive coverage..."
-
-          # Wait up to 10 minutes for CI to complete
-          max_wait=600  # 10 minutes
-          wait_time=0
-          interval=30   # Check every 30 seconds
-
-          while [ $wait_time -lt $max_wait ]; do
-            # Check if CI workflow is complete
-            STATUS=$(gh run list --workflow=CI --branch=test/improve-coverage-to-60-percent --limit=1 --json status --jq '.[0].status')
-
-            if [ "$STATUS" = "completed" ]; then
-              echo "✅ CI workflow completed, proceeding with coverage analysis"
-              break
-            elif [ "$STATUS" = "in_progress" ] || [ "$STATUS" = "queued" ]; then
-              echo "⏳ CI still running (${wait_time}s elapsed), waiting..."
-              sleep $interval
-              wait_time=$((wait_time + interval))
-            else
-              echo "❌ CI workflow failed or in unexpected state: $STATUS"
-              break
-            fi
-          done
-
-          if [ $wait_time -ge $max_wait ]; then
-            echo "⏰ Timeout waiting for CI, proceeding with fallback"
-          fi
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Download CI coverage artifacts (after wait)
-        if: steps.pr-info.outputs.event_type == 'pull_request'
-        run: |
-          echo "📥 Attempting to download CI coverage artifacts after wait..."
-
-          # Get the latest completed CI run
-          RUN_ID=$(gh run list --workflow=CI --branch=test/improve-coverage-to-60-percent --status=completed --limit=1 --json databaseId --jq '.[0].databaseId')
-
-          if [ "$RUN_ID" != "null" ] && [ -n "$RUN_ID" ]; then
-            echo "📦 Found CI run: $RUN_ID, downloading artifacts..."
-            gh run download $RUN_ID --name ci-coverage-reports --dir ./coverage-artifacts/ || echo "⚠️  Failed to download CI artifacts"
-
-            if [ -d "coverage-artifacts" ]; then
-              echo "✅ CI coverage artifacts downloaded successfully"
-              ls -la coverage-artifacts/
-            fi
-          else
-            echo "⚠️  No completed CI run found"
-          fi
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Use downloaded coverage or fallback
-        if: steps.pr-info.outputs.event_type == 'pull_request'
-        run: |
-          if [ -f "coverage-artifacts/face-rekon/coverage.xml" ]; then
-            echo "📊 Using comprehensive coverage from CI"
-            cp coverage-artifacts/face-rekon/coverage.xml coverage-pr.xml 2>/dev/null || echo "No unit coverage XML"
-            cp coverage-artifacts/face-rekon/coverage-integration.xml coverage-integration-pr.xml 2>/dev/null || echo "No integration coverage XML"
-            cp coverage-artifacts/face-rekon/coverage.json coverage-pr.json 2>/dev/null || echo "No unit coverage JSON"
-            cp coverage-artifacts/face-rekon/coverage-integration.json coverage-integration-pr.json 2>/dev/null || echo "No integration coverage JSON"
-            echo "ci_coverage_used=true" >> $GITHUB_ENV
-          else
-            echo "🔄 Falling back to running unit tests only"
-            echo "ci_coverage_used=false" >> $GITHUB_ENV
-          fi
-
-      - name: Fallback - Run unit tests only
-        if: steps.pr-info.outputs.event_type == 'pull_request' && env.ci_coverage_used == 'false'
+      - name: Run comprehensive tests (fallback for manual dispatch)
+        if: steps.pr-info.outputs.event_type == 'workflow_dispatch'
         run: |
           echo "🔄 Fallback: Running comprehensive tests directly"
           cd face-rekon
@@ -285,7 +200,7 @@ jobs:
 
             The baseline coverage is set at **41.2%** based on the current codebase state.
 
-            Coverage includes both unit and integration tests from CI workflow. This check only runs after CI completes successfully.
+            Coverage includes both unit and integration tests from CI workflow. This workflow automatically runs after CI completes successfully.
             </details>
 
             ---
