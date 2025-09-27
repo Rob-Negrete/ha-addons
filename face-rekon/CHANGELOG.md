@@ -2,6 +2,13 @@
 
 All notable changes to the Face Rekon Home Assistant add-on will be documented in this file.
 
+## [0.2.7-alpha.1](https://github.com/Rob-Negrete/ha-addons/compare/face-rekon-v0.2.6-alpha.1...face-rekon-v0.2.7-alpha.1) (2025-09-27)
+
+
+### 🧹 Chores
+
+* add comprehensive /bump-coverage slash command ([#90](https://github.com/Rob-Negrete/ha-addons/issues/90)) ([a78eec6](https://github.com/Rob-Negrete/ha-addons/commit/a78eec6b3a157767f594933bf71f5d76de02f5a4))
+
 ## [0.2.6-alpha.1](https://github.com/Rob-Negrete/ha-addons/compare/face-rekon-v0.2.5-alpha.1...face-rekon-v0.2.6-alpha.1) (2025-09-27)
 
 
