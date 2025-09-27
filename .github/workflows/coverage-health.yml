@@ -64,9 +64,17 @@ jobs:
               echo "event_type=workflow_run" >> $GITHUB_OUTPUT
               echo "✅ Found PR #$PR_NUMBER with SHA $PR_HEAD_SHA"
             else
-              echo "❌ No PR associated with workflow run"
+              echo "ℹ️  No PR associated with workflow run"
               echo "🔍 This might be a push to main or other non-PR event"
-              exit 1
+              echo "📊 Running coverage analysis for direct push to branch: ${{ github.event.workflow_run.head_branch }}"
+
+              # Set outputs for non-PR workflow runs (e.g., direct pushes to main)
+              PR_HEAD_SHA="${{ github.event.workflow_run.head_sha }}"
+              echo "pr_head_sha=$PR_HEAD_SHA" >> $GITHUB_OUTPUT
+              echo "event_type=workflow_run" >> $GITHUB_OUTPUT
+              echo "is_direct_push=true" >> $GITHUB_OUTPUT
+              echo "target_branch=${{ github.event.workflow_run.head_branch }}" >> $GITHUB_OUTPUT
+              echo "✅ Non-PR workflow run processed for branch ${{ github.event.workflow_run.head_branch }}"
             fi
 
           elif [[ "${{ github.event_name }}" == "check_run" ]]; then
@@ -263,16 +271,25 @@ jobs:
       - name: Run coverage health analysis
         id: coverage-health
         env:
-          BASELINE_COVERAGE: "41.2"
+          BASELINE_COVERAGE: "47.9"
         run: |
           # Use the enhanced script that auto-discovers and combines coverage files
+          echo "🔄 Checking for coverage files"
+          echo "📊 All available files:"
+          ls -la coverage*.xml coverage*.json 2>/dev/null || echo "No coverage files found"
+
           if [ -f "coverage-unit.xml" ]; then
-            echo "🔄 Using coverage analysis with discovered files"
-            echo "📊 Available coverage files:"
-            ls -la coverage*.xml 2>/dev/null || echo "No XML coverage files found"
+            echo "✅ Found unit coverage file"
+            if [ -f "coverage-integration.xml" ]; then
+              echo "✅ Found integration coverage file - script will auto-discover it"
+            else
+              echo "⚠️  No integration coverage file found"
+            fi
+
+            echo "🔄 Running coverage analysis with auto-discovery"
             python .github/scripts/coverage-health.py coverage-unit.xml coverage-main.xml
           else
-            echo "❌ No coverage files found for analysis"
+            echo "❌ No unit coverage file found for analysis"
             echo "📁 Files in current directory:"
             ls -la
             exit 1
@@ -296,6 +313,7 @@ jobs:
           fi
 
       - name: Create/Update PR Comment
+        if: steps.pr-info.outputs.pr_number && steps.pr-info.outputs.is_direct_push != 'true'
         uses: actions/github-script@v7
         with:
           script: |
@@ -319,11 +337,11 @@ jobs:
 
             This automated check analyzes test coverage and provides status indicators:
 
-            - 🟢 **Green (Pass)**: Coverage maintained or improved (≥41.2%)
-            - 🟡 **Amber (Warning)**: Minor coverage decrease (35-41.1%)
-            - 🔴 **Red (Fail)**: Significant coverage drop (<35%)
+            - 🟢 **Green (Pass)**: Coverage maintained or improved (≥47.9%)
+            - 🟡 **Amber (Warning)**: Minor coverage decrease (41.7-47.8%)
+            - 🔴 **Red (Fail)**: Significant coverage drop (<41.7%)
 
-            The baseline coverage is set at **41.2%** based on the current codebase state.
+            The baseline coverage is set at **47.9%** based on comprehensive unit + integration tests.
 
             Coverage includes both unit and integration tests from CI workflow. This workflow automatically runs after CI completes successfully.
             </details>
@@ -362,6 +380,15 @@ jobs:
                 body: commentBody
               });
             }
+
+      - name: Log coverage results for non-PR events
+        if: steps.pr-info.outputs.is_direct_push == 'true'
+        run: |
+          echo "📊 Coverage Analysis Results for Direct Push"
+          echo "🔗 Branch: ${{ steps.pr-info.outputs.target_branch }}"
+          echo "📈 Coverage: ${{ steps.coverage-report.outputs.coverage }}%"
+          echo "📋 Status: ${{ steps.coverage-report.outputs.status }}"
+          echo "ℹ️  Skipping PR comment creation for non-PR event"
 
       - name: Create Coverage Status Check
         uses: actions/github-script@v7
