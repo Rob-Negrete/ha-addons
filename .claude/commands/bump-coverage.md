@@ -110,6 +110,15 @@ endpoint_gaps = map_lines_to_functions(uncovered_lines, target="/recognize")
 - Mock complex dependencies appropriately
 - Ensure proper test organization and naming
 
+**NOTE**: Avoid creating new test entry scripts, to keep exclusively one entry script for unit tests and other for integration tests. You CAN create helper scripts called from the entry ones, that extends coverage. Like this:
+
+- integration tests -> tests/integration/ test_integration.py -> imports test_recognize.py -> all integration tests for face-rekon/recognize endpoint here.
+- unit tests -> tests/unit/test_unit.py -> imports test_clasificador.py -> all unit tests for clasificador.py here ... or you can even split it in smaller helper files, (for exampe: method level test_clasificador_extract_face_embedding.py).
+  If splitted (perhaps because is growing a lot or for clasification), maybe can be grouped in a folder for each endpoint / class. (ex: all integration tests of /recognize in /tests/integration/app/recognize/test_recognize_success.py)
+  Also, it is possible to create stubbing or mocking files that can be reused by tests (ex: mocks_base64_images.py or mocks_embeddings.py or mock_image_with_face.png, mock_image_with_multiple_faces.webp, mock_image_without_faces.jpg).
+
+ALWAYS run unit tests and dockerized integration tests and they all MUST PASS before commiting!
+
 ## 🧪 Step 5: Implement Targeted Test Cases
 
 **Specific Targeting Based on Arguments:**
