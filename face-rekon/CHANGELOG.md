@@ -2,6 +2,13 @@
 
 All notable changes to the Face Rekon Home Assistant add-on will be documented in this file.
 
+## [0.2.5-alpha.1](https://github.com/Rob-Negrete/ha-addons/compare/face-rekon-v0.2.4-alpha.1...face-rekon-v0.2.5-alpha.1) (2025-09-27)
+
+
+### 🧹 Chores
+
+* update path to face-rekon ([#84](https://github.com/Rob-Negrete/ha-addons/issues/84)) ([39c9df7](https://github.com/Rob-Negrete/ha-addons/commit/39c9df7a05868e4a54501581232c3722bd9a88ce))
+
 ## [0.2.4-alpha.1](https://github.com/Rob-Negrete/ha-addons/compare/face-rekon-v0.2.3-alpha.1...face-rekon-v0.2.4-alpha.1) (2025-09-25)
 
 
