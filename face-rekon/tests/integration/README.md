@@ -26,16 +26,23 @@ python run_tests.py integration  # ❌ Will show Docker requirement
 
 ### Test Structure
 
-- **`test_integration.py`** - Main comprehensive integration test file
-  - Flask API endpoints with real ML backend
-  - ML pipeline (InsightFace, OpenCV)
-  - Vector database operations (Qdrant)
+- **`test_integration.py`** - Comprehensive integration test file targeting 60% coverage
+  - Flask API endpoints with real ML backend (app.py coverage)
+  - ML pipeline (InsightFace, OpenCV, clasificador.py coverage)
+  - Vector database operations (Qdrant, qdrant_adapter.py coverage)
   - API models and Flask-RESTX components
   - End-to-end system workflows
+  - Error handling and edge cases
+  - Concurrent request testing
 
-### Coverage
+### Coverage Target
 
-Current Docker-based integration tests achieve **34% coverage** with all major components tested.
+Integration tests target **60% coverage** with comprehensive testing of:
+
+- **app.py**: Flask routes, error handling, static assets
+- **clasificador.py**: Face processing, management operations
+- **qdrant_adapter.py**: Vector operations, health checks
+- **models.py**: API model definitions
 
 ### Why Docker-First?
 
