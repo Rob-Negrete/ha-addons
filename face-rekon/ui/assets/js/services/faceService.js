@@ -4,8 +4,31 @@
  */
 class FaceService {
     constructor(baseUrl = '') {
+        // Auto-detect base URL if not provided
+        if (!baseUrl) {
+            baseUrl = this._detectBaseUrl();
+        }
         this.baseUrl = baseUrl;
         this.apiPath = '/api/face-rekon';
+    }
+
+    /**
+     * Auto-detects the correct base URL for API calls
+     * Handles both direct access and Home Assistant ingress routing
+     * @returns {string} Detected base URL
+     */
+    _detectBaseUrl() {
+        const currentPath = window.location.pathname;
+
+        // Check if we're running under Home Assistant ingress
+        // HA ingress URLs typically look like: /api/hassio_ingress/[addon_slug]/
+        const ingressMatch = currentPath.match(/^(\/api\/hassio_ingress\/[^\/]+)/);
+        if (ingressMatch) {
+            return ingressMatch[1];
+        }
+
+        // For direct access or other contexts, use empty string (relative URLs)
+        return '';
     }
 
     /**

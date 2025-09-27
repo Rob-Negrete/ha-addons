@@ -60,7 +60,7 @@ function formatDate(dateInput) {
 /**
  * Creates a URL for face image thumbnails
  * @param {string} faceId - The face identifier
- * @param {string} baseUrl - Base URL for the service
+ * @param {string} baseUrl - Base URL for the service (auto-detected if not provided)
  * @returns {string} Image URL or null if no faceId
  */
 function createImageUrl(faceId, baseUrl = '') {
@@ -68,8 +68,32 @@ function createImageUrl(faceId, baseUrl = '') {
         return null;
     }
 
+    // Auto-detect base URL if not provided
+    if (!baseUrl) {
+        baseUrl = detectBaseUrl();
+    }
+
     // Return URL to the new image serving endpoint
     return `${baseUrl}/images/${encodeURIComponent(faceId)}`;
+}
+
+/**
+ * Auto-detects the correct base URL for API calls
+ * Handles both direct access and Home Assistant ingress routing
+ * @returns {string} Detected base URL
+ */
+function detectBaseUrl() {
+    const currentPath = window.location.pathname;
+
+    // Check if we're running under Home Assistant ingress
+    // HA ingress URLs typically look like: /api/hassio_ingress/[addon_slug]/
+    const ingressMatch = currentPath.match(/^(\/api\/hassio_ingress\/[^\/]+)/);
+    if (ingressMatch) {
+        return ingressMatch[1];
+    }
+
+    // For direct access or other contexts, use empty string (relative URLs)
+    return '';
 }
 
 /**
@@ -272,6 +296,7 @@ if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
         formatDate,
         createImageUrl,
+        detectBaseUrl,
         truncateText,
         sanitizeHtml,
         isValidFaceId,
@@ -288,6 +313,7 @@ if (typeof module !== 'undefined' && module.exports) {
     window.FaceHelpers = {
         formatDate,
         createImageUrl,
+        detectBaseUrl,
         truncateText,
         sanitizeHtml,
         isValidFaceId,
