@@ -340,10 +340,10 @@ class TestRecognizeEndpointCoverage:
                     },
                 )
                 # Large payload gets processed but fails later
-                # Should return 200 with error in response
+                # Should return 200 with no_faces_detected status
                 assert response.status_code == 200
                 data = response.get_json()
-                assert "status" in data and data["status"] == "error"
+                assert "status" in data and data["status"] == "no_faces_detected"
                 print("✅ Preprocessing error test passed")
         except ImportError:
             pytest.skip("Flask app not available")

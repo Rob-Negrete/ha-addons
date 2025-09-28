@@ -18,9 +18,8 @@ scripts_path = os.path.join(os.path.dirname(__file__), "../../scripts")
 if scripts_path not in sys.path:
     sys.path.insert(0, scripts_path)
 
-# Import additional test modules for comprehensive coverage
-# This import provides TestRecognizeEndpointCoverage class for Flask tests
-from .test_recognize_endpoint import TestRecognizeEndpointCoverage  # noqa
+# Note: TestRecognizeEndpointCoverage is defined in test_recognize_endpoint.py
+# and runs separately to avoid duplication
 
 
 @pytest.fixture
