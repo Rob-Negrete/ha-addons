@@ -18,9 +18,7 @@ def create_models(api: Api) -> Dict[str, Any]:
                 required=True, description="Base64 encoded image data"
             ),
             "event_id": fields.String(
-                required=False,
-                description="Event identifier for tracking",
-                default="unknown",
+                required=True, description="Event identifier for tracking"
             ),
         },
     )

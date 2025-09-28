@@ -234,19 +234,20 @@ class TestRecognizeEndpointCoverage:
         except ImportError:
             pytest.skip("Flask app not available")
 
-    # Test Case 11: Missing event_id handling (lines 81-82)
+    # Test Case 11: Missing event_id Flask-RESTX validation
     def test_recognize_missing_event_id(self, test_image_base64):
-        """Test /recognize endpoint with missing event_id"""
+        """Test /recognize endpoint with missing event_id (Flask-RESTX validation)"""
         try:
             import app
 
             with app.app.test_client() as client:
+                # This should trigger Flask-RESTX validation error
                 response = RecognizeTestUtils.make_recognize_request(
                     client, {"image_base64": test_image_base64}
                 )
-                RecognizeAssertions.assert_processing_response(response)
-                RecognizeAssertions.assert_event_id_handling(response, "unknown")
-                print("✅ Missing event_id test passed")
+                # Expect Flask-RESTX validation error (400)
+                assert response.status_code == 400
+                print("✅ Missing event_id validation test passed")
         except ImportError:
             pytest.skip("Flask app not available")
 

@@ -91,6 +91,7 @@ class RecognizeTestScenarios:
         """Get various error request scenarios (lines 76-79)"""
         return [
             ("missing_image_base64", {"event_id": "test_event"}),
+            ("missing_event_id", {"image_base64": "test_image"}),
             ("empty_request", {}),
             ("null_image", {"image_base64": None, "event_id": "test"}),
             ("empty_image", {"image_base64": "", "event_id": "test"}),
@@ -102,8 +103,8 @@ class RecognizeTestScenarios:
         return [
             # Standard request
             {"image_base64": base64_image, "event_id": "standard_test"},
-            # Missing event_id (should default to "unknown") - lines 81-82
-            {"image_base64": base64_image},
+            # Explicit event_id handling - lines 81-82
+            {"image_base64": base64_image, "event_id": "unknown"},
             # Custom event_id for logging verification - lines 82-84
             {"image_base64": base64_image, "event_id": "custom_logging_test_12345"},
             # Data URI format - lines 91-95
@@ -153,6 +154,14 @@ class RecognizeAssertions:
         assert response.status_code == 400
         data = response.get_json()
         # Flask-RESTX validation returns different error format
+        assert "error" in data or "message" in data
+
+    @staticmethod
+    def assert_missing_event_id_error(response):
+        """Assert missing event_id Flask-RESTX validation error"""
+        assert response.status_code == 400
+        data = response.get_json()
+        # Flask-RESTX validation error format
         assert "error" in data or "message" in data
 
     @staticmethod
@@ -212,6 +221,13 @@ class RecognizeAssertions:
 
 class RecognizeTestUtils:
     """Utility functions for /recognize endpoint testing"""
+
+    @staticmethod
+    def generate_test_event_id():
+        """Generate a unique test event ID"""
+        import time
+
+        return f"test_event_{int(time.time() * 1000)}"
 
     @staticmethod
     def count_temp_files():
