@@ -2,6 +2,13 @@
 
 All notable changes to the Face Rekon Home Assistant add-on will be documented in this file.
 
+## [0.2.8-alpha.1](https://github.com/Rob-Negrete/ha-addons/compare/face-rekon-v0.2.7-alpha.1...face-rekon-v0.2.8-alpha.1) (2025-09-28)
+
+
+### ✅ Tests
+
+* improve coverage for app.py /recognize endpoint to 80% ([#92](https://github.com/Rob-Negrete/ha-addons/issues/92)) ([88eb512](https://github.com/Rob-Negrete/ha-addons/commit/88eb5126a2e8500f04a8695aefc880a775b2833e))
+
 ## [0.2.7-alpha.1](https://github.com/Rob-Negrete/ha-addons/compare/face-rekon-v0.2.6-alpha.1...face-rekon-v0.2.7-alpha.1) (2025-09-27)
 
 
