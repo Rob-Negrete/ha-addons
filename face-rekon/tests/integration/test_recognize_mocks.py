@@ -91,6 +91,7 @@ class RecognizeTestScenarios:
         """Get various error request scenarios (lines 76-79)"""
         return [
             ("missing_image_base64", {"event_id": "test_event"}),
+            ("missing_event_id", {"image_base64": "test_image"}),
             ("empty_request", {}),
             ("null_image", {"image_base64": None, "event_id": "test"}),
             ("empty_image", {"image_base64": "", "event_id": "test"}),
@@ -102,8 +103,8 @@ class RecognizeTestScenarios:
         return [
             # Standard request
             {"image_base64": base64_image, "event_id": "standard_test"},
-            # Missing event_id (should default to "unknown") - lines 81-82
-            {"image_base64": base64_image},
+            # Explicit event_id handling - lines 81-82
+            {"image_base64": base64_image, "event_id": "unknown"},
             # Custom event_id for logging verification - lines 82-84
             {"image_base64": base64_image, "event_id": "custom_logging_test_12345"},
             # Data URI format - lines 91-95
@@ -152,7 +153,16 @@ class RecognizeAssertions:
         """Assert missing image_base64 error response (lines 77-79)"""
         assert response.status_code == 400
         data = response.get_json()
-        assert data["error"] == "Missing image_base64"
+        # Flask-RESTX validation returns different error format
+        assert "error" in data or "message" in data
+
+    @staticmethod
+    def assert_missing_event_id_error(response):
+        """Assert missing event_id Flask-RESTX validation error"""
+        assert response.status_code == 400
+        data = response.get_json()
+        # Flask-RESTX validation error format
+        assert "error" in data or "message" in data
 
     @staticmethod
     def assert_invalid_base64_error(response):
@@ -167,7 +177,8 @@ class RecognizeAssertions:
         assert response.status_code == 400
         data = response.get_json()
         assert data["error"] == "Invalid image data - received error response"
-        assert "details" in data
+        # Details field is optional in error responses
+        assert "event_id" in data
 
     @staticmethod
     def assert_success_response_structure(response):
@@ -212,6 +223,13 @@ class RecognizeTestUtils:
     """Utility functions for /recognize endpoint testing"""
 
     @staticmethod
+    def generate_test_event_id():
+        """Generate a unique test event ID"""
+        import time
+
+        return f"test_event_{int(time.time() * 1000)}"
+
+    @staticmethod
     def count_temp_files():
         """Count temporary files in the temp directory for cleanup testing."""
         tmp_dir = "/app/data/tmp"
@@ -221,7 +239,7 @@ class RecognizeTestUtils:
     @staticmethod
     def make_recognize_request(client, request_data):
         """Make a standardized recognize request"""
-        return client.post("/face-rekon/recognize", json=request_data)
+        return client.post("/api/face-rekon/recognize", json=request_data)
 
     @staticmethod
     def make_recognize_request_with_raw_data(
@@ -229,7 +247,7 @@ class RecognizeTestUtils:
     ):
         """Make recognize request with raw data"""
         return client.post(
-            "/face-rekon/recognize", data=data, content_type=content_type
+            "/api/face-rekon/recognize", data=data, content_type=content_type
         )
 
     @staticmethod

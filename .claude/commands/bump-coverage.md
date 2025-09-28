@@ -17,6 +17,353 @@ I'll systematically improve test coverage to **$ARGUMENTS** using the comprehens
 
 This automated workflow will execute a proven 8-step coverage improvement process:
 
+## 📋 **CRITICAL: Test File Organization Guidelines**
+
+**⚠️ IMPORTANT: These test organization rules are MANDATORY and must be strictly followed:**
+
+### **🚫 DO NOT CREATE NEW ENTRY TEST FILES**
+
+**Forbidden Actions:**
+
+- ❌ Creating new standalone test entry files (e.g., `test_new_feature.py`)
+- ❌ Creating multiple entry scripts for the same test category
+- ❌ Bypassing existing test organization structure
+- ❌ Adding tests directly to the root test directory
+
+### **✅ REQUIRED: Use Existing Entry Points + Helper Files**
+
+**Mandatory Structure:**
+
+```
+tests/
+├── unit/
+│   ├── test_unit.py              # 📍 SINGLE ENTRY POINT for unit tests
+│   ├── test_clasificador.py      # ✅ Helper file imported by test_unit.py
+│   ├── test_app_endpoints.py     # ✅ Helper file for app.py endpoint tests
+│   └── mocks/                    # ✅ Reusable test data and fixtures
+│       ├── mock_embeddings.py
+│       ├── mock_images.py
+│       └── test_data.json
+├── integration/
+│   ├── test_integration.py       # 📍 SINGLE ENTRY POINT for integration tests
+│   ├── test_recognize_endpoint.py # ✅ Helper file imported by test_integration.py
+│   ├── test_recognize_mocks.py   # ✅ Test utilities and fixtures
+│   └── test_full_pipeline.py     # ✅ End-to-end workflow tests
+```
+
+### **🎯 Implementation Rules**
+
+1. **Entry Point Pattern**:
+
+   ```python
+   # In test_integration.py (ENTRY POINT)
+   from .test_recognize_endpoint import TestRecognizeEndpointCoverage
+   from .test_full_pipeline import TestFullPipelineIntegration
+
+   # Tests are automatically discovered through imports
+   ```
+
+2. **Helper File Organization**:
+
+   - **By Endpoint**: `test_recognize_endpoint.py`, `test_classify_endpoint.py`
+   - **By Method**: `test_clasificador_extract_faces.py`, `test_clasificador_embeddings.py`
+   - **By Component**: `test_qdrant_operations.py`, `test_image_processing.py`
+
+3. **Reusable Test Infrastructure**:
+
+   - **Mock Data**: `test_recognize_mocks.py`, `test_pipeline_fixtures.py`
+   - **Test Utilities**: Helper functions, assertions, setup/teardown
+   - **Fixtures**: Reusable test images, embeddings, database states
+
+4. **Naming Conventions**:
+   - Helper files: `test_{component}_{feature}.py`
+   - Mock files: `test_{component}_mocks.py` or `mocks_{data_type}.py`
+   - Entry points: `test_unit.py`, `test_integration.py` (FIXED NAMES)
+
+### **🔄 Adding New Tests - REQUIRED Process**
+
+1. **Identify Target**: Determine if unit or integration test needed
+2. **Find/Create Helper**: Use existing helper file or create appropriately named helper
+3. **Create Test Infrastructure**: Add mocks, fixtures, utilities to helper files
+4. **Import in Entry Point**: Add import statement to appropriate entry file
+5. **Verify Discovery**: Ensure tests are discovered through entry point imports
+
+### **📝 Example: Adding /recognize Endpoint Tests**
+
+```python
+# ✅ CORRECT: Create helper file
+# File: tests/integration/test_recognize_endpoint.py
+class TestRecognizeEndpointCoverage:
+    def test_recognize_missing_image_base64(self): ...
+    def test_recognize_invalid_format(self): ...
+
+# File: tests/integration/test_recognize_mocks.py
+class RecognizeTestData:
+    @staticmethod
+    def create_test_image(): ...
+
+# ✅ CORRECT: Import in entry point
+# File: tests/integration/test_integration.py
+from .test_recognize_endpoint import TestRecognizeEndpointCoverage  # ✅
+
+# ❌ WRONG: Creating new entry file
+# File: tests/integration/test_recognize.py (standalone) # ❌ FORBIDDEN
+```
+
+### **🚨 Validation Requirements**
+
+Before implementing any tests, you MUST:
+
+1. **Check existing structure**: Verify entry points exist
+2. **Identify helper file**: Find appropriate existing helper or plan new one
+3. **Plan import strategy**: Ensure entry point will import new tests
+4. **Validate naming**: Follow established conventions
+5. **Confirm no duplication**: Ensure no overlapping test implementations
+
+**Violation of these rules will result in immediate rejection and rework requirement.**
+
+---
+
+## 🧪 **MANDATORY: Local Testing Validation Before Commit**
+
+**⚠️ CRITICAL REQUIREMENT: All tests MUST pass locally before any commit is made.**
+
+### **🚨 PRE-COMMIT VALIDATION CHECKLIST**
+
+**Before committing ANY changes, you MUST:**
+
+1. **✅ Run Complete Test Suite Locally**:
+
+   ```bash
+   # Unit Tests (MUST PASS 100%)
+   QDRANT_PATH=/tmp/test_qdrant_unit FACE_REKON_BASE_PATH=/tmp/test_faces \
+   FACE_REKON_UNKNOWN_PATH=/tmp/test_unknowns FACE_REKON_THUMBNAIL_PATH=/tmp/test_thumbnails \
+   FACE_REKON_USE_EMBEDDED_QDRANT=true python -m pytest tests/unit/ -c pytest-unit.ini -v
+
+   # Integration Tests (MUST PASS 100%)
+   QDRANT_PATH=/tmp/test_qdrant_integration FACE_REKON_BASE_PATH=/tmp/test_faces \
+   FACE_REKON_UNKNOWN_PATH=/tmp/test_unknowns FACE_REKON_THUMBNAIL_PATH=/tmp/test_thumbnails \
+   FACE_REKON_USE_EMBEDDED_QDRANT=true python -m pytest tests/integration/ -c pytest-integration.ini -v
+   ```
+
+2. **✅ Verify Coverage Improvement**:
+
+   ```bash
+   # Generate coverage report (MUST show improvement)
+   QDRANT_PATH=/tmp/test_qdrant_combined FACE_REKON_BASE_PATH=/tmp/test_faces \
+   FACE_REKON_UNKNOWN_PATH=/tmp/test_unknowns FACE_REKON_THUMBNAIL_PATH=/tmp/test_thumbnails \
+   FACE_REKON_USE_EMBEDDED_QDRANT=true python -m pytest tests/unit/ tests/integration/ \
+   --cov=scripts --cov-report=term-missing --tb=short -q
+   ```
+
+3. **✅ Environment Consistency Check**:
+   - Ensure local test environment matches CI exactly
+   - Same Python version, dependencies, and environment variables
+   - Same test discovery patterns and coverage configuration
+   - Identical pytest configuration files (pytest-unit.ini, pytest-integration.ini)
+
+### **🚫 ZERO TOLERANCE POLICY**
+
+**❌ ABSOLUTELY FORBIDDEN:**
+
+- Committing with any failing tests (even if "just one test")
+- Committing without running the complete test suite
+- Committing with coverage regression (lower than baseline)
+- Assuming "CI will catch it" - ALL validation MUST happen locally first
+- Skipping tests due to "minor changes" - NO EXCEPTIONS
+
+### **📊 REQUIRED VALIDATION OUTCOMES**
+
+**Before commit is allowed, you MUST verify:**
+
+1. **Test Results**: `PASSED` status for ALL tests
+
+   ```
+   ✅ Required: ===== X passed, 0 failed, Y skipped =====
+   ❌ Forbidden: Any failed tests or errors
+   ```
+
+2. **Coverage Metrics**: Improvement over baseline
+
+   ```
+   ✅ Required: Total coverage ≥ previous baseline (e.g., 47.9% → 52.3%)
+   ❌ Forbidden: Coverage regression or unchanged coverage
+   ```
+
+3. **Test Suite Completeness**: All test categories executed
+   ```
+   ✅ Required: Both unit AND integration tests run successfully
+   ❌ Forbidden: Running only partial test suite
+   ```
+
+### **🔧 Local Environment Setup Validation**
+
+**Ensure your local environment matches CI:**
+
+```bash
+# Check Python version (must match CI)
+python --version  # Should match CI Python version
+
+# Verify dependencies
+pip list | grep -E "(pytest|coverage|flask|opencv|insightface)"
+
+# Validate test environment variables
+echo $QDRANT_PATH $FACE_REKON_BASE_PATH  # Should be set correctly
+
+# Test Docker availability (for integration tests)
+docker --version && docker ps  # Should work without errors
+```
+
+### **⚡ FAST VALIDATION WORKFLOW**
+
+**For quick pre-commit validation:**
+
+```bash
+# 1. Quick smoke test (30 seconds)
+python -m pytest tests/unit/test_simple.py -v
+
+# 2. Full validation (2-5 minutes)
+./scripts/run-all-tests.sh  # If available, or manual commands above
+
+# 3. Coverage check (additional 1 minute)
+python -m pytest tests/unit/ tests/integration/ --cov=scripts --cov-report=term-missing -q
+```
+
+### **🚨 COMMIT BLOCKING CONDITIONS**
+
+**Your commit WILL BE REJECTED if:**
+
+- Any test fails locally (even if CI would theoretically pass)
+- Coverage decreases from the established baseline
+- You skip running the complete test suite locally
+- Integration tests are not validated in proper environment
+- Test suite execution differs from CI workflow methodology
+
+### **✅ SUCCESSFUL VALIDATION EXAMPLE**
+
+```bash
+$ python -m pytest tests/unit/ tests/integration/ --cov=scripts --cov-report=term-missing -q
+
+======================== test session starts ========================
+tests/unit/test_simple.py ......                               [ 12%]
+tests/unit/test_app.py ........                                [ 28%]
+tests/integration/test_integration.py ....................      [100%]
+
+---------- coverage: platform darwin, python 3.11.7-final-0 ----------
+Name                    Stmts   Miss  Cover   Missing
+-----------------------------------------------------
+scripts/app.py            230    120   47.8%   [baseline: 47.9%] ✅
+scripts/clasificador.py   265    148   44.2%   [baseline: 44.0%] ✅
+scripts/qdrant_adapter.py 167     98   41.3%   [baseline: 41.0%] ✅
+-----------------------------------------------------
+TOTAL                     662    366   44.7%   [baseline: 44.5%] ✅
+
+======================== 57 passed, 18 skipped ========================
+
+✅ ALL CHECKS PASSED - COMMIT AUTHORIZED
+```
+
+**This validation ensures:**
+
+- No CI surprises or failures
+- Consistent quality standards
+- Reliable coverage improvements
+- Faster development cycles
+- Maintainable test infrastructure
+
+---
+
+## 🔄 **MANDATORY: Post-Push CI Validation**
+
+**⚠️ CRITICAL: After pushing to remote, you MUST verify ALL CI workflows succeed before considering the task complete.**
+
+### **🚨 REQUIRED POST-PUSH VALIDATION CHECKLIST**
+
+**After pushing your branch/PR, you MUST:**
+
+1. **✅ Monitor CI Workflow Status**:
+
+   ```bash
+   # Check workflow runs for your branch/PR
+   gh run list --branch your-branch-name --limit 5
+
+   # Watch specific workflow run in real-time
+   gh run watch WORKFLOW_RUN_ID
+
+   # View workflow details if failed
+   gh run view WORKFLOW_RUN_ID --log-failed
+   ```
+
+2. **✅ Verify Coverage Health Check Success**:
+
+   ```bash
+   # Check if Coverage Health Check workflow passed
+   gh run list --workflow="Coverage Health Check" --limit 3
+
+   # Ensure coverage validation succeeded
+   gh run view COVERAGE_RUN_ID
+   ```
+
+3. **✅ Validate All Required Checks Pass**:
+   - **Unit Tests CI** ✅ Must pass
+   - **Integration Tests CI** ✅ Must pass
+   - **Coverage Health Check** ✅ Must pass
+   - **Linting/Formatting** ✅ Must pass
+   - **Security Scans** ✅ Must pass
+
+### **🚫 WORKFLOW COMPLETION BLOCKERS**
+
+**❌ DO NOT consider task complete if:**
+
+- Any CI workflow shows "Failed" status
+- Coverage Health Check reports regression or failure
+- Required status checks are not green
+- PR auto-merge is blocked due to failing checks
+- Integration tests fail in CI environment (even if they passed locally)
+
+### **🔧 CI FAILURE RESPONSE PROTOCOL**
+
+**If CI workflows fail after push:**
+
+1. **Immediate Investigation**:
+
+   ```bash
+   # Get failure details
+   gh run view FAILED_RUN_ID --log-failed
+
+   # Check specific job failures
+   gh run view FAILED_RUN_ID --job JOB_ID
+   ```
+
+2. **Environment Discrepancy Analysis**:
+
+   - Compare local vs CI environment differences
+   - Check for missing dependencies or environment variables
+   - Verify Docker image compatibility and ML library versions
+   - Validate pytest configuration consistency
+
+3. **Fix and Re-validate**:
+   ```bash
+   # Fix issues locally first
+   # Run complete local validation again
+   # Push fixes and monitor CI again
+   gh run watch NEW_RUN_ID
+   ```
+
+### **🎯 COMPLETE WORKFLOW VALIDATION**
+
+**Only consider your bump-coverage task successful when:**
+
+1. ✅ **Local validation passes** (all tests, coverage improvement)
+2. ✅ **Push/PR created successfully** (proper branch workflow)
+3. ✅ **ALL CI workflows pass** (no failures, no regressions)
+4. ✅ **Coverage Health Check succeeds** (baseline validation)
+5. ✅ **PR auto-merge completes** (if applicable)
+
+**This ensures the complete circle of quality validation from local → CI → production readiness.**
+
+---
+
 ## 🔍 Step 1: Analyze Current Coverage State
 
 **Smart Coverage Analysis Strategy:**
