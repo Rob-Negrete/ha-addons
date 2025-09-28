@@ -221,7 +221,7 @@ class RecognizeTestUtils:
     @staticmethod
     def make_recognize_request(client, request_data):
         """Make a standardized recognize request"""
-        return client.post("/face-rekon/recognize", json=request_data)
+        return client.post("/api/face-rekon/recognize", json=request_data)
 
     @staticmethod
     def make_recognize_request_with_raw_data(
@@ -229,7 +229,7 @@ class RecognizeTestUtils:
     ):
         """Make recognize request with raw data"""
         return client.post(
-            "/face-rekon/recognize", data=data, content_type=content_type
+            "/api/face-rekon/recognize", data=data, content_type=content_type
         )
 
     @staticmethod
