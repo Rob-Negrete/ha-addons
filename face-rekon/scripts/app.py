@@ -132,7 +132,9 @@ class Recognize(Resource):
                 return {"error": "Invalid base64 image data"}, 400
 
             # Save image to temporary file
-            tmp_dir = "/app/data/tmp"
+            tmp_dir = (
+                "/app/data/tmp" if os.path.exists("/app") else "/tmp/face_rekon_test"
+            )
             os.makedirs(tmp_dir, exist_ok=True)
 
             # Detect image format from header
