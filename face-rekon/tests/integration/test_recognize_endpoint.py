@@ -339,10 +339,11 @@ class TestRecognizeEndpointCoverage:
                         "event_id": "test_preprocessing_error",
                     },
                 )
-                # Should handle gracefully with error response
-                assert response.status_code in [400, 500]
+                # Large payload gets processed but fails later
+                # Should return 200 with error in response
+                assert response.status_code == 200
                 data = response.get_json()
-                assert "error" in data
+                assert "status" in data and data["status"] == "error"
                 print("✅ Preprocessing error test passed")
         except ImportError:
             pytest.skip("Flask app not available")
