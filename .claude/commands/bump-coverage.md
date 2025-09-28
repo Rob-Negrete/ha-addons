@@ -273,6 +273,97 @@ TOTAL                     662    366   44.7%   [baseline: 44.5%] ✅
 
 ---
 
+## 🔄 **MANDATORY: Post-Push CI Validation**
+
+**⚠️ CRITICAL: After pushing to remote, you MUST verify ALL CI workflows succeed before considering the task complete.**
+
+### **🚨 REQUIRED POST-PUSH VALIDATION CHECKLIST**
+
+**After pushing your branch/PR, you MUST:**
+
+1. **✅ Monitor CI Workflow Status**:
+
+   ```bash
+   # Check workflow runs for your branch/PR
+   gh run list --branch your-branch-name --limit 5
+
+   # Watch specific workflow run in real-time
+   gh run watch WORKFLOW_RUN_ID
+
+   # View workflow details if failed
+   gh run view WORKFLOW_RUN_ID --log-failed
+   ```
+
+2. **✅ Verify Coverage Health Check Success**:
+
+   ```bash
+   # Check if Coverage Health Check workflow passed
+   gh run list --workflow="Coverage Health Check" --limit 3
+
+   # Ensure coverage validation succeeded
+   gh run view COVERAGE_RUN_ID
+   ```
+
+3. **✅ Validate All Required Checks Pass**:
+   - **Unit Tests CI** ✅ Must pass
+   - **Integration Tests CI** ✅ Must pass
+   - **Coverage Health Check** ✅ Must pass
+   - **Linting/Formatting** ✅ Must pass
+   - **Security Scans** ✅ Must pass
+
+### **🚫 WORKFLOW COMPLETION BLOCKERS**
+
+**❌ DO NOT consider task complete if:**
+
+- Any CI workflow shows "Failed" status
+- Coverage Health Check reports regression or failure
+- Required status checks are not green
+- PR auto-merge is blocked due to failing checks
+- Integration tests fail in CI environment (even if they passed locally)
+
+### **🔧 CI FAILURE RESPONSE PROTOCOL**
+
+**If CI workflows fail after push:**
+
+1. **Immediate Investigation**:
+
+   ```bash
+   # Get failure details
+   gh run view FAILED_RUN_ID --log-failed
+
+   # Check specific job failures
+   gh run view FAILED_RUN_ID --job JOB_ID
+   ```
+
+2. **Environment Discrepancy Analysis**:
+
+   - Compare local vs CI environment differences
+   - Check for missing dependencies or environment variables
+   - Verify Docker image compatibility and ML library versions
+   - Validate pytest configuration consistency
+
+3. **Fix and Re-validate**:
+   ```bash
+   # Fix issues locally first
+   # Run complete local validation again
+   # Push fixes and monitor CI again
+   gh run watch NEW_RUN_ID
+   ```
+
+### **🎯 COMPLETE WORKFLOW VALIDATION**
+
+**Only consider your bump-coverage task successful when:**
+
+1. ✅ **Local validation passes** (all tests, coverage improvement)
+2. ✅ **Push/PR created successfully** (proper branch workflow)
+3. ✅ **ALL CI workflows pass** (no failures, no regressions)
+4. ✅ **Coverage Health Check succeeds** (baseline validation)
+5. ✅ **PR auto-merge completes** (if applicable)
+
+**This ensures the complete circle of quality validation from local → CI → production readiness.**
+
+---
+
 ## 🔍 Step 1: Analyze Current Coverage State
 
 **Smart Coverage Analysis Strategy:**
