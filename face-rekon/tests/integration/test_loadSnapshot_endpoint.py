@@ -12,7 +12,6 @@ Testing approach:
 - Covers lines 317-325 in app.py (loadSnapshot function)
 """
 
-import os
 from unittest import TestCase
 
 import pytest
@@ -40,8 +39,11 @@ class TestLoadSnapshotEndpointCoverage(TestCase):
                     print("✅ Successfully served loadSnapshot.html")
 
                     # Test that response contains HTML content
-                    html_content = response.data.decode('utf-8')
-                    assert any(tag in html_content.lower() for tag in ["<html", "<head", "<body", "<!doctype"])
+                    html_content = response.data.decode("utf-8")
+                    assert any(
+                        tag in html_content.lower()
+                        for tag in ["<html", "<head", "<body", "<!doctype"]
+                    )
                     print("✅ Valid HTML content served")
 
                 elif response.status_code == 404:
@@ -65,7 +67,7 @@ class TestLoadSnapshotEndpointCoverage(TestCase):
                 # regardless of whether file exists or not
                 assert response.status_code in [200, 404, 500]
 
-                print(f"✅ Directory resolution logic executed (status: {response.status_code})")
+                print(f"✅ Directory resolution logic: {response.status_code}")
 
                 # Test that the endpoint is properly routed
                 # This ensures the @app.route decorator and function definition work
@@ -96,7 +98,7 @@ class TestLoadSnapshotEndpointCoverage(TestCase):
 
                 # Any response (200, 404, or 500) means the function executed fully
                 assert response.status_code in [200, 404, 500]
-                print(f"✅ Complete loadSnapshot function executed (status: {response.status_code})")
+                print(f"✅ Complete loadSnapshot function: {response.status_code}")
 
                 # Test multiple requests to ensure consistency
                 for i in range(3):
@@ -118,12 +120,14 @@ class TestLoadSnapshotEndpointCoverage(TestCase):
 
                 if response.status_code == 200:
                     # Test successful file serving headers and content
-                    assert "loadSnapshot.html" in response.headers.get("Content-Disposition", "")
+                    assert "loadSnapshot.html" in response.headers.get(
+                        "Content-Disposition", ""
+                    )
                     assert response.content_type.startswith("text/html")
                     print("✅ send_from_directory headers correct")
 
                     # Test that file content is valid
-                    content = response.data.decode('utf-8')
+                    content = response.data.decode("utf-8")
                     assert len(content) > 0
                     print("✅ File content retrieved successfully")
 
@@ -208,17 +212,19 @@ class TestLoadSnapshotEndpointCoverage(TestCase):
                 # Test with query parameters (should still work)
                 query_response = client.get("/loadSnapshot?test=1&param=value")
                 assert query_response.status_code in [200, 404, 500]
-                print(f"✅ /loadSnapshot with query params: {query_response.status_code}")
+                print(
+                    f"✅ /loadSnapshot with query params: {query_response.status_code}"
+                )
 
                 # Test with custom headers
                 headers = {
-                    'User-Agent': 'Test-Client/1.0',
-                    'Accept': 'text/html,application/xhtml+xml',
-                    'Accept-Language': 'en-US,en;q=0.9'
+                    "User-Agent": "Test-Client/1.0",
+                    "Accept": "text/html,application/xhtml+xml",
+                    "Accept-Language": "en-US,en;q=0.9",
                 }
                 header_response = client.get("/loadSnapshot", headers=headers)
                 assert header_response.status_code in [200, 404, 500]
-                print(f"✅ /loadSnapshot with custom headers: {header_response.status_code}")
+                print(f"✅ /loadSnapshot with headers: {header_response.status_code}")
 
                 # Test multiple concurrent requests (basic concurrency)
                 responses = []
@@ -257,7 +263,7 @@ class TestLoadSnapshotEndpointCoverage(TestCase):
                 if response.status_code == 200:
                     print("✅ File served successfully - all code paths covered")
                     # Verify HTML content structure
-                    content = response.data.decode('utf-8')
+                    content = response.data.decode("utf-8")
                     assert len(content) > 0
                     print(f"✅ Content preview: {content[:100]}...")
 
