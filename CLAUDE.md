@@ -241,45 +241,54 @@ FACE_REKON_USE_EMBEDDED_QDRANT=true
 
 ### Enhanced /bump-coverage Command Implementation
 
-**Step 1: Coverage Analysis - CRITICAL: Use Docker Integration Testing**
+**Step 1: Coverage Analysis - CRITICAL: Combined Analysis with Mandatory Docker Integration Testing**
 
-⚠️ **MANDATORY**: Always analyze coverage using the Docker integration testing approach to get accurate results.
+⚠️ **MANDATORY**: Always use **COMBINED ANALYSIS** (Unit + Docker Integration) to get complete and accurate coverage results, exactly like CI workflow.
 
-**❌ WRONG WAY (Local Analysis):**
+**❌ WRONG WAY (Local Integration Only):**
 
 ```bash
-# This gives incomplete/misleading results
+# This gives incomplete/misleading results - integration tests skip locally
 python -m pytest tests/unit/ --cov=scripts --cov-report=json
 python -m pytest tests/integration/ --cov=scripts --cov-report=json  # Skips ML tests
 ```
 
-**✅ CORRECT WAY (Docker Integration Analysis):**
+**✅ CORRECT WAY (Combined Analysis with Docker Integration):**
 
 ```bash
-# Step 1a: Run unit tests locally for baseline
+# Step 1a: Run unit tests locally for baseline coverage
 cd ha-addons/face-rekon
-QDRANT_PATH=/tmp/test_qdrant_unit [...] python -m pytest tests/unit/ -c pytest-unit.ini --cov=scripts --cov-report=xml:coverage-unit.xml
+QDRANT_PATH=/tmp/test_qdrant_unit FACE_REKON_BASE_PATH=/tmp/test_faces FACE_REKON_UNKNOWN_PATH=/tmp/test_unknowns FACE_REKON_THUMBNAIL_PATH=/tmp/test_thumbnails FACE_REKON_USE_EMBEDDED_QDRANT=true python -m pytest tests/unit/ -c pytest-unit.ini --cov=scripts --cov-report=xml:coverage-unit.xml
 
-# Step 1b: Run integration tests in Docker with real ML stack
+# Step 1b: Run integration tests in Docker with REAL ML STACK (CRITICAL!)
 docker-compose -f docker-compose.test.yml run --rm integration-tests
 
-# Step 1c: Use coverage-health.py script for combined analysis (like CI)
+# Step 1c: Use coverage-health.py for COMBINED analysis (matches CI workflow)
 cd ../../
 python ha-addons/.github/scripts/coverage-health.py ha-addons/face-rekon/coverage-unit.xml
 ```
 
-**Why Docker Integration Testing is Mandatory:**
+**🔑 KEY PRINCIPLE: Combined Analysis with Docker Integration**
 
+- **Unit Tests**: Fast baseline coverage (25.2% scripts/app.py)
+- **Docker Integration**: Real ML pipeline coverage (71% scripts/app.py)
+- **Combined Result**: Complete picture matching CI workflow
+- **Docker is MANDATORY**: Integration tests MUST run in Docker environment
+
+**Why Combined Analysis with Docker Integration is Mandatory:**
+
+- **Complete Coverage**: Unit + Docker integration gives comprehensive picture
 - **Real ML Coverage**: Integration tests in Docker achieve 71% coverage vs 25.2% unit-only
-- **Accurate Results**: Local integration tests skip due to missing ML dependencies
-- **CI Parity**: Matches exactly what GitHub Actions reports
-- **No ML Mocking**: Tests real InsightFace, OpenCV, ONNX behavior
+- **CI Workflow Parity**: Matches exactly what GitHub Actions reports
+- **No ML Mocking**: Tests real InsightFace, OpenCV, ONNX behavior in Docker
+- **Accurate Baselines**: Unit tests provide fast feedback, Docker provides real-world coverage
 
-**Example Results:**
+**Example Combined Analysis Results:**
 
-- **Unit tests only**: 25.2% coverage (41.1% overall project)
-- **Local integration**: 51.7% coverage (many tests skip)
-- **Docker integration**: **71% coverage** (55% overall project) ← TRUE RESULTS
+- **Unit tests only**: 25.2% coverage scripts/app.py (41.1% overall project)
+- **Local integration**: 51.7% coverage (many tests skip due to missing ML deps)
+- **Docker integration**: **71% coverage** scripts/app.py (55% overall project)
+- **Combined Analysis**: Unit baseline + Docker integration = **TRUE CI-MATCHING RESULTS**
 
 **Step 2: Docker Integration Test Creation**
 
@@ -332,19 +341,20 @@ docker-compose -f docker-compose.test.yml run --rm integration-tests \
 
 **Usage:** `/bump-coverage [target_percentage] [analysis_instructions]`
 
-**Core Principle:** ALWAYS use Docker integration testing with real ML dependencies
+**Core Principle:** ALWAYS use Combined Analysis (Unit + Docker Integration) with real ML dependencies
 
 **Workflow Summary:**
 
-1. 🔍 **Analyze** → Use Docker integration testing approach for TRUE coverage results
+1. 🔍 **Analyze** → Use Combined Analysis (Unit + Docker Integration) for TRUE coverage results
 2. 🐳 **Docker Test** → Create integration tests with try-except import pattern
 3. ✅ **Validate** → Ensure tests pass in GitHub Actions with real ML stack
 4. 📈 **Measure** → Confirm coverage improvement in CI reports
 
-**CRITICAL STEP 1 - Coverage Analysis:**
+**CRITICAL STEP 1 - Combined Coverage Analysis:**
 
 - ❌ NEVER analyze coverage using only local tests
-- ✅ ALWAYS use: `docker-compose -f docker-compose.test.yml run --rm integration-tests`
-- ✅ This gives TRUE coverage results (e.g., 71% vs 25.2% unit-only)
+- ✅ ALWAYS use Combined Analysis: Unit tests + Docker integration tests
+- ✅ Commands: Unit coverage → `docker-compose -f docker-compose.test.yml run --rm integration-tests` → `coverage-health.py`
+- ✅ This gives TRUE CI-matching results (e.g., 71% vs 25.2% unit-only)
 
 **Remember:** No mocking of ML libraries, use Docker environment, tests should skip gracefully locally but run fully in CI.
