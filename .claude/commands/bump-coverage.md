@@ -364,40 +364,73 @@ TOTAL                     662    366   44.7%   [baseline: 44.5%] ✅
 
 ---
 
-## 🔍 Step 1: Analyze Current Coverage State
+## 🔍 Step 1: Combined Coverage Analysis (CRITICAL: Use Docker Integration)
 
-**Smart Coverage Analysis Strategy:**
+**⚠️ MANDATORY: Combined Analysis (Unit + Docker Integration) for TRUE Coverage Results**
 
-**Option A: Use Existing Local Coverage Reports (Preferred)**
+**✅ CORRECT Combined Analysis Workflow:**
 
-- Check for local coverage reports: `coverage.xml`, `coverage.json`, `htmlcov/index.html`
-- Parse existing coverage data to identify gaps without running tests
+```bash
+# Step 1a: Run unit tests locally for baseline coverage
+cd ha-addons/face-rekon
+QDRANT_PATH=/tmp/test_qdrant_unit FACE_REKON_BASE_PATH=/tmp/test_faces FACE_REKON_UNKNOWN_PATH=/tmp/test_unknowns FACE_REKON_THUMBNAIL_PATH=/tmp/test_thumbnails FACE_REKON_USE_EMBEDDED_QDRANT=true python -m pytest tests/unit/ -c pytest-unit.ini --cov=scripts --cov-report=xml:coverage-unit.xml
+
+# Step 1b: Run integration tests in Docker with REAL ML STACK (CRITICAL!)
+docker-compose -f docker-compose.test.yml run --rm integration-tests
+
+# Step 1c: Use coverage-health.py with auto-discovery for COMBINED analysis (matches CI workflow)
+python ../../.github/scripts/coverage-health.py coverage-unit.xml
+# Script auto-discovers coverage-integration.xml and uses best coverage from all reports
+```
+
+**🔑 KEY PRINCIPLE: Combined Analysis with Docker Integration**
+
+- **Unit Tests**: Fast baseline coverage (e.g., 41.1% overall project)
+- **Docker Integration**: Real ML pipeline coverage (e.g., 71% scripts/app.py)
+- **Combined Result**: Complete picture matching CI workflow (e.g., 44.8% best coverage)
+- **Docker is MANDATORY**: Integration tests MUST run in Docker environment
+
+**Why Combined Analysis with Docker Integration is Mandatory:**
+
+- **Complete Coverage**: Unit + Docker integration gives comprehensive picture
+- **Real ML Coverage**: Integration tests in Docker achieve 71% vs 41% unit-only
+- **CI Workflow Parity**: Matches exactly what GitHub Actions reports
+- **No ML Mocking**: Tests real InsightFace, OpenCV, ONNX behavior in Docker
+- **Accurate Baselines**: Unit tests provide fast feedback, Docker provides real-world coverage
+
+**Coverage Report Analysis Strategy:**
+
+**Option A: Use Combined Coverage Results (Preferred)**
+
+- Use coverage-health.py output for comprehensive analysis
+- Parse auto-discovered coverage files (unit + integration + any cached files)
 - Extract file-by-file coverage percentages and uncovered line numbers
-- Use cached coverage for faster analysis and gap identification
-- Validate coverage report freshness (warn if outdated)
+- Use combined results for accurate gap identification
+- Validate coverage report includes real ML pipeline coverage
 
-**Option B: Generate Fresh Coverage Analysis**
+**Option B: Parse Individual Coverage Files (Fallback)**
 
-- Run comprehensive coverage analysis (unit + integration tests) if no reports found
+- Check for existing coverage-unit.xml and coverage-integration.xml
+- Parse coverage data from both sources if coverage-health.py unavailable
+- Manually combine results for comprehensive analysis
 - Generate detailed coverage report with file-by-file breakdown
-- Cache results locally for future `/bump-coverage` runs
 
 **Coverage Report Parsing:**
 
-- Extract uncovered lines from XML/JSON reports
+- Extract uncovered lines from XML/JSON reports (preferably combined analysis)
 - Map uncovered lines to specific functions/methods/endpoints
-- Identify critical paths that lack coverage
-- Generate focused improvement recommendations
-- Document baseline metrics and improvement targets
+- Identify critical paths that lack coverage (prioritize integration-tested paths)
+- Generate focused improvement recommendations based on real ML pipeline coverage
+- Document baseline metrics from Combined Analysis results
 
-**Critical Validation: Local vs CI Coherence**
+**Critical Validation: CI Parity with Combined Analysis**
 
-- Validate CI workflow is producing both unit and integration coverage
-- Compare local coverage reports with latest CI artifacts to ensure consistency
-- Verify Coverage Health Check workflow is using combined coverage (not just unit)
-- Check that local test environment matches CI test configuration
-- Ensure coverage measurement methodology is identical (same test paths, same exclusions)
-- Alert if significant discrepancies between local and CI coverage numbers
+- Validate CI workflow produces both unit and integration coverage
+- Compare local Combined Analysis with latest CI artifacts to ensure consistency
+- Verify Coverage Health Check workflow uses combined coverage methodology
+- Check that Docker integration tests run successfully in CI environment
+- Ensure coverage measurement methodology matches CI (Combined Analysis approach)
+- Alert if significant discrepancies between local Combined Analysis and CI numbers
 
 ## 📊 Step 2: Targeted Coverage Gap Analysis
 
@@ -503,36 +536,60 @@ endpoint_gaps = map_lines_to_functions(uncovered_lines, target="/recognize")
 - Concurrent request handling
 - Resource cleanup and management
 
-## 📊 Step 6: Coverage Validation & CI Integration
+## 📊 Step 6: Combined Coverage Validation & CI Integration
 
-**Local Coverage Validation:**
+**MANDATORY: Combined Analysis Validation (Unit + Docker Integration)**
 
-- Run comprehensive test suite locally (unit + integration)
-- Verify both coverage improvements match expected targets
-- Generate fresh coverage reports in coverage-reports/ directory
-- Compare new results with baseline reports
+```bash
+# Step 6a: Run unit tests locally for baseline validation
+QDRANT_PATH=/tmp/test_qdrant_unit FACE_REKON_BASE_PATH=/tmp/test_faces FACE_REKON_UNKNOWN_PATH=/tmp/test_unknowns FACE_REKON_THUMBNAIL_PATH=/tmp/test_thumbnails FACE_REKON_USE_EMBEDDED_QDRANT=true python -m pytest tests/unit/ -c pytest-unit.ini --cov=scripts --cov-report=xml:coverage-unit.xml --cov-report=term-missing
 
-**CI/Local Coherence Validation:**
+# Step 6b: Run Docker integration tests for comprehensive validation (CRITICAL!)
+docker-compose -f docker-compose.test.yml run --rm integration-tests
+
+# Step 6c: Run Combined Analysis validation (matches CI workflow)
+python ../../.github/scripts/coverage-health.py coverage-unit.xml
+```
+
+**Combined Coverage Validation Requirements:**
+
+- ✅ **Unit Tests Pass**: All unit tests must pass locally
+- ✅ **Docker Integration Tests Pass**: All 66 integration tests pass in Docker environment
+- ✅ **Combined Coverage Improvement**: coverage-health.py shows improvement over baseline
+- ✅ **Real ML Pipeline Coverage**: Integration tests contribute meaningful coverage (71% scripts/app.py)
+- ✅ **Auto-Discovery Success**: Script finds and combines all coverage files
+- ✅ **CI Parity**: Local Combined Analysis matches expected CI behavior
+
+**Expected Combined Analysis Results:**
+
+- **Unit Coverage**: ~41.1% overall project baseline
+- **Docker Integration**: ~71% scripts/app.py coverage
+- **Combined Result**: Best coverage from auto-discovery (target: >44.8%)
+- **Improvement Validation**: New coverage > previous baseline
+
+**CI/Local Coherence Validation with Combined Analysis:**
 
 - Download latest CI coverage artifacts from recent successful runs
-- Compare local coverage methodology with CI workflow configuration
-- Ensure identical test environments:
-  - Same Python version and dependencies
-  - Same coverage configuration (.coveragerc)
-  - Same test file discovery patterns
-  - Same coverage exclusions and inclusions
+- Compare local Combined Analysis results with CI Combined Analysis workflow
+- Ensure identical Combined Analysis methodology:
+  - Same unit test environment and coverage generation
+  - Same Docker integration test environment (docker-compose.test.yml)
+  - Same coverage-health.py auto-discovery behavior
+  - Same coverage file discovery patterns (coverage-\*.xml)
 - Validate Coverage Health Check workflow compatibility:
   - Confirm auto-discovery finds both coverage files (unit + integration)
-  - Verify realistic baseline expectations (47.9% comprehensive baseline)
-  - Test non-PR event handling works correctly
-  - Ensure workflow uses combined coverage, not just unit tests
+  - Verify realistic baseline expectations based on Combined Analysis
+  - Test coverage-health.py produces same results locally as in CI
+  - Ensure workflow uses Combined Analysis, not individual coverage reports
 
-**Discrepancy Detection:**
+**Discrepancy Detection for Combined Analysis:**
 
-- Alert if local vs CI coverage differs by >2%
-- Identify root causes: environment differences, test configurations, etc.
-- Provide recommendations to align local and CI environments
-- Document coverage improvements and validation results
+- Alert if local Combined Analysis vs CI Combined Analysis differs by >2%
+- Check Docker integration test success rate (should be >90% like CI)
+- Identify root causes: Docker environment differences, ML dependency versions, etc.
+- Validate coverage-health.py auto-discovery consistency between local and CI
+- Provide recommendations to align local Combined Analysis with CI workflow
+- Document Combined Analysis improvements and validation results
 
 ## 🚀 Step 7: Commit, Push & Create PR
 
@@ -674,22 +731,24 @@ coverage.json
 
 ## 💡 **Practical Usage Examples**
 
-**General Coverage Improvement (Using Local Reports):**
+**General Coverage Improvement (Using Combined Analysis):**
 
 ```bash
 /bump-coverage 60
-# → Reads coverage-reports/coverage-combined.xml
-# → Identifies: app.py (45% → 60%), clasificador.py (57% → 65%), qdrant_adapter.py (35% → 50%)
-# → Targets highest-impact uncovered lines across all files
+# → Step 1: Runs Combined Analysis (Unit + Docker Integration)
+# → Uses coverage-health.py auto-discovery for comprehensive coverage
+# → Identifies: app.py (71% Docker integration), overall project (44.8% combined)
+# → Targets highest-impact uncovered lines across all files using real ML pipeline coverage
 ```
 
-**File-Specific Improvement (Smart Gap Analysis):**
+**File-Specific Improvement (Combined Analysis Gap Analysis):**
 
 ```bash
 /bump-coverage 55 app.py
-# → Parses coverage-reports/coverage-unit.xml for app.py specific gaps
-# → Finds uncovered lines: 156-167 (error handling), 234-239 (cleanup), 345-350 (validation)
-# → Creates targeted tests for exactly those missing scenarios
+# → Step 1: Runs Combined Analysis specifically for app.py
+# → Unit baseline (41.1%) + Docker integration (71%) = comprehensive gap analysis
+# → Finds uncovered lines from real ML pipeline testing, not just unit tests
+# → Creates targeted tests for Docker-validated missing scenarios
 ```
 
 **Endpoint-Specific Testing (Precision Targeting):**
@@ -720,47 +779,53 @@ coverage.json
 # → Recovery mechanisms and fallback behaviors
 ```
 
-**Validation Example (Local vs CI Coherence):**
+**Combined Analysis Validation Example (Local vs CI Coherence):**
 
 ```bash
 /bump-coverage 60 app.py /recognize endpoint
-# → Step 1: Reads local coverage-reports/coverage-combined.xml (Local: 47.2%)
+# → Step 1: Runs Combined Analysis (Unit + Docker Integration)
+# → Local Combined Analysis: 44.8% (from coverage-health.py auto-discovery)
 # → Step 6: Downloads latest CI artifacts via gh run download
-# → Compares: Local 47.2% vs CI 47.9% (0.7% difference - acceptable)
-# → Validates: CI produces both coverage-unit.xml + coverage-integration.xml ✅
-# → Confirms: Coverage Health Check uses 47.9% baseline ✅
-# → Result: Environments are coherent, proceed with improvements
+# → Compares: Local 44.8% vs CI 44.8% (0.0% difference - perfect coherence)
+# → Validates: CI uses same Combined Analysis methodology ✅
+# → Confirms: Coverage Health Check uses coverage-health.py auto-discovery ✅
+# → Docker integration tests: 66 passed locally, same as CI ✅
+# → Result: Combined Analysis environments are coherent, proceed with improvements
 ```
 
-**Discrepancy Alert Example:**
+**Combined Analysis Discrepancy Alert Example:**
 
 ```bash
 /bump-coverage 65
-# → Local reports: 48.1% coverage
-# → CI reports: 42.3% coverage (5.8% difference - alert!)
-# → Investigation: Local includes integration tests, CI integration tests failing
-# → Recommendation: Fix CI integration test environment before proceeding
-# → Action: Resolve Docker/ML dependency issues in CI first
+# → Local Combined Analysis: 44.8% coverage (Unit: 41.1% + Docker Integration: 71% app.py)
+# → CI Combined Analysis: 38.2% coverage (5.6% difference - alert!)
+# → Investigation: Local Docker integration tests pass, CI Docker integration tests failing
+# → Root cause: CI Docker environment missing ML dependencies or outdated images
+# → Recommendation: Fix CI Docker integration test environment before proceeding
+# → Action: Update CI docker-compose.test.yml and ML dependency versions
 ```
 
 **Progressive Baseline Management Example:**
 
 ```bash
-# Iteration 1: Current baseline 47.9%
-/bump-coverage 55 app.py /recognize endpoint
-# → Target: 55%, Baseline: 47.9%, Achieved: 52.3%
-# → Step 8: Update baseline to 52.3% (or 51% with safety margin)
-# → Commit: "chore: update coverage baseline to 52% after /recognize improvements"
+# Iteration 1: Current Combined Analysis baseline 44.8%
+/bump-coverage 50 app.py serve_face_image endpoint
+# → Combined Analysis Target: 50%, Baseline: 44.8%, Achieved: 48.2%
+# → Unit: 41.1% + Docker Integration: 75% app.py (improved from 71%)
+# → Step 8: Update baseline to 48.2% (or 48% with safety margin)
+# → Commit: "chore: update coverage baseline to 48% after serve_face_image improvements"
 
-# Iteration 2: New baseline 52%
-/bump-coverage 60 clasificador.py extract_face_crops method
-# → Target: 60%, Baseline: 52%, Achieved: 57.8%
-# → Step 8: Update baseline to 57.8% (or 57% with safety margin)
+# Iteration 2: New Combined Analysis baseline 48%
+/bump-coverage 55 clasificador.py extract_face_crops method
+# → Combined Analysis Target: 55%, Baseline: 48%, Achieved: 52.1%
+# → Real ML pipeline coverage improvements validated in Docker
+# → Step 8: Update baseline to 52.1% (or 52% with safety margin)
 
-# Iteration 3: Progressive improvement continues
-/bump-coverage 65 qdrant_adapter.py health_check error_scenarios
-# → Target: 65%, Baseline: 57%, Achieved: 61.2%
-# → New baseline: 61% → Sustainable ratcheting effect! 📈
+# Iteration 3: Progressive Combined Analysis improvement continues
+/bump-coverage 60 qdrant_adapter.py health_check error_scenarios
+# → Combined Analysis Target: 60%, Baseline: 52%, Achieved: 56.8%
+# → Docker integration tests validate real vector database operations
+# → New baseline: 57% → Sustainable Combined Analysis ratcheting effect! 📈
 ```
 
 ---
