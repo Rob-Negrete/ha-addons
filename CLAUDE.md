@@ -263,9 +263,10 @@ QDRANT_PATH=/tmp/test_qdrant_unit FACE_REKON_BASE_PATH=/tmp/test_faces FACE_REKO
 # Step 1b: Run integration tests in Docker with REAL ML STACK (CRITICAL!)
 docker-compose -f docker-compose.test.yml run --rm integration-tests
 
-# Step 1c: Use coverage-health.py for COMBINED analysis (matches CI workflow)
-cd ../../
-python ha-addons/.github/scripts/coverage-health.py ha-addons/face-rekon/coverage-unit.xml
+# Step 1c: Use coverage-health.py with auto-discovery for COMBINED analysis (matches CI workflow)
+cd ha-addons/face-rekon
+python ../../.github/scripts/coverage-health.py coverage-unit.xml
+# Script auto-discovers coverage-integration.xml and uses best coverage from all reports
 ```
 
 **🔑 KEY PRINCIPLE: Combined Analysis with Docker Integration**
@@ -354,7 +355,7 @@ docker-compose -f docker-compose.test.yml run --rm integration-tests \
 
 - ❌ NEVER analyze coverage using only local tests
 - ✅ ALWAYS use Combined Analysis: Unit tests + Docker integration tests
-- ✅ Commands: Unit coverage → `docker-compose -f docker-compose.test.yml run --rm integration-tests` → `coverage-health.py`
+- ✅ Commands: Unit coverage → Docker integration → `coverage-health.py coverage-unit.xml` (auto-discovers all coverage files)
 - ✅ This gives TRUE CI-matching results (e.g., 71% vs 25.2% unit-only)
 
 **Remember:** No mocking of ML libraries, use Docker environment, tests should skip gracefully locally but run fully in CI.
