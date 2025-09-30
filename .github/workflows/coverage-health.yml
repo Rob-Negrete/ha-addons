@@ -149,7 +149,7 @@ jobs:
 
       - name: Download coverage artifacts from CI
         if: steps.pr-info.outputs.event_type == 'workflow_run'
-        uses: dawidd6/action-download-artifact@v3
+        uses: dawidd6/action-download-artifact@v6
         with:
           name: ci-coverage-reports
           path: ./coverage-artifacts/
