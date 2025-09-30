@@ -34,7 +34,7 @@ class TestAssetsEndpointCoverage(TestCase):
                     "script.js",
                     "favicon.ico",
                     "logo.png",
-                    "background.jpg"
+                    "background.jpg",
                 ]
 
                 for asset_file in asset_files:
@@ -50,14 +50,16 @@ class TestAssetsEndpointCoverage(TestCase):
 
                         # Test appropriate content types for different files
                         content_type = response.content_type
-                        if asset_file.endswith('.css'):
-                            assert 'text/css' in content_type
-                        elif asset_file.endswith('.js'):
-                            assert 'javascript' in content_type.lower()
-                        elif asset_file.endswith(('.png', '.jpg', '.ico')):
-                            assert 'image' in content_type.lower()
+                        if asset_file.endswith(".css"):
+                            assert "text/css" in content_type
+                        elif asset_file.endswith(".js"):
+                            assert "javascript" in content_type.lower()
+                        elif asset_file.endswith((".png", ".jpg", ".ico")):
+                            assert "image" in content_type.lower()
 
-                        print(f"✅ Correct content type for {asset_file}: {content_type}")
+                        print(
+                            f"✅ Correct content type for {asset_file}: {content_type}"
+                        )
 
                     elif response.status_code == 404:
                         # Test file not found scenario (expected in test environment)
@@ -102,7 +104,7 @@ class TestAssetsEndpointCoverage(TestCase):
                 # Line 308: import os
                 # Line 309: (blank line)
                 # Line 310: ui_assets_dir = os.path.abspath(
-                # Line 311:     os.path.join(os.path.dirname(__file__), "..", "ui", "assets")
+                # Line 311:     os.path.join(..., "ui", "assets")
                 # Line 312: )
                 # Line 313: return send_from_directory(ui_assets_dir, filename)
 
@@ -215,7 +217,11 @@ class TestAssetsEndpointCoverage(TestCase):
                 # Test very long filename
                 long_filename = "a" * 1000 + ".css"
                 long_response = client.get(f"/assets/{long_filename}")
-                assert long_response.status_code in [404, 414, 500]  # 414 = URI Too Long
+                assert long_response.status_code in [
+                    404,
+                    414,
+                    500,
+                ]  # 414 = URI Too Long
                 print("✅ Long filename handled correctly")
 
         except ImportError as e:
@@ -230,15 +236,28 @@ class TestAssetsEndpointCoverage(TestCase):
                 # Test various asset types that might be served
                 asset_types = [
                     # CSS files
-                    "main.css", "style.css", "theme.css", "bootstrap.css",
+                    "main.css",
+                    "style.css",
+                    "theme.css",
+                    "bootstrap.css",
                     # JavaScript files
-                    "app.js", "main.js", "jquery.js", "bootstrap.js",
+                    "app.js",
+                    "main.js",
+                    "jquery.js",
+                    "bootstrap.js",
                     # Images
-                    "logo.png", "favicon.ico", "background.jpg", "sprite.gif",
+                    "logo.png",
+                    "favicon.ico",
+                    "background.jpg",
+                    "sprite.gif",
                     # Fonts
-                    "font.woff", "icons.ttf", "symbols.eot",
+                    "font.woff",
+                    "icons.ttf",
+                    "symbols.eot",
                     # Other common web assets
-                    "manifest.json", "sitemap.xml", "robots.txt"
+                    "manifest.json",
+                    "sitemap.xml",
+                    "robots.txt",
                 ]
 
                 for asset in asset_types:
@@ -251,7 +270,9 @@ class TestAssetsEndpointCoverage(TestCase):
                     # If file exists, test content type is set
                     if response.status_code == 200:
                         assert response.content_type is not None
-                        print(f"✅ Content-Type set for {asset}: {response.content_type}")
+                        print(
+                            f"✅ Content-Type set for {asset}: {response.content_type}"
+                        )
 
         except ImportError as e:
             pytest.skip(f"ML dependencies not available: {e}")
@@ -274,9 +295,9 @@ class TestAssetsEndpointCoverage(TestCase):
 
                 # Test with custom headers
                 headers = {
-                    'User-Agent': 'Test-Browser/1.0',
-                    'Accept': 'text/css,*/*;q=0.1',
-                    'Accept-Language': 'en-US,en;q=0.9'
+                    "User-Agent": "Test-Browser/1.0",
+                    "Accept": "text/css,*/*;q=0.1",
+                    "Accept-Language": "en-US,en;q=0.9",
                 }
                 header_response = client.get("/assets/style.css", headers=headers)
                 assert header_response.status_code in [200, 404, 500]
