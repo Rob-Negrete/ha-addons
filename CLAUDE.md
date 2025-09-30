@@ -209,8 +209,8 @@ def test_endpoint_functionality(self):
 
 **Success Metrics:**
 
-- Coverage baseline: 25.2% → **54% achieved** (face-rekon project)
-- Docker integration tests: 62 passed, 5 failed (92% success rate)
+- Coverage baseline: 25.2% → **51.3% achieved** (face-rekon project)
+- Docker integration tests: 79 passed, 6 failed (93% success rate)
 - Real ML pipeline testing with InsightFace, OpenCV, ONNX in Docker
 
 ### Testing Infrastructure
@@ -241,55 +241,45 @@ FACE_REKON_USE_EMBEDDED_QDRANT=true
 
 ### Enhanced /bump-coverage Command Implementation
 
-**Step 1: Coverage Analysis - CRITICAL: Combined Analysis with Mandatory Docker Integration Testing**
+**Step 1: Coverage Analysis - CRITICAL: Use Docker Integration Testing**
 
-⚠️ **MANDATORY**: Always use **COMBINED ANALYSIS** (Unit + Docker Integration) to get complete and accurate coverage results, exactly like CI workflow.
+⚠️ **MANDATORY**: Always analyze coverage using the Docker integration testing approach to get accurate results.
 
-**❌ WRONG WAY (Local Integration Only):**
+**❌ WRONG WAY (Local Analysis):**
 
 ```bash
-# This gives incomplete/misleading results - integration tests skip locally
+# This gives incomplete/misleading results
 python -m pytest tests/unit/ --cov=scripts --cov-report=json
 python -m pytest tests/integration/ --cov=scripts --cov-report=json  # Skips ML tests
 ```
 
-**✅ CORRECT WAY (Combined Analysis with Docker Integration):**
+**✅ CORRECT WAY (Docker Integration Analysis):**
 
 ```bash
-# Step 1a: Run unit tests locally for baseline coverage
+# Step 1a: Run unit tests locally for baseline
 cd ha-addons/face-rekon
-QDRANT_PATH=/tmp/test_qdrant_unit FACE_REKON_BASE_PATH=/tmp/test_faces FACE_REKON_UNKNOWN_PATH=/tmp/test_unknowns FACE_REKON_THUMBNAIL_PATH=/tmp/test_thumbnails FACE_REKON_USE_EMBEDDED_QDRANT=true python -m pytest tests/unit/ -c pytest-unit.ini --cov=scripts --cov-report=xml:coverage-unit.xml
+QDRANT_PATH=/tmp/test_qdrant_unit [...] python -m pytest tests/unit/ -c pytest-unit.ini --cov=scripts --cov-report=xml:coverage-unit.xml
 
-# Step 1b: Run integration tests in Docker with REAL ML STACK (CRITICAL!)
+# Step 1b: Run integration tests in Docker with real ML stack
 docker-compose -f docker-compose.test.yml run --rm integration-tests
 
-# Step 1c: Use coverage-health.py with auto-discovery for COMBINED analysis (matches CI workflow)
-cd ha-addons/face-rekon
-python ../../.github/scripts/coverage-health.py coverage-unit.xml
-# Script auto-discovers coverage-integration.xml and uses best coverage from all reports
+# Step 1c: Use coverage-health.py script for combined analysis (like CI)
+cd ../../
+python ha-addons/.github/scripts/coverage-health.py ha-addons/face-rekon/coverage-unit.xml
 ```
 
-**🔑 KEY PRINCIPLE: Combined Analysis with Docker Integration**
+**Why Docker Integration Testing is Mandatory:**
 
-- **Unit Tests**: Fast baseline coverage (25.2% scripts/app.py)
-- **Docker Integration**: Real ML pipeline coverage (71% scripts/app.py)
-- **Combined Result**: Complete picture matching CI workflow
-- **Docker is MANDATORY**: Integration tests MUST run in Docker environment
-
-**Why Combined Analysis with Docker Integration is Mandatory:**
-
-- **Complete Coverage**: Unit + Docker integration gives comprehensive picture
 - **Real ML Coverage**: Integration tests in Docker achieve 71% coverage vs 25.2% unit-only
-- **CI Workflow Parity**: Matches exactly what GitHub Actions reports
-- **No ML Mocking**: Tests real InsightFace, OpenCV, ONNX behavior in Docker
-- **Accurate Baselines**: Unit tests provide fast feedback, Docker provides real-world coverage
+- **Accurate Results**: Local integration tests skip due to missing ML dependencies
+- **CI Parity**: Matches exactly what GitHub Actions reports
+- **No ML Mocking**: Tests real InsightFace, OpenCV, ONNX behavior
 
-**Example Combined Analysis Results:**
+**Example Results:**
 
-- **Unit tests only**: 25.2% coverage scripts/app.py (41.1% overall project)
-- **Local integration**: 51.7% coverage (many tests skip due to missing ML deps)
-- **Docker integration**: **71% coverage** scripts/app.py (55% overall project)
-- **Combined Analysis**: Unit baseline + Docker integration = **TRUE CI-MATCHING RESULTS**
+- **Unit tests only**: 25.2% coverage (41.4% overall project)
+- **Combined unit + integration**: 51.3% coverage (local achievable maximum)
+- **Docker integration**: **71% coverage** (estimated based on CI) ← TRUE RESULTS
 
 **Step 2: Docker Integration Test Creation**
 
@@ -335,27 +325,26 @@ docker-compose -f docker-compose.test.yml run --rm integration-tests \
 **Example Success: debug_test_webp endpoint**
 
 - Before: 0% coverage (48 uncovered lines)
-- After: 54% overall project coverage
+- After: 51.3% overall project coverage
 - Result: 18 comprehensive test methods covering all code paths
 
 ### /bump-coverage Command Quick Reference
 
 **Usage:** `/bump-coverage [target_percentage] [analysis_instructions]`
 
-**Core Principle:** ALWAYS use Combined Analysis (Unit + Docker Integration) with real ML dependencies
+**Core Principle:** ALWAYS use Docker integration testing with real ML dependencies
 
 **Workflow Summary:**
 
-1. 🔍 **Analyze** → Use Combined Analysis (Unit + Docker Integration) for TRUE coverage results
+1. 🔍 **Analyze** → Use Docker integration testing approach for TRUE coverage results
 2. 🐳 **Docker Test** → Create integration tests with try-except import pattern
 3. ✅ **Validate** → Ensure tests pass in GitHub Actions with real ML stack
 4. 📈 **Measure** → Confirm coverage improvement in CI reports
 
-**CRITICAL STEP 1 - Combined Coverage Analysis:**
+**CRITICAL STEP 1 - Coverage Analysis:**
 
 - ❌ NEVER analyze coverage using only local tests
-- ✅ ALWAYS use Combined Analysis: Unit tests + Docker integration tests
-- ✅ Commands: Unit coverage → Docker integration → `coverage-health.py coverage-unit.xml` (auto-discovers all coverage files)
-- ✅ This gives TRUE CI-matching results (e.g., 71% vs 25.2% unit-only)
+- ✅ ALWAYS use: `docker-compose -f docker-compose.test.yml run --rm integration-tests`
+- ✅ This gives TRUE coverage results (e.g., 71% vs 51.3% combined local)
 
 **Remember:** No mocking of ML libraries, use Docker environment, tests should skip gracefully locally but run fully in CI.
