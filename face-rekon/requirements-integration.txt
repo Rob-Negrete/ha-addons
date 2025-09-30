@@ -7,7 +7,7 @@ insightface==0.7.3
 opencv-python-headless
 faiss-cpu==1.10.0
 tinydb
-qdrant-client==1.7.0
+qdrant-client==1.9.0
 
 # Core dependencies (if not already installed)
 flask==3.1.2
