@@ -131,6 +131,7 @@ jobs:
         with:
           ref: ${{ steps.pr-info.outputs.pr_head_sha || github.event.workflow_run.head_sha }}
           fetch-depth: 0
+          lfs: true
 
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -236,6 +237,10 @@ jobs:
         run: |
           # Clean any remaining coverage files before checkout
           rm -f face-rekon/.coverage face-rekon/.coverage.*
+
+          # Stash any local changes (including LFS files) to avoid conflicts
+          git stash --include-untracked || true
+
           git fetch origin main:main
           git checkout main
 
@@ -264,6 +269,9 @@ jobs:
       - name: Switch back to PR branch
         run: |
           git checkout ${{ steps.pr-info.outputs.pr_head_sha }}
+
+          # Restore stashed changes if any
+          git stash pop || true
 
       - name: Make coverage health script executable
         run: chmod +x .github/scripts/coverage-health.py
