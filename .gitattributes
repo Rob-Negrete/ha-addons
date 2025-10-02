@@ -1,3 +1,1 @@
-# Git LFS configuration
-face-rekon/tests/dummies/*.jpg filter=lfs diff=lfs merge=lfs -text
-face-rekon/tests/dummies/*.png filter=lfs diff=lfs merge=lfs -text
+# Git LFS configuration (removed test images - they're small enough for regular git)
