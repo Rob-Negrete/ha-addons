@@ -168,18 +168,19 @@ jobs:
             echo "📁 Contents of coverage-artifacts directory:"
             ls -la coverage-artifacts/
 
-            # Copy CI coverage reports with consistent naming for the enhanced script
+            # Copy CI coverage reports to /tmp (persists across git checkouts)
             # Files are extracted directly to coverage-artifacts/ (no face-rekon subdirectory)
-            echo "🔄 Copying coverage files..."
-            cp coverage-artifacts/coverage.xml coverage-unit.xml 2>/dev/null && echo "✅ Copied unit coverage XML" || echo "❌ No unit coverage XML"
-            cp coverage-artifacts/coverage-integration.xml coverage-integration.xml 2>/dev/null && echo "✅ Copied integration coverage XML" || echo "❌ No integration coverage XML"
-            cp coverage-artifacts/coverage.json coverage-unit.json 2>/dev/null && echo "✅ Copied unit coverage JSON" || echo "❌ No unit coverage JSON"
-            cp coverage-artifacts/coverage-integration.json coverage-integration.json 2>/dev/null && echo "✅ Copied integration coverage JSON" || echo "❌ No integration coverage JSON"
+            echo "🔄 Copying coverage files to /tmp (survives git checkouts)..."
+            mkdir -p /tmp/coverage-pr
+            cp coverage-artifacts/coverage.xml /tmp/coverage-pr/coverage-unit.xml 2>/dev/null && echo "✅ Copied unit coverage XML" || echo "❌ No unit coverage XML"
+            cp coverage-artifacts/coverage-integration.xml /tmp/coverage-pr/coverage-integration.xml 2>/dev/null && echo "✅ Copied integration coverage XML" || echo "❌ No integration coverage XML"
+            cp coverage-artifacts/coverage.json /tmp/coverage-pr/coverage-unit.json 2>/dev/null && echo "✅ Copied unit coverage JSON" || echo "❌ No unit coverage JSON"
+            cp coverage-artifacts/coverage-integration.json /tmp/coverage-pr/coverage-integration.json 2>/dev/null && echo "✅ Copied integration coverage JSON" || echo "❌ No integration coverage JSON"
 
             echo "✅ Coverage reports from CI workflow processed"
-            echo "📍 Current working directory after copy: $(pwd)"
-            echo "📊 Available coverage files in current directory:"
-            ls -la coverage*.xml coverage*.json 2>/dev/null || echo "No coverage files found"
+            echo "📍 Coverage files saved to /tmp/coverage-pr/"
+            echo "📊 Available coverage files in /tmp:"
+            ls -la /tmp/coverage-pr/ 2>/dev/null || echo "No coverage files found"
           else
             echo "⚠️  Unable to download CI coverage artifacts, falling back to running tests"
             echo "📝 Artifact download outcome: ${{ steps.download-artifacts.outcome }}"
@@ -287,6 +288,16 @@ jobs:
         env:
           BASELINE_COVERAGE: "47.9"
         run: |
+          # Restore coverage files from /tmp (where they were saved before git checkouts)
+          echo "🔄 Restoring coverage files from /tmp"
+          if [ -d "/tmp/coverage-pr" ]; then
+            echo "✅ Found coverage files in /tmp/coverage-pr"
+            cp /tmp/coverage-pr/* . 2>/dev/null && echo "✅ Restored coverage files to working directory" || echo "⚠️  No files to restore"
+            ls -la /tmp/coverage-pr/
+          else
+            echo "⚠️  No coverage files found in /tmp/coverage-pr"
+          fi
+
           # Use the enhanced script that auto-discovers and combines coverage files
           echo "🔄 Checking for coverage files"
           echo "📍 Current working directory: $(pwd)"
@@ -310,6 +321,8 @@ jobs:
             echo "❌ No unit coverage file found for analysis"
             echo "📁 Files in current directory:"
             ls -la
+            echo "📁 Checking if files exist in /tmp:"
+            ls -la /tmp/coverage-pr/ 2>/dev/null || echo "No /tmp/coverage-pr directory"
             echo "📁 Checking if files exist in subdirectories:"
             find . -name "coverage*.xml" -o -name "coverage*.json" 2>/dev/null || echo "No coverage files found anywhere"
             exit 1
