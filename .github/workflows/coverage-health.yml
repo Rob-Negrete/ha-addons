@@ -350,37 +350,34 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
-            const coverage = '${{ steps.coverage-report.outputs.coverage }}';
-            const status = '${{ steps.coverage-report.outputs.status }}';
+            const fs = require('fs');
             const reportExists = '${{ steps.coverage-report.outputs.report_exists }}' === 'true';
 
-            let statusIcon = '❓';
-            if (status.includes('🟢')) statusIcon = '🟢';
-            else if (status.includes('🟡')) statusIcon = '🟡';
-            else if (status.includes('🔴')) statusIcon = '🔴';
+            let commentBody;
 
-            const commentBody = `## 📊 Coverage Health Report
+            if (reportExists && fs.existsSync('coverage-report.md')) {
+              // Read the full markdown report with function-level details
+              commentBody = fs.readFileSync('coverage-report.md', 'utf8');
 
-            ${statusIcon} **Status:** ${status.replace(/🟢|🟡|🔴/g, '').trim()}
-            📈 **Coverage:** ${coverage}%
-            📋 **Report Generated:** ${reportExists ? 'Yes' : 'No'}
+              // Add footer
+              commentBody += `\n\n---\n*Coverage health check powered by GitHub Actions*`;
+            } else {
+              // Fallback to simple summary if report doesn't exist
+              const coverage = '${{ steps.coverage-report.outputs.coverage }}';
+              const status = '${{ steps.coverage-report.outputs.status }}';
 
-            <details>
-            <summary>About Coverage Health Checks</summary>
+              let statusIcon = '❓';
+              if (status.includes('🟢')) statusIcon = '🟢';
+              else if (status.includes('🟡')) statusIcon = '🟡';
+              else if (status.includes('🔴')) statusIcon = '🔴';
 
-            This automated check analyzes test coverage and provides status indicators:
-
-            - 🟢 **Green (Pass)**: Coverage maintained or improved (≥72.0%)
-            - 🟡 **Amber (Warning)**: Minor coverage decrease (65.0-71.9%)
-            - 🔴 **Red (Fail)**: Significant coverage drop (<65.0%)
-
-            The baseline coverage is set at **72.0%** based on comprehensive unit + integration tests.
-
-            Coverage includes both unit and integration tests from CI workflow. This workflow automatically runs after CI completes successfully.
-            </details>
-
-            ---
-            *Coverage health check powered by GitHub Actions*`;
+              commentBody = `## ${statusIcon} Coverage Health Report\n\n` +
+                `**Status:** ${status.replace(/🟢|🟡|🔴/g, '').trim()}\n` +
+                `**Coverage:** ${coverage}%\n` +
+                `**Report Generated:** No\n\n` +
+                `---\n` +
+                `*Coverage health check powered by GitHub Actions*`;
+            }
 
             // Get PR number from either pr-info or pr-lookup steps
             const prNumber = '${{ steps.pr-info.outputs.pr_number }}' || '${{ steps.pr-lookup.outputs.pr_number }}';
@@ -393,7 +390,7 @@ jobs:
             });
 
             const existingComment = comments.data.find(comment =>
-              comment.body.includes('## 📊 Coverage Health Report')
+              comment.body.includes('Coverage Health Check')
             );
 
             if (existingComment) {
