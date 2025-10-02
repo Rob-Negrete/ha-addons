@@ -8,11 +8,12 @@ This script analyzes test coverage and provides health status indicators:
 - 🔴 Red: Significant coverage drop (<65%)
 """
 
+import ast
 import json
 import sys
 import xml.etree.ElementTree as ET
 from pathlib import Path
-from typing import Dict, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
 
 class CoverageHealthChecker:
@@ -27,6 +28,42 @@ class CoverageHealthChecker:
         self.green_threshold = baseline_coverage  # ≥baseline%
         self.amber_threshold = max(65.0, baseline_coverage - 7.0)  # 7% below baseline
         # Red threshold < amber%
+
+    def extract_functions_from_source(self, filepath: Path) -> List[Dict]:
+        """
+        Extract function definitions from Python source file.
+
+        Returns:
+            List of dicts with function name, start_line, end_line
+        """
+        try:
+            with open(filepath, "r") as f:
+                source = f.read()
+
+            tree = ast.parse(source, str(filepath))
+            functions = []
+
+            for node in ast.walk(tree):
+                if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                    start_line = node.lineno
+                    end_line = start_line
+                    if node.body:
+                        for stmt in node.body:
+                            if hasattr(stmt, "end_lineno") and stmt.end_lineno:
+                                end_line = max(end_line, stmt.end_lineno)
+
+                    functions.append(
+                        {
+                            "name": node.name,
+                            "start_line": start_line,
+                            "end_line": end_line,
+                        }
+                    )
+
+            return functions
+        except Exception:
+            # Silently skip files that can't be parsed (not Python, etc.)
+            return []
 
     def parse_coverage_xml(self, xml_path: Path) -> Optional[Dict]:
         """
@@ -59,17 +96,27 @@ class CoverageHealthChecker:
                     filename = class_elem.get("filename", "unknown")
                     line_rate_file = float(class_elem.get("line-rate", 0.0)) * 100
 
-                    # Calculate lines_covered and lines_valid from <lines> children
+                    # Calculate lines_covered and lines_valid from <lines>
                     lines = class_elem.findall(".//line")
                     lines_valid_file = len(lines)
                     lines_covered_file = sum(
                         1 for line in lines if int(line.get("hits", "0")) > 0
                     )
 
+                    # Store covered/uncovered line numbers for function analysis
+                    covered_lines = set(
+                        int(line.get("number"))
+                        for line in lines
+                        if int(line.get("hits", "0")) > 0
+                    )
+                    all_lines = set(int(line.get("number")) for line in lines)
+
                     files[filename] = {
                         "lines_covered": lines_covered_file,
                         "lines_valid": lines_valid_file,
                         "line_rate": line_rate_file,
+                        "covered_lines": covered_lines,
+                        "all_lines": all_lines,
                     }
 
             return {
@@ -368,7 +415,7 @@ class CoverageHealthChecker:
                 "achieved across all test types*\n\n"
             )
 
-        # Add undercovered files section
+        # Add undercovered files and functions section
         files = report.get("files", {})
         if files:
             undercovered = []
@@ -378,12 +425,17 @@ class CoverageHealthChecker:
                     if file_rate < 70.0:  # Below 70% threshold
                         lines_covered = file_data.get("lines_covered", 0)
                         lines_valid = file_data.get("lines_valid", 1)
+                        covered_lines = file_data.get("covered_lines", set())
+                        all_lines = file_data.get("all_lines", set())
+
                         undercovered.append(
                             {
                                 "file": filepath,
                                 "coverage": file_rate,
                                 "lines_covered": lines_covered,
                                 "lines_valid": lines_valid,
+                                "covered_lines": covered_lines,
+                                "all_lines": all_lines,
                             }
                         )
 
@@ -392,26 +444,106 @@ class CoverageHealthChecker:
                 undercovered.sort(key=lambda x: x["coverage"])
 
                 summary += "### 🎯 Priority: Undercovered Files (< 70%)\n\n"
-                summary += "| File | Coverage | Lines Missing | Priority |\n"
-                summary += "|------|----------|---------------|----------|\n"
+                summary += (
+                    "| File | Function | Coverage | Lines Missing | " "Priority |\n"
+                )
+                summary += (
+                    "|------|----------|----------|---------------|" "----------|\n"
+                )
 
-                for item in undercovered[:5]:  # Top 5 priorities
+                # Process each undercovered file
+                for item in undercovered[:5]:  # Top 5 file priorities
                     file_name = item["file"]
-                    coverage = item["coverage"]
-                    missing = item["lines_valid"] - item["lines_covered"]
+                    file_coverage = item["coverage"]
+                    file_missing = item["lines_valid"] - item["lines_covered"]
+                    covered_lines = item["covered_lines"]
+                    all_lines = item["all_lines"]
 
-                    # Determine priority
-                    if coverage < 50:
-                        priority = "🔴 HIGH"
-                    elif coverage < 65:
-                        priority = "🟡 MEDIUM"
+                    # Determine file-level priority
+                    if file_coverage < 50:
+                        file_priority = "🔴 HIGH"
+                    elif file_coverage < 65:
+                        file_priority = "🟡 MEDIUM"
                     else:
-                        priority = "🟢 LOW"
+                        file_priority = "🟢 LOW"
 
-                    summary += (
-                        f"| `{file_name}` | {coverage:.1f}% | "
-                        f"{missing} lines | {priority} |\n"
-                    )
+                    # Try to find source file and extract functions
+                    source_path = Path.cwd() / "scripts" / file_name
+                    if not source_path.exists():
+                        # Try without scripts prefix
+                        source_path = Path.cwd() / file_name
+
+                    functions = []
+                    if source_path.exists():
+                        functions = self.extract_functions_from_source(source_path)
+
+                    if functions:
+                        # Calculate coverage for each function
+                        func_coverage_list = []
+                        for func in functions:
+                            func_lines = set(
+                                range(func["start_line"], func["end_line"] + 1)
+                            )
+                            # Only count lines that are in coverage data
+                            func_executable = func_lines & all_lines
+                            func_covered = func_lines & covered_lines
+
+                            if func_executable:
+                                func_rate = (
+                                    len(func_covered) / len(func_executable)
+                                ) * 100
+                                func_missing = len(func_executable) - len(func_covered)
+
+                                # Only show functions with < 70% coverage
+                                if func_rate < 70.0:
+                                    func_coverage_list.append(
+                                        {
+                                            "name": func["name"],
+                                            "coverage": func_rate,
+                                            "missing": func_missing,
+                                        }
+                                    )
+
+                        if func_coverage_list:
+                            # Sort by coverage (lowest first)
+                            func_coverage_list.sort(key=lambda x: x["coverage"])
+
+                            # Show top 3 undercovered functions per file
+                            for idx, func_item in enumerate(func_coverage_list[:3]):
+                                func_name = func_item["name"]
+                                func_cov = func_item["coverage"]
+                                func_miss = func_item["missing"]
+
+                                # Determine function priority
+                                if func_cov < 30:
+                                    func_priority = "🔴 HIGH"
+                                elif func_cov < 50:
+                                    func_priority = "🟡 MEDIUM"
+                                else:
+                                    func_priority = "🟢 LOW"
+
+                                # Show file name only on first row
+                                display_file = f"`{file_name}`" if idx == 0 else ""
+
+                                summary += (
+                                    f"| {display_file} | `{func_name}()` | "
+                                    f"{func_cov:.1f}% | {func_miss} lines | "
+                                    f"{func_priority} |\n"
+                                )
+                        else:
+                            # No undercovered functions, show file-level
+                            summary += (
+                                f"| `{file_name}` | *(overall)* | "
+                                f"{file_coverage:.1f}% | {file_missing} "
+                                f"lines | {file_priority} |\n"
+                            )
+                    else:
+                        # Can't parse functions, show file-level only
+                        summary += (
+                            f"| `{file_name}` | *(overall)* | "
+                            f"{file_coverage:.1f}% | {file_missing} lines | "
+                            f"{file_priority} |\n"
+                        )
 
                 summary += "\n"
 
