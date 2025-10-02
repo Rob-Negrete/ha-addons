@@ -6,6 +6,8 @@
 
 This repository contains custom Home Assistant add-ons for enhanced home automation capabilities.
 
+**Note**: Coverage reports now include function-level analysis to help prioritize testing efforts.
+
 ## 🏠 Available Add-ons
 
 ### Face-Rekon
