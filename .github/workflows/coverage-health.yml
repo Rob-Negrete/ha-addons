@@ -164,18 +164,21 @@ jobs:
         run: |
           if [[ "${{ steps.download-artifacts.outcome }}" == "success" && -d "coverage-artifacts" ]]; then
             echo "📥 Using comprehensive coverage from CI workflow"
+            echo "📍 Current working directory: $(pwd)"
             echo "📁 Contents of coverage-artifacts directory:"
             ls -la coverage-artifacts/
 
             # Copy CI coverage reports with consistent naming for the enhanced script
             # Files are extracted directly to coverage-artifacts/ (no face-rekon subdirectory)
-            cp coverage-artifacts/coverage.xml coverage-unit.xml 2>/dev/null || echo "No unit coverage XML"
-            cp coverage-artifacts/coverage-integration.xml coverage-integration.xml 2>/dev/null || echo "No integration coverage XML"
-            cp coverage-artifacts/coverage.json coverage-unit.json 2>/dev/null || echo "No unit coverage JSON"
-            cp coverage-artifacts/coverage-integration.json coverage-integration.json 2>/dev/null || echo "No integration coverage JSON"
+            echo "🔄 Copying coverage files..."
+            cp coverage-artifacts/coverage.xml coverage-unit.xml 2>/dev/null && echo "✅ Copied unit coverage XML" || echo "❌ No unit coverage XML"
+            cp coverage-artifacts/coverage-integration.xml coverage-integration.xml 2>/dev/null && echo "✅ Copied integration coverage XML" || echo "❌ No integration coverage XML"
+            cp coverage-artifacts/coverage.json coverage-unit.json 2>/dev/null && echo "✅ Copied unit coverage JSON" || echo "❌ No unit coverage JSON"
+            cp coverage-artifacts/coverage-integration.json coverage-integration.json 2>/dev/null && echo "✅ Copied integration coverage JSON" || echo "❌ No integration coverage JSON"
 
-            echo "✅ Coverage reports from CI workflow downloaded"
-            echo "📊 Available coverage files:"
+            echo "✅ Coverage reports from CI workflow processed"
+            echo "📍 Current working directory after copy: $(pwd)"
+            echo "📊 Available coverage files in current directory:"
             ls -la coverage*.xml coverage*.json 2>/dev/null || echo "No coverage files found"
           else
             echo "⚠️  Unable to download CI coverage artifacts, falling back to running tests"
@@ -286,8 +289,12 @@ jobs:
         run: |
           # Use the enhanced script that auto-discovers and combines coverage files
           echo "🔄 Checking for coverage files"
-          echo "📊 All available files:"
-          ls -la coverage*.xml coverage*.json 2>/dev/null || echo "No coverage files found"
+          echo "📍 Current working directory: $(pwd)"
+          echo "📁 Directory contents:"
+          ls -la
+          echo ""
+          echo "📊 Looking for coverage files:"
+          ls -la coverage*.xml coverage*.json 2>/dev/null || echo "❌ No coverage files found with pattern coverage*.xml or coverage*.json"
 
           if [ -f "coverage-unit.xml" ]; then
             echo "✅ Found unit coverage file"
@@ -303,6 +310,8 @@ jobs:
             echo "❌ No unit coverage file found for analysis"
             echo "📁 Files in current directory:"
             ls -la
+            echo "📁 Checking if files exist in subdirectories:"
+            find . -name "coverage*.xml" -o -name "coverage*.json" 2>/dev/null || echo "No coverage files found anywhere"
             exit 1
           fi
         continue-on-error: true
