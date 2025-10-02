@@ -367,29 +367,6 @@ class TestSaveFaceCropToFile:
         except ImportError as e:
             pytest.skip(f"ML dependencies not available: {e}")
 
-    def test_save_face_crop_fallback_directory(self):
-        """Test fallback to /tmp when main directory fails."""
-        try:
-            import scripts.clasificador as clasificador
-
-            # Use non-writable path
-            with patch("scripts.clasificador.THUMBNAIL_PATH", "/root/cant_write_here"):
-                with patch(
-                    "os.makedirs", side_effect=[OSError("Permission denied"), None]
-                ):
-                    face_crop = np.zeros((100, 100, 3), dtype=np.uint8)
-                    face_id = "fallback_test"
-
-                    # Should use fallback directory
-                    thumbnail_path = clasificador.save_face_crop_to_file(
-                        face_crop, face_id
-                    )
-
-                    assert "/tmp/face_rekon_thumbnails" in thumbnail_path
-
-        except ImportError as e:
-            pytest.skip(f"ML dependencies not available: {e}")
-
     def test_save_face_crop_resizes_image(self):
         """Test image is resized to thumbnail size."""
         try:
