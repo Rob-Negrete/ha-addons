@@ -286,7 +286,7 @@ jobs:
       - name: Run coverage health analysis
         id: coverage-health
         env:
-          BASELINE_COVERAGE: "47.9"
+          BASELINE_COVERAGE: "72.0"
         run: |
           # Restore coverage files from /tmp (where they were saved before git checkouts)
           echo "🔄 Restoring coverage files from /tmp"
@@ -370,11 +370,11 @@ jobs:
 
             This automated check analyzes test coverage and provides status indicators:
 
-            - 🟢 **Green (Pass)**: Coverage maintained or improved (≥47.9%)
-            - 🟡 **Amber (Warning)**: Minor coverage decrease (41.7-47.8%)
-            - 🔴 **Red (Fail)**: Significant coverage drop (<41.7%)
+            - 🟢 **Green (Pass)**: Coverage maintained or improved (≥72.0%)
+            - 🟡 **Amber (Warning)**: Minor coverage decrease (65.0-71.9%)
+            - 🔴 **Red (Fail)**: Significant coverage drop (<65.0%)
 
-            The baseline coverage is set at **47.9%** based on comprehensive unit + integration tests.
+            The baseline coverage is set at **72.0%** based on comprehensive unit + integration tests.
 
             Coverage includes both unit and integration tests from CI workflow. This workflow automatically runs after CI completes successfully.
             </details>

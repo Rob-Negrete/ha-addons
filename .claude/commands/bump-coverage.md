@@ -186,7 +186,7 @@ Before implementing any tests, you MUST:
 2. **Coverage Metrics**: Improvement over baseline
 
    ```
-   ✅ Required: Total coverage ≥ previous baseline (e.g., 47.9% → 52.3%)
+   ✅ Required: Total coverage ≥ previous baseline (e.g., 72.0% → 75.0%)
    ❌ Forbidden: Coverage regression or unchanged coverage
    ```
 
@@ -252,11 +252,11 @@ tests/integration/test_integration.py ....................      [100%]
 ---------- coverage: platform darwin, python 3.11.7-final-0 ----------
 Name                    Stmts   Miss  Cover   Missing
 -----------------------------------------------------
-scripts/app.py            230    120   47.8%   [baseline: 47.9%] ✅
-scripts/clasificador.py   265    148   44.2%   [baseline: 44.0%] ✅
-scripts/qdrant_adapter.py 167     98   41.3%   [baseline: 41.0%] ✅
+scripts/app.py            230     65   71.7%   [baseline: 72.0%] ✅
+scripts/clasificador.py   265     73   72.5%   [baseline: 72.0%] ✅
+scripts/qdrant_adapter.py 167     46   72.5%   [baseline: 72.0%] ✅
 -----------------------------------------------------
-TOTAL                     662    366   44.7%   [baseline: 44.5%] ✅
+TOTAL                     662    184   72.2%   [baseline: 72.0%] ✅
 
 ======================== 57 passed, 18 skipped ========================
 

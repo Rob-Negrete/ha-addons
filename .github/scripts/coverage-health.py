@@ -3,9 +3,9 @@
 Coverage Health Check Script for ha-addons repository.
 
 This script analyzes test coverage and provides health status indicators:
-- 🟢 Green: Coverage maintained or improved (≥67%)
-- 🟡 Amber: Minor coverage decrease (60-66%)
-- 🔴 Red: Significant coverage drop (<60%)
+- 🟢 Green: Coverage maintained or improved (≥72%)
+- 🟡 Amber: Minor coverage decrease (65-71%)
+- 🔴 Red: Significant coverage drop (<65%)
 """
 
 import json
@@ -16,7 +16,7 @@ from typing import Dict, Optional, Tuple
 
 
 class CoverageHealthChecker:
-    def __init__(self, baseline_coverage: float = 41.2):
+    def __init__(self, baseline_coverage: float = 72.0):
         """
         Initialize coverage health checker.
 
@@ -25,7 +25,7 @@ class CoverageHealthChecker:
         """
         self.baseline = baseline_coverage
         self.green_threshold = baseline_coverage  # ≥baseline%
-        self.amber_threshold = max(35.0, baseline_coverage - 6.2)  # 6.2% below baseline
+        self.amber_threshold = max(65.0, baseline_coverage - 7.0)  # 7% below baseline
         # Red threshold < amber%
 
     def parse_coverage_xml(self, xml_path: Path) -> Optional[Dict]:
@@ -401,7 +401,7 @@ def main():
     # Initialize checker with baseline from environment or default
     import os
 
-    baseline_percentage = float(os.getenv("BASELINE_COVERAGE", "41.2"))
+    baseline_percentage = float(os.getenv("BASELINE_COVERAGE", "72.0"))
     checker = CoverageHealthChecker(baseline_percentage)
 
     # Discover all available coverage files for comprehensive analysis
