@@ -50,6 +50,11 @@ jobs:
           FACE_REKON_USE_EMBEDDED_QDRANT=true \
           python -m pytest tests/unit/ -c pytest-unit.ini -v --cov=scripts --cov-report=xml --cov-report=json --cov-report=term-missing
 
+      - name: Pull LFS files before Docker build
+        run: |
+          cd face-rekon
+          git lfs pull
+
       - name: Build test container
         run: |
           cd face-rekon
