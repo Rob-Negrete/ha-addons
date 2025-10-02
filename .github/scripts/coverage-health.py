@@ -8,11 +8,12 @@ This script analyzes test coverage and provides health status indicators:
 - 🔴 Red: Significant coverage drop (<65%)
 """
 
+import ast
 import json
 import sys
 import xml.etree.ElementTree as ET
 from pathlib import Path
-from typing import Dict, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
 
 class CoverageHealthChecker:
@@ -27,6 +28,42 @@ class CoverageHealthChecker:
         self.green_threshold = baseline_coverage  # ≥baseline%
         self.amber_threshold = max(65.0, baseline_coverage - 7.0)  # 7% below baseline
         # Red threshold < amber%
+
+    def extract_functions_from_source(self, filepath: Path) -> List[Dict]:
+        """
+        Extract function definitions from Python source file.
+
+        Returns:
+            List of dicts with function name, start_line, end_line
+        """
+        try:
+            with open(filepath, "r") as f:
+                source = f.read()
+
+            tree = ast.parse(source, str(filepath))
+            functions = []
+
+            for node in ast.walk(tree):
+                if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                    start_line = node.lineno
+                    end_line = start_line
+                    if node.body:
+                        for stmt in node.body:
+                            if hasattr(stmt, "end_lineno") and stmt.end_lineno:
+                                end_line = max(end_line, stmt.end_lineno)
+
+                    functions.append(
+                        {
+                            "name": node.name,
+                            "start_line": start_line,
+                            "end_line": end_line,
+                        }
+                    )
+
+            return functions
+        except Exception:
+            # Silently skip files that can't be parsed (not Python, etc.)
+            return []
 
     def parse_coverage_xml(self, xml_path: Path) -> Optional[Dict]:
         """
@@ -57,13 +94,29 @@ class CoverageHealthChecker:
             for package in root.findall(".//package"):
                 for class_elem in package.findall(".//class"):
                     filename = class_elem.get("filename", "unknown")
-                    lines_covered_file = int(class_elem.get("lines-covered", 0))
-                    lines_valid_file = int(class_elem.get("lines-valid", 1))
                     line_rate_file = float(class_elem.get("line-rate", 0.0)) * 100
+
+                    # Calculate lines_covered and lines_valid from <lines>
+                    lines = class_elem.findall(".//line")
+                    lines_valid_file = len(lines)
+                    lines_covered_file = sum(
+                        1 for line in lines if int(line.get("hits", "0")) > 0
+                    )
+
+                    # Store covered/uncovered line numbers for function analysis
+                    covered_lines = set(
+                        int(line.get("number"))
+                        for line in lines
+                        if int(line.get("hits", "0")) > 0
+                    )
+                    all_lines = set(int(line.get("number")) for line in lines)
+
                     files[filename] = {
                         "lines_covered": lines_covered_file,
                         "lines_valid": lines_valid_file,
                         "line_rate": line_rate_file,
+                        "covered_lines": covered_lines,
+                        "all_lines": all_lines,
                     }
 
             return {
@@ -155,11 +208,12 @@ class CoverageHealthChecker:
                 # Accumulate file-level coverage
                 for filepath, file_data in coverage_data.get("files", {}).items():
                     if isinstance(file_data, dict):
-                        # From XML format
+                        # From XML format - take MAX coverage for each file
+                        # (since tests cover the same code, we want best result)
                         if filepath not in combined_files:
                             combined_files[filepath] = file_data.copy()
                         else:
-                            # Merge file coverage data (take max coverage)
+                            # Keep the file_data with higher coverage rate
                             existing = combined_files[filepath]
                             if file_data.get("line_rate", 0) > existing.get(
                                 "line_rate", 0
@@ -188,37 +242,53 @@ class CoverageHealthChecker:
                             pkg_coverage, combined_packages[pkg_name]
                         )
 
-            # For coverage combination, we need to take the best coverage from
-            # all sources rather than summing them, since they cover same lines
-            best_coverage_rate = 0.0
-            best_coverage_data = None
+            # Calculate true combined coverage from file-level data
+            # by aggregating lines_covered and lines_valid from all files
+            total_lines_covered = 0
+            total_lines_valid = 0
 
-            # Find the coverage report with highest overall percentage
-            for coverage_data in coverage_list:
-                if coverage_data.get("line_rate", 0) > best_coverage_rate:
-                    best_coverage_rate = coverage_data.get("line_rate", 0)
-                    best_coverage_data = coverage_data
+            for filepath, file_data in combined_files.items():
+                if isinstance(file_data, dict):
+                    # From XML format with detailed file data
+                    lines_cov = file_data.get("lines_covered", 0)
+                    lines_val = file_data.get("lines_valid", 0)
+                    total_lines_covered += lines_cov
+                    total_lines_valid += lines_val
+                else:
+                    # From JSON format (percentage only) - skip
+                    # We'll use XML data which has actual line counts
+                    continue
 
-            if best_coverage_data:
-                combined["line_rate"] = best_coverage_data["line_rate"]
-                combined["lines_covered"] = best_coverage_data["lines_covered"]
-                combined["lines_valid"] = best_coverage_data["lines_valid"]
+            # Calculate overall coverage percentage from aggregated data
+            if total_lines_valid > 0:
+                combined_line_rate = (total_lines_covered / total_lines_valid) * 100
+                combined["line_rate"] = combined_line_rate
+                combined["lines_covered"] = total_lines_covered
+                combined["lines_valid"] = total_lines_valid
 
-                # For more accurate combination, we could theoretically
-                # combine at file level, but we'll use best single report
                 print(
-                    "   📊 Using best coverage from available reports: "
-                    f"{combined['line_rate']:.2f}%"
+                    "   📊 Calculated true combined coverage: "
+                    f"{combined_line_rate:.2f}%"
                 )
-                print(
-                    "   💡 Note: True combined coverage would require "
-                    "file-level merging"
-                )
+                print(f"   📈 Lines: " f"{total_lines_covered}/{total_lines_valid}")
             else:
-                # Fallback to original if no valid data
-                combined["line_rate"] = combined.get("line_rate", 0)
-                combined["lines_covered"] = combined.get("lines_covered", 0)
-                combined["lines_valid"] = combined.get("lines_valid", 1)
+                # Fallback: if no file-level data, use best single report
+                best_coverage_rate = 0.0
+                best_coverage_data = None
+
+                for coverage_data in coverage_list:
+                    if coverage_data.get("line_rate", 0) > best_coverage_rate:
+                        best_coverage_rate = coverage_data.get("line_rate", 0)
+                        best_coverage_data = coverage_data
+
+                if best_coverage_data:
+                    combined["line_rate"] = best_coverage_data["line_rate"]
+                    combined["lines_covered"] = best_coverage_data["lines_covered"]
+                    combined["lines_valid"] = best_coverage_data["lines_valid"]
+                else:
+                    combined["line_rate"] = combined.get("line_rate", 0)
+                    combined["lines_covered"] = combined.get("lines_covered", 0)
+                    combined["lines_valid"] = combined.get("lines_valid", 1)
 
             combined["files"] = combined_files
             combined["packages"] = combined_packages
@@ -282,32 +352,208 @@ class CoverageHealthChecker:
             "files": current_coverage.get("files", {}),
         }
 
-    def generate_markdown_summary(self, report: Dict) -> str:
-        """Generate markdown summary for PR comments."""
+    def generate_markdown_summary(
+        self,
+        report: Dict,
+        unit_coverage: Optional[Dict] = None,
+        integration_coverage: Optional[Dict] = None,
+    ) -> str:
+        """
+        Generate markdown summary for PR comments.
+
+        Includes separate unit/integration tracking when available.
+        """
         emoji = report["emoji"]
         status = report["status"]
         current = report["current_coverage"]
         baseline = report["baseline_coverage"]
         delta = report["delta"]
-        delta_status = report["delta_status"]
 
         delta_sign = "+" if delta >= 0 else ""
 
         summary = f"""## {emoji} Coverage Health Check: {status}
 
-**Current Coverage:** {current}%
-**Baseline Coverage:** {baseline}%
-**Coverage Delta:** {delta_sign}{delta}% ({delta_status})
-
+**Overall Coverage:** {current}% ({delta_sign}{delta}% vs baseline {baseline}%)
 **Lines Covered:** {report['lines_covered']}/{report['lines_total']}
 
-*Coverage includes comprehensive results from both unit and integration tests*
-
-### Status Thresholds
-- 🟢 **Green (Pass):** ≥ {self.green_threshold}%
-- 🟡 **Amber (Warning):** {self.amber_threshold}% - {self.green_threshold-0.01}%
-- 🔴 **Red (Fail):** < {self.amber_threshold}%
 """
+
+        # Add unit vs integration breakdown if both are available
+        if unit_coverage and integration_coverage:
+            unit_rate = unit_coverage["line_rate"]
+            integration_rate = integration_coverage["line_rate"]
+
+            # Calculate deltas if baseline exists
+            unit_delta = unit_rate - baseline if baseline else 0.0
+            integration_delta = integration_rate - baseline if baseline else 0.0
+
+            unit_delta_sign = "+" if unit_delta >= 0 else ""
+            integration_delta_sign = "+" if integration_delta >= 0 else ""
+
+            summary += "### 📊 Coverage by Test Type\n\n"
+            summary += "| Test Type | Coverage | Delta | Lines Covered |\n"
+            summary += "|-----------|----------|-------|---------------|\n"
+            summary += (
+                f"| 🧪 **Unit Tests** | {unit_rate:.1f}% | "
+                f"{unit_delta_sign}{unit_delta:.1f}% | "
+                f"{unit_coverage['lines_covered']}/"
+                f"{unit_coverage['lines_valid']} |\n"
+            )
+            summary += (
+                f"| 🐳 **Integration Tests** | {integration_rate:.1f}% | "
+                f"{integration_delta_sign}{integration_delta:.1f}% | "
+                f"{integration_coverage['lines_covered']}/"
+                f"{integration_coverage['lines_valid']} |\n"
+            )
+            summary += (
+                f"| 📈 **Best Coverage** | {current}% | "
+                f"{delta_sign}{delta:.1f}% | "
+                f"{report['lines_covered']}/{report['lines_total']} |\n\n"
+            )
+            summary += (
+                "*Best coverage represents the maximum coverage "
+                "achieved across all test types*\n\n"
+            )
+
+        # Add undercovered files and functions section
+        files = report.get("files", {})
+        if files:
+            undercovered = []
+            for filepath, file_data in files.items():
+                if isinstance(file_data, dict):
+                    file_rate = file_data.get("line_rate", 0)
+                    if file_rate < 70.0:  # Below 70% threshold
+                        lines_covered = file_data.get("lines_covered", 0)
+                        lines_valid = file_data.get("lines_valid", 1)
+                        covered_lines = file_data.get("covered_lines", set())
+                        all_lines = file_data.get("all_lines", set())
+
+                        undercovered.append(
+                            {
+                                "file": filepath,
+                                "coverage": file_rate,
+                                "lines_covered": lines_covered,
+                                "lines_valid": lines_valid,
+                                "covered_lines": covered_lines,
+                                "all_lines": all_lines,
+                            }
+                        )
+
+            if undercovered:
+                # Sort by coverage (lowest first)
+                undercovered.sort(key=lambda x: x["coverage"])
+
+                summary += "### 🎯 Priority: Undercovered Files (< 70%)\n\n"
+                summary += (
+                    "| File | Function | Coverage | Lines Missing | " "Priority |\n"
+                )
+                summary += (
+                    "|------|----------|----------|---------------|" "----------|\n"
+                )
+
+                # Process each undercovered file
+                for item in undercovered[:5]:  # Top 5 file priorities
+                    file_name = item["file"]
+                    file_coverage = item["coverage"]
+                    file_missing = item["lines_valid"] - item["lines_covered"]
+                    covered_lines = item["covered_lines"]
+                    all_lines = item["all_lines"]
+
+                    # Determine file-level priority
+                    if file_coverage < 50:
+                        file_priority = "🔴 HIGH"
+                    elif file_coverage < 65:
+                        file_priority = "🟡 MEDIUM"
+                    else:
+                        file_priority = "🟢 LOW"
+
+                    # Try to find source file and extract functions
+                    source_path = Path.cwd() / "scripts" / file_name
+                    if not source_path.exists():
+                        # Try without scripts prefix
+                        source_path = Path.cwd() / file_name
+
+                    functions = []
+                    if source_path.exists():
+                        functions = self.extract_functions_from_source(source_path)
+
+                    if functions:
+                        # Calculate coverage for each function
+                        func_coverage_list = []
+                        for func in functions:
+                            func_lines = set(
+                                range(func["start_line"], func["end_line"] + 1)
+                            )
+                            # Only count lines that are in coverage data
+                            func_executable = func_lines & all_lines
+                            func_covered = func_lines & covered_lines
+
+                            if func_executable:
+                                func_rate = (
+                                    len(func_covered) / len(func_executable)
+                                ) * 100
+                                func_missing = len(func_executable) - len(func_covered)
+
+                                # Only show functions with < 70% coverage
+                                if func_rate < 70.0:
+                                    func_coverage_list.append(
+                                        {
+                                            "name": func["name"],
+                                            "coverage": func_rate,
+                                            "missing": func_missing,
+                                        }
+                                    )
+
+                        if func_coverage_list:
+                            # Sort by coverage (lowest first)
+                            func_coverage_list.sort(key=lambda x: x["coverage"])
+
+                            # Show top 3 undercovered functions per file
+                            for idx, func_item in enumerate(func_coverage_list[:3]):
+                                func_name = func_item["name"]
+                                func_cov = func_item["coverage"]
+                                func_miss = func_item["missing"]
+
+                                # Determine function priority
+                                if func_cov < 30:
+                                    func_priority = "🔴 HIGH"
+                                elif func_cov < 50:
+                                    func_priority = "🟡 MEDIUM"
+                                else:
+                                    func_priority = "🟢 LOW"
+
+                                # Show file name only on first row
+                                display_file = f"`{file_name}`" if idx == 0 else ""
+
+                                summary += (
+                                    f"| {display_file} | `{func_name}()` | "
+                                    f"{func_cov:.1f}% | {func_miss} lines | "
+                                    f"{func_priority} |\n"
+                                )
+                        else:
+                            # No undercovered functions, show file-level
+                            summary += (
+                                f"| `{file_name}` | *(overall)* | "
+                                f"{file_coverage:.1f}% | {file_missing} "
+                                f"lines | {file_priority} |\n"
+                            )
+                    else:
+                        # Can't parse functions, show file-level only
+                        summary += (
+                            f"| `{file_name}` | *(overall)* | "
+                            f"{file_coverage:.1f}% | {file_missing} lines | "
+                            f"{file_priority} |\n"
+                        )
+
+                summary += "\n"
+
+        summary += "### Status Thresholds\n"
+        summary += f"- 🟢 **Green (Pass):** ≥ {self.green_threshold}%\n"
+        summary += (
+            f"- 🟡 **Amber (Warning):** {self.amber_threshold}% - "
+            f"{self.green_threshold-0.01}%\n"
+        )
+        summary += f"- 🔴 **Red (Fail):** < {self.amber_threshold}%\n"
 
         # Add package breakdown if available
         if report.get("packages"):
@@ -428,8 +674,11 @@ def main():
     for file_path in coverage_files:
         print(f"   • {file_path.name}")
 
-    # Parse all coverage files
+    # Parse all coverage files and track unit vs integration separately
     coverage_data_list = []
+    unit_coverage = None
+    integration_coverage = None
+
     for coverage_file in coverage_files:
         print(f"🔄 Parsing {coverage_file.name}...")
 
@@ -445,6 +694,15 @@ def main():
         if coverage_data:
             print(f"   ✅ Parsed: {coverage_data['line_rate']:.2f}% coverage")
             coverage_data_list.append(coverage_data)
+
+            # Identify unit vs integration coverage by filename
+            file_name = coverage_file.name.lower()
+            if "unit" in file_name:
+                unit_coverage = coverage_data
+                print("   🧪 Identified as: Unit test coverage")
+            elif "integration" in file_name:
+                integration_coverage = coverage_data
+                print("   🐳 Identified as: Integration test coverage")
         else:
             print(f"   ❌ Failed to parse {coverage_file.name}")
 
@@ -480,8 +738,10 @@ def main():
     print(f"Delta: {report['delta']:+.2f}%")
     print(f"Should fail CI: {report['should_fail_ci']}")
 
-    # Generate markdown for GitHub
-    markdown = checker.generate_markdown_summary(report)
+    # Generate markdown for GitHub with unit/integration breakdown
+    markdown = checker.generate_markdown_summary(
+        report, unit_coverage=unit_coverage, integration_coverage=integration_coverage
+    )
 
     # Write markdown to file for GitHub Actions
     with open("coverage-report.md", "w") as f:
