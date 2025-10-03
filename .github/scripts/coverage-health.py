@@ -376,6 +376,8 @@ class CoverageHealthChecker:
 **Overall Coverage:** {current}% ({delta_sign}{delta}% vs baseline {baseline}%)
 **Lines Covered:** {report['lines_covered']}/{report['lines_total']}
 
+*📖 [Coverage Metrics Guide](../COVERAGE-GUIDE.md#understanding-coverage-metrics)*
+
 """
 
         # Add unit vs integration breakdown if both are available

@@ -85,13 +85,90 @@ The README.md coverage badge is automatically updated to reflect:
 
 ### Coverage Calculation
 
-Coverage is calculated from **unit tests only** to ensure:
+Coverage is calculated from **both unit and integration tests** with intelligent merging:
 
-- Fast execution (≈0.34s vs 57s for integration tests)
-- Reliable CI performance without ML dependencies
-- Focus on core business logic coverage
+- **Unit Tests**: Fast execution (≈0.34s), mock ML dependencies, focus on business logic
+- **Integration Tests**: Docker-based (≈57s), real ML stack, end-to-end validation
+- **Combined Coverage**: Takes the BEST coverage for each file across both test types
 
-Integration tests are run separately in Docker containers with full ML dependencies.
+Integration tests run in Docker containers with full ML dependencies (InsightFace, OpenCV, FAISS).
+
+## 📊 Understanding Coverage Metrics
+
+### Coverage Types Explained
+
+The coverage health report includes three key metrics:
+
+#### 1. **Overall Coverage** (The Important One!)
+
+```markdown
+**Overall Coverage:** 75.96% (+0.0% vs baseline 72.0%)
+**Lines Covered:** 474/624
+```
+
+- **What it is**: The BEST combined coverage across ALL test types
+- **How it's calculated**: For each file, takes `max(unit_coverage, integration_coverage)`, then aggregates
+- **Why it matters**: Shows your TRUE total test coverage
+- **This is the number to focus on!** ✨
+
+#### 2. **Coverage by Test Type**
+
+```markdown
+| Test Type                | Coverage | Delta | Lines Covered |
+| ------------------------ | -------- | ----- | ------------- |
+| 🧪 **Unit Tests**        | 63.1%    | -8.9% | 394/624       |
+| 🐳 **Integration Tests** | 71.5%    | -0.5% | 446/624       |
+| 📈 **Best Coverage**     | 75.96%   | +0.0% | 474/624       |
+```
+
+- **Unit Tests**: Coverage from unit tests only (fast, mocked dependencies)
+- **Integration Tests**: Coverage from integration tests only (slow, real ML stack)
+- **Best Coverage**: Same as "Overall Coverage" - maximum across both types
+
+#### 3. **Package Coverage** (Legacy Metric)
+
+```markdown
+### Package Coverage
+
+- 🟡 **.**: 71.5%
+```
+
+- **What it is**: Coverage from integration tests only (per-package breakdown)
+- **Why it's lower**: Doesn't include unit test coverage
+- **Can be misleading**: Shows only integration coverage, not the combined total
+- **Ignore this**: Focus on "Overall Coverage" instead
+
+### Why Overall Coverage > Package Coverage
+
+**Example scenario:**
+
+```
+File: app.py
+  - Unit tests cover: Lines 1-100 (60% of file)
+  - Integration tests cover: Lines 50-150 (60% of file)
+  - Combined coverage: Lines 1-150 (90% of file) ← Best of both!
+
+Overall Coverage: 90% (takes max for each file)
+Package Coverage: 60% (integration tests only)
+```
+
+**Key insight**: Some code is better tested by unit tests, other code needs integration tests. Taking the MAX gives you the complete picture!
+
+### Which Number Should You Care About?
+
+✅ **Focus on**: **Overall Coverage (75.96%)**
+
+- Represents true total coverage
+- Combines best of unit + integration tests
+- Used for baseline comparisons and CI decisions
+
+❌ **Ignore**: Package Coverage (71.5%)
+
+- Legacy metric from old reporting
+- Integration tests only
+- Misleadingly lower than true coverage
+
+For detailed metric calculations, see [Coverage Health Script](../.github/scripts/coverage-health.py#L137-L260).
 
 ## 📈 Usage Guide
 
@@ -224,18 +301,21 @@ The coverage health check runs independently but coordinates with:
 
 **Issue**: Coverage Health Check workflow fails with "Artifact not found"
 **Solution**:
+
 - The workflow uses `dawidd6/action-download-artifact@v3` for cross-workflow artifact downloads
 - If artifacts are unavailable, the fallback mechanism automatically runs tests directly
 - Check CI workflow completion and artifact upload status
 
 **Issue**: File path errors during coverage processing
 **Solution**:
+
 - Coverage artifacts are extracted directly to `coverage-artifacts/` (no subdirectory)
 - Ensure file copying uses correct paths: `coverage-artifacts/coverage.xml`
 - Check workflow logs for directory structure debugging output
 
 **Issue**: Coverage baseline mismatch
 **Solution**:
+
 - Current baseline is 41.2% (configured in `BASELINE_COVERAGE` environment variable)
 - Update local testing to match workflow baseline
 - Verify coverage calculation method matches unit test scope
@@ -257,6 +337,7 @@ ls -la coverage-artifacts/
 ```
 
 **Check Artifact Status**:
+
 ```bash
 # View workflow run details
 gh run view <run-id>
@@ -268,6 +349,7 @@ gh api repos/owner/repo/actions/runs/<run-id>/artifacts
 ### Recovery Procedures
 
 **If Coverage Health Check Fails**:
+
 1. Check CI workflow completion status
 2. Verify artifact upload succeeded
 3. Review coverage-health workflow logs
