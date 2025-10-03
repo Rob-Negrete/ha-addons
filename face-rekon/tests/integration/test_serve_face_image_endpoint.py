@@ -662,3 +662,39 @@ class TestServeFaceImageEndpointCoverage(TestCase):
 
         except ImportError as e:
             pytest.skip(f"ML dependencies not available: {e}")
+
+    def test_serve_face_image_exception_handler(self):
+        """
+        Test exception handler for serve_face_image (lines 383-384).
+        This covers the general error path for unexpected exceptions.
+        """
+        try:
+            import uuid
+            from unittest.mock import patch
+
+            # Use a valid UUID
+            face_id = str(uuid.uuid4())
+
+            # Mock get_face_with_thumbnail to raise an exception
+            import app
+
+            with app.app.test_client() as client:
+                with patch("clasificador.get_face_with_thumbnail") as mock_get:
+                    # Make it raise an unexpected exception
+                    mock_get.side_effect = RuntimeError("Database connection failed")
+
+                    response = client.get(f"/images/{face_id}")
+
+                    # Lines 383-384 should be covered!
+                    assert response.status_code == 500
+                    data = response.get_json()
+                    assert "error" in data
+                    assert "Internal server error" in data["error"]
+                    assert "Database connection failed" in data["error"]
+
+                    print("✅ Exception handler covered (lines 383-384)")
+                    print(f"   Face ID: {face_id}")
+                    print(f"   Response: {data}")
+
+        except ImportError as e:
+            pytest.skip(f"ML dependencies not available: {e}")
