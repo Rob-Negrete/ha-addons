@@ -128,6 +128,55 @@ stark-fortress/
 - The project follows Docker best practices with multi-stage builds where applicable
 - Git sync agent supports configurable branch and sync intervals
 
+## Code Quality Standards
+
+**CRITICAL: When writing new code, always adhere to these linting/formatting rules to avoid pre-commit hook failures:**
+
+### Python Code (face-rekon)
+
+- **black**: Auto-formatter for consistent code style (runs automatically)
+- **isort**: Import sorting in standardized order
+- **flake8**: Linting with these key rules:
+  - Maximum line length: 88 characters
+  - No unused imports
+  - No undefined variables
+  - Proper indentation and spacing
+
+### Pre-commit Hooks
+
+All code changes must pass these automated checks before committing:
+
+- `black` - Code formatting
+- `isort` - Import sorting
+- `flake8` - Linting
+- `trim trailing whitespace` - Remove trailing spaces
+- `fix end of files` - Ensure proper file endings
+- `check yaml` - YAML syntax validation
+- `check json` - JSON syntax validation
+- `check for merge conflicts` - Detect merge conflict markers
+
+**Best Practices:**
+
+- Run `black <file>` before committing to auto-format
+- Keep lines under 88 characters (split long strings/comments if needed)
+- Remove unused imports
+- Follow existing code patterns in the repository
+
+**Example: Fixing Long Lines**
+
+```python
+# ❌ BAD - Line too long
+def example_function():
+    """This is a very long docstring that exceeds the 88 character limit and will fail flake8"""
+
+# ✅ GOOD - Split across lines
+def example_function():
+    """
+    This is a properly formatted docstring that respects
+    the 88 character line length limit
+    """
+```
+
 ## Project Analysis Summary (face-rekon)
 
 **Primary Goal:** Home Assistant add-on for real-time face recognition that identifies people from camera images using AI/ML models.
