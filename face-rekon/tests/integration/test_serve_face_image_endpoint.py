@@ -606,3 +606,59 @@ class TestServeFaceImageEndpointCoverage(TestCase):
 
         except ImportError as e:
             pytest.skip(f"ML dependencies not available: {e}")
+
+    def test_serve_face_image_thumbnail_file_not_found(self):
+        """
+        Test thumbnail file not found error path (line 369).
+        This covers the important edge case where database has
+        thumbnail_path but the file was deleted or doesn't exist.
+        """
+        try:
+            import uuid
+
+            import clasificador
+            import numpy as np
+
+            # Create a valid face with a thumbnail_path that doesn't exist
+            face_id = str(uuid.uuid4())
+            fake_thumbnail_path = "/tmp/nonexistent_thumbnail.jpg"
+
+            # Create face data with embedding
+            face_data = {
+                "face_id": face_id,
+                "name": "Test Face",
+                "event_id": "test_event",
+                "thumbnail_path": fake_thumbnail_path,  # File doesn't exist!
+                "face_bbox": [0, 0, 100, 100],
+            }
+
+            # Create a dummy embedding
+            embedding = np.random.rand(512).astype(np.float32)
+
+            # Save to database
+            clasificador.db_save_face(face_data, embedding)
+
+            # Now try to serve the image - should get 404
+            import app
+
+            with app.app.test_client() as client:
+                response = client.get(f"/images/{face_id}")
+
+                # Line 369 should be covered!
+                assert response.status_code == 404
+                data = response.get_json()
+                assert "error" in data
+                assert "Thumbnail file not found" in data["error"]
+
+                print("✅ Thumbnail not found error covered (line 369)")
+                print(f"   Face ID: {face_id}")
+                print(f"   Response: {data}")
+
+            # Cleanup - remove face from database
+            try:
+                clasificador.delete_face(face_id)
+            except Exception:
+                pass
+
+        except ImportError as e:
+            pytest.skip(f"ML dependencies not available: {e}")
