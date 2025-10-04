@@ -70,6 +70,148 @@ def integration_test_env():
 
 
 @pytest.fixture(scope="session")
+def shared_qdrant_adapter():
+    """
+    Session-scoped fixture that creates a single Qdrant adapter instance.
+
+    This solves the embedded Qdrant storage locking issue by ensuring only
+    ONE QdrantAdapter instance accesses the storage throughout the test session.
+
+    All tests should use this fixture instead of creating their own adapters.
+
+    Returns:
+        QdrantAdapter: Shared instance for all tests
+    """
+    try:
+        from qdrant_adapter import QdrantAdapter
+
+        # Create single adapter instance for entire test session
+        adapter = QdrantAdapter()
+
+        yield adapter
+
+        # Cleanup after all tests complete
+        # The adapter's client will be closed automatically
+
+    except ImportError as e:
+        pytest.skip(f"Qdrant dependencies not available: {e}")
+
+
+@pytest.fixture
+def qdrant_adapter(shared_qdrant_adapter):
+    """
+    Function-scoped fixture that provides a clean Qdrant adapter for each test.
+
+    Uses the session-scoped shared adapter but clears all data between tests
+    to ensure test isolation.
+
+    Usage in tests:
+        def test_something(qdrant_adapter):
+            # Use qdrant_adapter for all Qdrant operations
+            face_id = qdrant_adapter.save_face(face_data, embedding)
+            result = qdrant_adapter.get_face(face_id)
+
+    Returns:
+        QdrantAdapter: Clean adapter instance with empty collection
+    """
+    adapter = shared_qdrant_adapter
+
+    # Clear all data from the collection before test
+    try:
+        from qdrant_adapter import COLLECTION_NAME
+        from qdrant_client import models
+
+        # Get all points and delete them
+        scroll_result = adapter.client.scroll(
+            collection_name=COLLECTION_NAME,
+            limit=10000,  # Get all points
+            with_payload=False,
+            with_vectors=False,
+        )
+
+        if scroll_result and scroll_result[0]:
+            point_ids = [point.id for point in scroll_result[0]]
+            if point_ids:
+                adapter.client.delete(
+                    collection_name=COLLECTION_NAME,
+                    points_selector=models.PointIdsList(points=point_ids),
+                )
+    except Exception as e:
+        # If cleanup fails, log but don't fail the test
+        print(f"Warning: Failed to clean Qdrant collection: {e}")
+
+    yield adapter
+
+    # No cleanup needed after test - next test will clean before it runs
+
+
+@pytest.fixture(autouse=True)
+def inject_shared_qdrant_into_clasificador(shared_qdrant_adapter):
+    """
+    Automatically inject shared Qdrant adapter into clasificador module.
+
+    This fixture runs automatically for ALL integration tests (autouse=True).
+    It ensures that clasificador.py uses the shared adapter instead of creating
+    its own, preventing Qdrant storage locking issues.
+
+    Also cleans the Qdrant collection before each test to ensure isolation.
+    """
+    try:
+        from qdrant_adapter import COLLECTION_NAME
+        from qdrant_client import models
+
+        # Clear all data from the collection before test
+        try:
+            scroll_result = shared_qdrant_adapter.client.scroll(
+                collection_name=COLLECTION_NAME,
+                limit=10000,
+                with_payload=False,
+                with_vectors=False,
+            )
+
+            if scroll_result and scroll_result[0]:
+                point_ids = [point.id for point in scroll_result[0]]
+                if point_ids:
+                    shared_qdrant_adapter.client.delete(
+                        collection_name=COLLECTION_NAME,
+                        points_selector=models.PointIdsList(points=point_ids),
+                    )
+        except Exception as e:
+            print(f"Warning: Failed to clean Qdrant collection in autouse fixture: {e}")
+
+        #  Import clasificador and inject adapter
+        # Import AFTER cleanup to avoid triggering lazy initialization
+        # Handle BOTH import paths since tests use different imports:
+        # - `from clasificador import ...`
+        # - `from scripts.clasificador import ...`
+        try:
+            import clasificador as clasificador_direct
+
+            import scripts.clasificador as clasificador_scripts
+
+            # Store original adapters (if any)
+            original_adapter_direct = clasificador_direct._qdrant_adapter
+            original_adapter_scripts = clasificador_scripts._qdrant_adapter
+
+            # Inject shared adapter into BOTH module paths
+            clasificador_direct._qdrant_adapter = shared_qdrant_adapter
+            clasificador_scripts._qdrant_adapter = shared_qdrant_adapter
+
+            yield
+
+            # Restore originals after test
+            clasificador_direct._qdrant_adapter = original_adapter_direct
+            clasificador_scripts._qdrant_adapter = original_adapter_scripts
+        except ImportError:
+            # clasificador not available
+            yield
+
+    except ImportError:
+        # qdrant dependencies not available (running locally without ML deps)
+        yield
+
+
+@pytest.fixture(scope="session")
 def shared_ml_models():
     """
     Session-scoped fixture that loads ML models once and reuses them.

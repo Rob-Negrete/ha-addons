@@ -253,12 +253,10 @@ class TestMLPipeline:
 class TestVectorDatabase:
     """Test Qdrant vector database operations"""
 
-    def test_qdrant_adapter_basic_operations(self):
+    def test_qdrant_adapter_basic_operations(self, qdrant_adapter):
         """Test basic Qdrant adapter operations"""
         try:
-            import qdrant_adapter
-
-            adapter = qdrant_adapter.get_qdrant_adapter()
+            adapter = qdrant_adapter
             assert adapter is not None
             print("✅ QdrantAdapter created")
 
@@ -379,12 +377,10 @@ class TestDataProcessing:
         except ImportError:
             pytest.skip("Image processing not available")
 
-    def test_error_handling(self):
+    def test_error_handling(self, qdrant_adapter):
         """Test error handling scenarios"""
         try:
-            import qdrant_adapter
-
-            adapter = qdrant_adapter.get_qdrant_adapter()
+            adapter = qdrant_adapter
 
             # Test with invalid inputs
             invalid_cases = [
@@ -408,12 +404,11 @@ class TestDataProcessing:
 class TestSystemIntegration:
     """Test end-to-end system integration"""
 
-    def test_full_workflow(self, test_image_base64):
+    def test_full_workflow(self, test_image_base64, qdrant_adapter):
         """Test complete system workflow"""
         try:
             import app
             import clasificador
-            import qdrant_adapter
 
             workflow_results = {}
 
@@ -438,7 +433,7 @@ class TestSystemIntegration:
             print(f"✅ Workflow step 2 - Clasificador: {len(unclassified)} faces")
 
             # Step 3: Check direct qdrant access
-            adapter = qdrant_adapter.get_qdrant_adapter()
+            adapter = qdrant_adapter
             stats = adapter.get_stats()
             workflow_results["qdrant_stats"] = len(stats)
             print(f"✅ Workflow step 3 - Qdrant: {len(stats)} stats")
@@ -450,15 +445,14 @@ class TestSystemIntegration:
         except ImportError:
             pytest.skip("Full workflow not available")
 
-    def test_performance_basic(self):
+    def test_performance_basic(self, qdrant_adapter):
         """Basic performance testing"""
         try:
             import time
 
             import numpy as np
-            import qdrant_adapter
 
-            adapter = qdrant_adapter.get_qdrant_adapter()
+            adapter = qdrant_adapter
 
             # Test rapid operations
             start_time = time.time()
@@ -642,12 +636,10 @@ class TestQdrantAdapterExtended:
         except ImportError:
             pytest.skip("QdrantAdapter not available")
 
-    def test_vector_operations_comprehensive(self):
+    def test_vector_operations_comprehensive(self, qdrant_adapter):
         """Test comprehensive vector operations for coverage"""
         try:
-            import qdrant_adapter
-
-            adapter = qdrant_adapter.get_qdrant_adapter()
+            adapter = qdrant_adapter
 
             # Test vector saving and searching with different scenarios
             test_vectors = [
@@ -683,12 +675,10 @@ class TestQdrantAdapterExtended:
         except ImportError:
             pytest.skip("Vector operations not available")
 
-    def test_qdrant_health_and_stats_operations(self):
+    def test_qdrant_health_and_stats_operations(self, qdrant_adapter):
         """Test health checking and statistics operations for coverage"""
         try:
-            import qdrant_adapter
-
-            adapter = qdrant_adapter.get_qdrant_adapter()
+            adapter = qdrant_adapter
 
             # Test health operations
             try:

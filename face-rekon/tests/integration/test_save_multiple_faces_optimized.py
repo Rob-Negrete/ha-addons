@@ -24,7 +24,9 @@ class TestSaveMultipleFacesOptimized:
         """Get path to test images directory."""
         return os.path.join(os.path.dirname(__file__), "..", "dummies")
 
-    def test_save_multiple_faces_optimized_with_single_face(self, test_images_dir):
+    def test_save_multiple_faces_optimized_with_single_face(
+        self, test_images_dir, qdrant_adapter
+    ):
         """Test saving a single face from an image."""
         try:
             from scripts.clasificador import save_multiple_faces_optimized
@@ -43,7 +45,9 @@ class TestSaveMultipleFacesOptimized:
         except ImportError as e:
             pytest.skip(f"ML dependencies not available: {e}")
 
-    def test_save_multiple_faces_optimized_with_multiple_faces(self, test_images_dir):
+    def test_save_multiple_faces_optimized_with_multiple_faces(
+        self, test_images_dir, qdrant_adapter
+    ):
         """Test saving multiple faces from a single image."""
         try:
             from scripts.clasificador import save_multiple_faces_optimized
@@ -64,7 +68,9 @@ class TestSaveMultipleFacesOptimized:
         except ImportError as e:
             pytest.skip(f"ML dependencies not available: {e}")
 
-    def test_save_multiple_faces_optimized_with_many_faces(self, test_images_dir):
+    def test_save_multiple_faces_optimized_with_many_faces(
+        self, test_images_dir, qdrant_adapter
+    ):
         """Test saving many faces from a single image."""
         try:
             from scripts.clasificador import save_multiple_faces_optimized
@@ -105,7 +111,9 @@ class TestSaveMultipleFacesOptimized:
         except ImportError as e:
             pytest.skip(f"ML dependencies not available: {e}")
 
-    def test_save_multiple_faces_optimized_duplicate_detection(self, test_images_dir):
+    def test_save_multiple_faces_optimized_duplicate_detection(
+        self, test_images_dir, qdrant_adapter
+    ):
         """Test duplicate event detection - should skip processing."""
         try:
             from scripts.clasificador import save_multiple_faces_optimized
