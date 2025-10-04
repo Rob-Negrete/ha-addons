@@ -2,6 +2,50 @@
 
 All notable changes to the Face Rekon Home Assistant add-on will be documented in this file.
 
+## [0.3.0-alpha.1](https://github.com/Rob-Negrete/ha-addons/compare/face-rekon-v0.2.8-alpha.1...face-rekon-v0.3.0-alpha.1) (2025-10-04)
+
+
+### ✨ Features
+
+* achieve 74% coverage for /recognize endpoint with comprehensive test strategy ([#95](https://github.com/Rob-Negrete/ha-addons/issues/95)) ([6341e69](https://github.com/Rob-Negrete/ha-addons/commit/6341e69f728b6559abe0755d55ceeeff71ced0c6))
+* Improve /assets/&lt;path:filename&gt; endpoint coverage to 78% ([#104](https://github.com/Rob-Negrete/ha-addons/issues/104)) ([9abef0f](https://github.com/Rob-Negrete/ha-addons/commit/9abef0f48485397e0261ec9a529cd66498b50b03))
+* Improve debug_test_webp endpoint coverage from 37.5% to 52.1% ([#97](https://github.com/Rob-Negrete/ha-addons/issues/97)) ([948fabd](https://github.com/Rob-Negrete/ha-addons/commit/948fabd14b55fd125aa148697e90184cbcd6eb42))
+* Improve loadSnapshot endpoint coverage from 76% to 77% ([#102](https://github.com/Rob-Negrete/ha-addons/issues/102)) ([da0958d](https://github.com/Rob-Negrete/ha-addons/commit/da0958defdeb83708bc8a08efec5ec671f2914e1))
+* remove debug endpoint and improve image processing coverage ([#128](https://github.com/Rob-Negrete/ha-addons/issues/128)) ([ab8b2ea](https://github.com/Rob-Negrete/ha-addons/commit/ab8b2ea6be48ec5ef24ac1b4b8203f86f557775c))
+
+
+### 🐛 Bug Fixes
+
+* handle LFS file conflicts in coverage-health workflow ([#119](https://github.com/Rob-Negrete/ha-addons/issues/119)) ([fbc73f6](https://github.com/Rob-Negrete/ha-addons/commit/fbc73f688c6328ca4bf32fdffdf5f500c24c0f28))
+* upgrade qdrant-client to 1.9.0 to fix CVE-2024-3829 ([6fde630](https://github.com/Rob-Negrete/ha-addons/commit/6fde63016127d1c67d784e9dcc21c6c9f7fbba29))
+
+
+### 📚 Documentation
+
+* enhance /bump-coverage command with Docker integration testing guidelines ([#99](https://github.com/Rob-Negrete/ha-addons/issues/99)) ([97d99de](https://github.com/Rob-Negrete/ha-addons/commit/97d99de3a1c78a70a6937df5d803c12c8fec3e38))
+
+
+### ♻️ Code Refactoring
+
+* move test images from Git LFS to regular Git tracking ([#121](https://github.com/Rob-Negrete/ha-addons/issues/121)) ([309e53a](https://github.com/Rob-Negrete/ha-addons/commit/309e53a8e5efecf42d28018dead85ed8c4032567))
+
+
+### ✅ Tests
+
+* achieve 100% coverage for delete_face function ([#131](https://github.com/Rob-Negrete/ha-addons/issues/131)) ([4ff3d2b](https://github.com/Rob-Negrete/ha-addons/commit/4ff3d2b613b9eb6c8c673bad248b055e8e965825))
+* achieve 100% coverage for serve_face_image endpoint ([#129](https://github.com/Rob-Negrete/ha-addons/issues/129)) ([ddac922](https://github.com/Rob-Negrete/ha-addons/commit/ddac922283a0dd6073e1cffec2369fa24e66ecb2))
+* achieve coverage for check_recent_detection function ([#133](https://github.com/Rob-Negrete/ha-addons/issues/133)) ([133a674](https://github.com/Rob-Negrete/ha-addons/commit/133a6743d1a105fa8655268af272d13d95f72f1b))
+* improve extract_faces_with_crops coverage using real face images ([#116](https://github.com/Rob-Negrete/ha-addons/issues/116)) ([aa210d9](https://github.com/Rob-Negrete/ha-addons/commit/aa210d9e9635deef4a4c2812e1a58048289f5ab3))
+* improve identify_all_faces coverage with real face images ([#118](https://github.com/Rob-Negrete/ha-addons/issues/118)) ([5986bfc](https://github.com/Rob-Negrete/ha-addons/commit/5986bfc035cb8b9fe1180c58f9f1bc100d75e14e))
+
+
+### 🧹 Chores
+
+* improve clasificador.py coverage from 36% to 40% ([#115](https://github.com/Rob-Negrete/ha-addons/issues/115)) ([a38313c](https://github.com/Rob-Negrete/ha-addons/commit/a38313c876d57e2f7a85314c4d9efe7ee44f1817))
+* improve clasificador.py coverage from 36% to 41% ([#114](https://github.com/Rob-Negrete/ha-addons/issues/114)) ([2d99f70](https://github.com/Rob-Negrete/ha-addons/commit/2d99f70f4a106b0951ec5aaa5a8b8d0dd11360d9))
+* Improve qdrant_adapter.py coverage from 34% to 78% ([#124](https://github.com/Rob-Negrete/ha-addons/issues/124)) ([6b9b345](https://github.com/Rob-Negrete/ha-addons/commit/6b9b3450fa3c4b0d901d2e404e4f15c08a27fa81))
+* Improve save_multiple_faces_optimized() coverage from 0% to 100% ([#123](https://github.com/Rob-Negrete/ha-addons/issues/123)) ([1a7ab9e](https://github.com/Rob-Negrete/ha-addons/commit/1a7ab9e58f86d65b84494d906441d02d4ec36974))
+
 ## [0.2.8-alpha.1](https://github.com/Rob-Negrete/ha-addons/compare/face-rekon-v0.2.7-alpha.1...face-rekon-v0.2.8-alpha.1) (2025-09-28)
 
 
