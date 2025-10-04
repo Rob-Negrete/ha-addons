@@ -2,6 +2,140 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Common File Paths Reference
+
+**IMPORTANT**: Use these exact paths to avoid path resolution errors. All paths are relative to the repository root (`/Users/robnegrete/Documents/Proyectos/stark-fortress/ha-addons`).
+
+### Coverage Files
+
+- **Unit Coverage XML**: `face-rekon/coverage-unit.xml`
+- **Integration Coverage XML**: `face-rekon/coverage-integration-final.xml`
+- **Coverage Report (Markdown)**: `coverage-report.md`
+- **Coverage Status JSON**: `status-check.json`
+
+### Test Directories
+
+- **Unit Tests**: `face-rekon/tests/unit/`
+- **Integration Tests**: `face-rekon/tests/integration/`
+- **Test Configuration (Unit)**: `face-rekon/pytest-unit.ini`
+- **Test Configuration (Integration)**: `face-rekon/pytest-integration.ini`
+
+### Docker Configuration
+
+- **Integration Test Compose**: `face-rekon/docker-compose.test.yml`
+- **Main Compose**: `face-rekon/docker-compose.yml`
+- **Test Dockerfile**: `face-rekon/Dockerfile.test`
+
+### Source Code
+
+- **Main Application**: `face-rekon/scripts/app.py`
+- **Face Classifier**: `face-rekon/scripts/clasificador.py`
+- **Qdrant Adapter**: `face-rekon/scripts/qdrant_adapter.py`
+
+### CI/CD Scripts
+
+- **Coverage Health Script**: `.github/scripts/coverage-health.py`
+- **CI Workflow**: `.github/workflows/ci.yml`
+- **Coverage Health Workflow**: `.github/workflows/coverage-health.yml`
+
+### Documentation
+
+- **Project Guidelines**: `CLAUDE.md` (this file)
+- **Parent Guidelines**: `../CLAUDE.md` (parent directory, not in git repo)
+- **Coverage Guide**: `COVERAGE-GUIDE.md`
+
+## Standard Commands Reference
+
+**IMPORTANT**: These commands can be executed without asking for confirmation. They are part of the standard workflow and are safe to run.
+
+### Coverage Analysis (Exactly as CI Does)
+
+```bash
+# From: /Users/robnegrete/Documents/Proyectos/stark-fortress/ha-addons/face-rekon
+
+# Step 1: Run unit tests with coverage
+QDRANT_PATH=/tmp/ci_test_qdrant FACE_REKON_BASE_PATH=/tmp/ci_test_faces \
+FACE_REKON_UNKNOWN_PATH=/tmp/ci_test_unknowns \
+FACE_REKON_THUMBNAIL_PATH=/tmp/ci_test_thumbnails \
+FACE_REKON_USE_EMBEDDED_QDRANT=true \
+python -m pytest tests/unit/ -c pytest-unit.ini \
+  --cov=scripts --cov-report=xml:coverage-unit.xml -q
+
+# Step 2: Run Docker integration tests with coverage
+docker-compose -f docker-compose.test.yml run --rm -v "$(pwd)":/output \
+  integration-tests sh -c "python -m pytest tests/integration/ \
+  -c pytest-integration.ini --cov=scripts \
+  --cov-report=xml:/output/coverage-integration-final.xml -q"
+
+# Step 3: Analyze combined coverage (from parent directory)
+cd ..
+python .github/scripts/coverage-health.py \
+  face-rekon/coverage-integration-final.xml face-rekon/coverage-unit.xml
+```
+
+### Running Tests
+
+```bash
+# From: /Users/robnegrete/Documents/Proyectos/stark-fortress/ha-addons/face-rekon
+
+# Run specific integration test
+docker-compose -f docker-compose.test.yml run --rm integration-tests \
+  python -m pytest tests/integration/test_[name].py::[TestClass]::[test_method] -v
+
+# Run all integration tests
+docker-compose -f docker-compose.test.yml run --rm integration-tests \
+  python -m pytest tests/integration/ -v
+
+# Run all unit tests
+QDRANT_PATH=/tmp/ci_test_qdrant [...] \
+python -m pytest tests/unit/ -c pytest-unit.ini -v
+```
+
+### Git Workflow
+
+```bash
+# From: /Users/robnegrete/Documents/Proyectos/stark-fortress/ha-addons/face-rekon
+
+# Create feature branch (standard naming)
+git checkout main
+git pull origin main
+git checkout -b feat/[descriptive-name]
+
+# Commit with pre-commit hooks
+git add [files]
+git commit -m "commit message"
+
+# Push and create PR
+git push -u origin feat/[branch-name]
+gh pr create --title "title" --body "body"
+
+# Monitor CI checks
+gh pr checks [PR_NUMBER] --watch
+
+# Monitor Coverage Health Check
+gh run list --workflow="coverage-health.yml" --limit=3
+gh run watch [RUN_ID]
+
+# Verify coverage results
+gh pr view [PR_NUMBER] --json comments \
+  --jq '.comments[] | select(.body | contains("Coverage Health")) | .body'
+
+# Merge PR
+gh pr merge [PR_NUMBER] --squash --delete-branch
+```
+
+### Code Formatting & Linting
+
+```bash
+# From: /Users/robnegrete/Documents/Proyectos/stark-fortress/ha-addons/face-rekon
+
+# Format with black
+black tests/integration/test_[name].py
+
+# Pre-commit hooks run automatically on commit
+# DO NOT use --no-verify flag
+```
+
 ## Project Overview
 
 This repository contains Home Assistant add-ons developed as Docker containers. The project consists of three main components:
