@@ -118,11 +118,12 @@ def qdrant_adapter(shared_qdrant_adapter):
 
     # Clear all data from the collection before test
     try:
+        from qdrant_adapter import COLLECTION_NAME
         from qdrant_client import models
 
         # Get all points and delete them
         scroll_result = adapter.client.scroll(
-            collection_name=adapter.collection_name,
+            collection_name=COLLECTION_NAME,
             limit=10000,  # Get all points
             with_payload=False,
             with_vectors=False,
@@ -132,7 +133,7 @@ def qdrant_adapter(shared_qdrant_adapter):
             point_ids = [point.id for point in scroll_result[0]]
             if point_ids:
                 adapter.client.delete(
-                    collection_name=adapter.collection_name,
+                    collection_name=COLLECTION_NAME,
                     points_selector=models.PointIdsList(points=point_ids),
                 )
     except Exception as e:
