@@ -160,8 +160,6 @@ def inject_shared_qdrant_into_clasificador(shared_qdrant_adapter):
         from qdrant_adapter import COLLECTION_NAME
         from qdrant_client import models
 
-        from scripts import clasificador
-
         # Clear all data from the collection before test
         try:
             scroll_result = shared_qdrant_adapter.client.scroll(
@@ -181,19 +179,27 @@ def inject_shared_qdrant_into_clasificador(shared_qdrant_adapter):
         except Exception as e:
             print(f"Warning: Failed to clean Qdrant collection in autouse fixture: {e}")
 
-        # Store original adapter (if any)
-        original_adapter = clasificador._qdrant_adapter
+        #  Import clasificador and inject adapter
+        # Import AFTER cleanup to avoid triggering lazy initialization
+        try:
+            import scripts.clasificador as clasificador
 
-        # Inject shared adapter into module global
-        clasificador._qdrant_adapter = shared_qdrant_adapter
+            # Store original adapter (if any)
+            original_adapter = clasificador._qdrant_adapter
 
-        yield
+            # Inject shared adapter into module global
+            clasificador._qdrant_adapter = shared_qdrant_adapter
 
-        # Restore original after test
-        clasificador._qdrant_adapter = original_adapter
+            yield
+
+            # Restore original after test
+            clasificador._qdrant_adapter = original_adapter
+        except ImportError:
+            # clasificador not available
+            yield
 
     except ImportError:
-        # clasificador not available (running locally without ML deps)
+        # qdrant dependencies not available (running locally without ML deps)
         yield
 
 
