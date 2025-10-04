@@ -154,12 +154,31 @@ def inject_shared_qdrant_into_clasificador(shared_qdrant_adapter):
     It ensures that clasificador.py uses the shared adapter instead of creating
     its own, preventing Qdrant storage locking issues.
 
-    This allows existing tests that call clasificador functions
-    (like identify_all_faces, save_multiple_faces_optimized) to work
-    without modification.
+    Also cleans the Qdrant collection before each test to ensure isolation.
     """
     try:
         import clasificador
+        from qdrant_adapter import COLLECTION_NAME
+        from qdrant_client import models
+
+        # Clear all data from the collection before test
+        try:
+            scroll_result = shared_qdrant_adapter.client.scroll(
+                collection_name=COLLECTION_NAME,
+                limit=10000,
+                with_payload=False,
+                with_vectors=False,
+            )
+
+            if scroll_result and scroll_result[0]:
+                point_ids = [point.id for point in scroll_result[0]]
+                if point_ids:
+                    shared_qdrant_adapter.client.delete(
+                        collection_name=COLLECTION_NAME,
+                        points_selector=models.PointIdsList(points=point_ids),
+                    )
+        except Exception as e:
+            print(f"Warning: Failed to clean Qdrant collection in autouse fixture: {e}")
 
         # Store original adapter (if any)
         original_adapter = clasificador._qdrant_adapter
