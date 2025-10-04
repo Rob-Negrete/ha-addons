@@ -181,19 +181,27 @@ def inject_shared_qdrant_into_clasificador(shared_qdrant_adapter):
 
         #  Import clasificador and inject adapter
         # Import AFTER cleanup to avoid triggering lazy initialization
+        # Handle BOTH import paths since tests use different imports:
+        # - `from clasificador import ...`
+        # - `from scripts.clasificador import ...`
         try:
-            import scripts.clasificador as clasificador
+            import clasificador as clasificador_direct
 
-            # Store original adapter (if any)
-            original_adapter = clasificador._qdrant_adapter
+            import scripts.clasificador as clasificador_scripts
 
-            # Inject shared adapter into module global
-            clasificador._qdrant_adapter = shared_qdrant_adapter
+            # Store original adapters (if any)
+            original_adapter_direct = clasificador_direct._qdrant_adapter
+            original_adapter_scripts = clasificador_scripts._qdrant_adapter
+
+            # Inject shared adapter into BOTH module paths
+            clasificador_direct._qdrant_adapter = shared_qdrant_adapter
+            clasificador_scripts._qdrant_adapter = shared_qdrant_adapter
 
             yield
 
-            # Restore original after test
-            clasificador._qdrant_adapter = original_adapter
+            # Restore originals after test
+            clasificador_direct._qdrant_adapter = original_adapter_direct
+            clasificador_scripts._qdrant_adapter = original_adapter_scripts
         except ImportError:
             # clasificador not available
             yield
