@@ -157,9 +157,10 @@ def inject_shared_qdrant_into_clasificador(shared_qdrant_adapter):
     Also cleans the Qdrant collection before each test to ensure isolation.
     """
     try:
-        import clasificador
         from qdrant_adapter import COLLECTION_NAME
         from qdrant_client import models
+
+        from scripts import clasificador
 
         # Clear all data from the collection before test
         try:
