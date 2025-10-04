@@ -397,3 +397,194 @@ docker-compose -f docker-compose.test.yml run --rm integration-tests \
 - ✅ This gives TRUE coverage results (e.g., 71% vs 51.3% combined local)
 
 **Remember:** No mocking of ML libraries, use Docker environment, tests should skip gracefully locally but run fully in CI.
+
+### Complete Coverage Improvement Workflow (Proven Process)
+
+**This is the DEFINITIVE workflow that guarantees real, verifiable coverage gains in CI.**
+
+#### Phase 1: Analysis & Planning
+
+1. **Analyze Coverage Exactly as CI Does**
+
+   ```bash
+   # Run unit tests
+   cd face-rekon
+   QDRANT_PATH=/tmp/ci_test_qdrant FACE_REKON_BASE_PATH=/tmp/ci_test_faces \
+   FACE_REKON_UNKNOWN_PATH=/tmp/ci_test_unknowns \
+   FACE_REKON_THUMBNAIL_PATH=/tmp/ci_test_thumbnails \
+   FACE_REKON_USE_EMBEDDED_QDRANT=true \
+   python -m pytest tests/unit/ -c pytest-unit.ini \
+     --cov=scripts --cov-report=xml:coverage-unit.xml -q
+
+   # Run Docker integration tests
+   docker-compose -f docker-compose.test.yml run --rm -v "$(pwd)":/output \
+     integration-tests sh -c "python -m pytest tests/integration/ \
+     -c pytest-integration.ini --cov=scripts \
+     --cov-report=xml:/output/coverage-integration-final.xml -q"
+
+   # Analyze combined coverage (same as CI)
+   cd ..
+   python .github/scripts/coverage-health.py face-rekon/coverage-unit.xml
+   ```
+
+2. **Identify & Prioritize Candidates**
+
+   - Review coverage report for lowest covered functions/endpoints
+   - Prioritize by: business criticality, complexity, error-prone areas
+   - Select ONE function/endpoint to achieve 100% coverage
+
+3. **Identify Code Paths to Cover**
+
+   - Read the target function code
+   - List all code paths: success, validation, edge cases, error handlers
+   - Note line numbers for each path
+
+4. **Plan Test Strategy**
+   - Decide which paths need Docker integration tests (real ML)
+   - Decide which paths can use unit tests (mocking OK)
+   - Sketch test method names and what each will cover
+
+#### Phase 2: Preparation
+
+5. **Clean Workspace & Create Feature Branch**
+   ```bash
+   cd face-rekon
+   git checkout main
+   git pull origin main
+   git checkout -b feat/improve-[function-name]-coverage
+   ```
+
+#### Phase 3: Implementation (Iterative)
+
+6. **For Each Code Path:**
+
+   a. **Write Test** (prioritize Docker integration for ML dependencies)
+
+   ```python
+   def test_[function]_[path_description](self):
+       """Test [specific scenario] to cover lines X-Y"""
+       try:
+           import app
+           # Test implementation with real ML pipeline
+           # NO MOCKING of InsightFace, OpenCV, Qdrant
+       except ImportError as e:
+           pytest.skip(f"ML dependencies not available: {e}")
+   ```
+
+   b. **Run Tests Locally**
+
+   ```bash
+   # Run specific test
+   docker-compose -f docker-compose.test.yml run --rm integration-tests \
+     python -m pytest tests/integration/test_[name].py::[TestClass]::[test_method] -v
+   ```
+
+   c. **Verify Coverage Gain**
+
+   ```bash
+   # Re-run combined coverage analysis
+   QDRANT_PATH=/tmp/ci_test_qdrant [...] python -m pytest tests/unit/ \
+     -c pytest-unit.ini --cov=scripts --cov-report=xml:coverage-unit.xml -q
+
+   docker-compose -f docker-compose.test.yml run --rm -v "$(pwd)":/output \
+     integration-tests sh -c "python -m pytest tests/integration/ \
+     -c pytest-integration.ini --cov=scripts \
+     --cov-report=xml:/output/coverage-integration-final.xml -q"
+
+   cd ..
+   python .github/scripts/coverage-health.py face-rekon/coverage-unit.xml
+   ```
+
+   d. **Verify Linting BEFORE Committing**
+
+   ```bash
+   black tests/integration/test_[name].py
+   # Pre-commit hooks will run automatically
+   # DO NOT use --no-verify - hooks are there for a reason!
+   ```
+
+   e. **Commit Progress**
+
+   ```bash
+   git add tests/integration/test_[name].py
+   git commit -m "test: cover [path description] for [function] (lines X-Y)"
+   ```
+
+7. **Repeat Step 6 Until 100% Coverage**
+   - Continue until ALL paths in target function are covered
+   - Each commit should show measurable coverage gain
+   - All tests MUST PASS before committing
+
+#### Phase 4: PR & CI Validation
+
+8. **Push & Create PR**
+
+   ```bash
+   git push -u origin feat/improve-[function-name]-coverage
+   gh pr create --title "test: achieve 100% coverage for [function]" \
+     --body "[See PR template]"
+   ```
+
+9. **Monitor CI Checks**
+
+   ```bash
+   gh pr checks [PR_NUMBER] --watch
+   ```
+
+   - Wait for: Code Quality, Docker Build Test, Test Face Rekon
+   - ALL must pass ✅
+
+10. **Wait for Coverage Health Check**
+
+    - CI workflow triggers `workflow_dispatch` for Coverage Health Check
+    - Wait 5-10 seconds after CI passes
+    - Monitor: `gh run list --workflow="coverage-health.yml" --limit=1`
+
+11. **Verify Coverage Health Results**
+
+    ```bash
+    # Check the workflow completed successfully
+    gh run view [RUN_ID] --json status,conclusion
+
+    # View coverage report
+    gh run view [RUN_ID] --log | grep -A 20 "Coverage Health Report"
+
+    # Verify on PR comments
+    gh pr view [PR_NUMBER] --json comments \
+      --jq '.comments[] | select(.body | contains("Coverage Health")) | .body'
+    ```
+
+12. **Verify Positive Delta**
+
+    - **CRITICAL**: Coverage must show improvement vs baseline
+    - Status must be: 🟢 PASS
+    - Coverage % must exceed 72% baseline
+    - If delta is 0 or negative, investigate and fix before merging
+
+13. **Merge When All Green**
+    ```bash
+    gh pr merge [PR_NUMBER] --squash --delete-branch
+    ```
+
+#### Success Criteria Checklist
+
+- ✅ Target function/endpoint: 100% coverage
+- ✅ All tests pass locally and in CI
+- ✅ Code Quality checks: PASS
+- ✅ Docker Build Test: PASS
+- ✅ Test Face Rekon: PASS
+- ✅ Coverage Health Check: PASS with positive delta
+- ✅ Overall coverage: ≥72% (preferably improved)
+- ✅ All linting rules followed (black, isort, flake8)
+- ✅ No ML dependency mocking in integration tests
+
+#### Example Success Story
+
+**serve_face_image endpoint (PR #129):**
+
+- Initial: 0% → Final: 100% (+100 pp)
+- Overall: 74.84% → 77.56% (+2.72 pp)
+- Tests: 136 → 142 integration tests (+6)
+- All paths covered: validation, success, edge cases, errors
+- CI Coverage Health: ✅ PASS with 77.56%
+- Result: Merged successfully!
