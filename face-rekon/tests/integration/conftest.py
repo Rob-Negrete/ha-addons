@@ -144,6 +144,38 @@ def qdrant_adapter(shared_qdrant_adapter):
     # No cleanup needed after test - next test will clean before it runs
 
 
+@pytest.fixture(autouse=True)
+def inject_shared_qdrant_into_clasificador(shared_qdrant_adapter):
+    """
+    Automatically inject shared Qdrant adapter into clasificador module.
+
+    This fixture runs automatically for ALL integration tests (autouse=True).
+    It ensures that clasificador.py uses the shared adapter instead of creating
+    its own, preventing Qdrant storage locking issues.
+
+    This allows existing tests that call clasificador functions
+    (like identify_all_faces, save_multiple_faces_optimized) to work
+    without modification.
+    """
+    try:
+        import clasificador
+
+        # Store original adapter (if any)
+        original_adapter = clasificador._qdrant_adapter
+
+        # Inject shared adapter into module global
+        clasificador._qdrant_adapter = shared_qdrant_adapter
+
+        yield
+
+        # Restore original after test
+        clasificador._qdrant_adapter = original_adapter
+
+    except ImportError:
+        # clasificador not available (running locally without ML deps)
+        yield
+
+
 @pytest.fixture(scope="session")
 def shared_ml_models():
     """
