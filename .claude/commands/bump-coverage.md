@@ -613,35 +613,168 @@ Closes #{issue_number}
 - Link to coverage improvement issue
 - Document testing strategy and infrastructure changes
 
-## ✅ Step 8: Merge & Update Baselines
+## ✅ Step 8: Wait for Coverage Health Check & Verify Gain
 
-**Merge and Validation:**
+### **🎯 CRITERIA OF DONE (MANDATORY)**
 
-- Merge PR after all coverage checks pass
-- Verify solution works as expected in production environment
-- Confirm no regressions introduced in functionality or performance
+**⚠️ CRITICAL: A coverage improvement task is NOT complete until ALL of these conditions are met:**
 
-**Progressive Baseline Management:**
+#### **Step 8.1: Monitor Coverage Health Check Workflow**
 
-- **Baseline Update Logic**: If target was 60%, baseline was 47%, and achieved 55%:
-  - New baseline = **55%** (actual achievement)
-  - Or **54%** (with 1% safety margin to prevent flaky test regression)
-- **Update Coverage Health Check workflow baseline**:
-  - Change `BASELINE_COVERAGE` from "47.9" to "54.0" (or achieved %)
-  - Update health check thresholds in PR comment template
-  - Commit baseline update separately for clear tracking
-- **Progressive Strategy**:
-  - Each successful improvement becomes the new floor
-  - Prevents coverage regression while being realistic
-  - Creates sustainable "ratcheting up" effect
+After all CI checks pass (Code Quality, Docker Build, Test Face Rekon), the Coverage Health Check workflow triggers automatically.
+
+**Monitor the workflow:**
+
+```bash
+# Wait for Coverage Health Check to trigger (2-5 minutes after CI passes)
+gh run list --workflow="coverage-health.yml" --limit=1
+
+# Watch the workflow run
+gh run watch <RUN_ID>
+
+# Check completion status
+gh run view <RUN_ID> --json status,conclusion
+```
+
+**Required:** Workflow must complete with `conclusion: "success"`
+
+#### **Step 8.2: Verify Positive Coverage Delta**
+
+**How to verify:**
+
+```bash
+# View the coverage report in workflow logs
+gh run view <RUN_ID> --log | grep -A 30 "Coverage Health Report"
+
+# Or check PR comments for Coverage Health Check report
+gh pr view <PR_NUMBER> --json comments \
+  --jq '.comments[] | select(.body | contains("Coverage Health")) | .body'
+```
+
+**Required Indicators:**
+
+- ✅ Status: 🟢 PASS (not 🔴 FAIL)
+- ✅ Delta: **POSITIVE number** (e.g., +2.72%, NOT +0.00%)
+- ✅ Coverage: Above baseline (e.g., 77.56% when baseline is 72%)
+
+**Example SUCCESS (Meets Criteria):**
+
+```
+📊 Coverage Health Report
+==================================================
+Status: 🟢 PASS
+Coverage: 77.56%
+Delta: +2.72%          ← MUST BE POSITIVE!
+Should fail CI: False
+```
+
+**Example FAILURE (Does NOT meet criteria):**
+
+```
+📊 Coverage Health Report
+==================================================
+Status: 🟢 PASS
+Coverage: 75.80%
+Delta: +0.00%          ← NO GAIN - NOT DONE!
+Should fail CI: False
+```
+
+#### **Step 8.3: What If No Gain or Failure?**
+
+**If Delta is 0.00% or negative:**
+
+1. **Investigate:** Tests may not be running in CI properly
+2. **Check:** Are integration tests being executed? Check CI logs
+3. **Fix:** Add more tests or fix test execution configuration
+4. **Re-run:** Push fixes and wait for new Coverage Health Check
+5. **Repeat:** Until positive delta is achieved
+
+**If Workflow Fails:**
+
+1. **Check Logs:** `gh run view <RUN_ID> --log`
+2. **Common Issues:**
+   - Coverage files not uploaded (check "Upload coverage artifacts" step)
+   - Baseline comparison error (verify coverage-health.py)
+   - Permissions issue (check GitHub Actions settings)
+3. **Fix:** Address root cause and re-run workflow
+
+**DO NOT MERGE** until positive delta is confirmed!
+
+#### **Step 8.4: Merge Only After Criteria Met**
+
+**Final Merge Checklist:**
+
+- [ ] Coverage Health Check workflow: ✅ SUCCESS
+- [ ] Coverage delta: ✅ POSITIVE (e.g., +2.72%)
+- [ ] All CI checks: ✅ GREEN
+- [ ] Function coverage: ✅ 100%
+- [ ] PR approved and ready
+
+**Merge Command:**
+
+```bash
+# Only run this after FULL criteria met
+gh pr merge <PR_NUMBER> --squash --delete-branch
+```
+
+**Why This Matters:**
+
+- Prevents merging PRs that don't actually improve coverage
+- Ensures Coverage Health Check validation works correctly
+- Maintains progressive baseline improvement (ratcheting effect)
+- Guarantees real, measurable impact on project quality
+
+#### **Step 8.5: Timeline Expectations**
+
+**Typical Flow:**
+
+1. PR created → CI starts (0 min)
+2. CI passes → Coverage Health Check triggers (2-5 min)
+3. Coverage Health Check completes (1-2 min)
+4. **Total:** 3-7 minutes from PR to criteria verification
+
+**If Coverage Health Check doesn't trigger:**
+
+- Wait 5-10 minutes (sometimes delayed)
+- Check GitHub Actions tab for workflow runs
+- Manually trigger if needed: `gh workflow run coverage-health.yml`
+
+---
+
+**🔴 REMEMBER: Task is NOT DONE until Coverage Health Check shows POSITIVE delta! 🔴**
+
+---
+
+## ✅ Step 9: Progressive Baseline Management (After Merge)
+
+**Only perform these steps AFTER Step 8 criteria are met and PR is merged.**
+
+**Baseline Update Logic:**
+
+If target was 60%, baseline was 72%, and achieved 77.56%:
+
+- New baseline = **77.56%** (actual achievement from Coverage Health Check)
+- Or **77%** (with 0.5% safety margin to prevent flaky test regression)
+
+**Update Coverage Health Check workflow baseline:**
+
+```bash
+# Edit .github/workflows/coverage-health.yml
+# Change BASELINE_COVERAGE from "72.0" to "77.0" (or achieved %)
+```
+
+**Progressive Strategy:**
+
+- Each successful improvement becomes the new floor
+- Prevents coverage regression while being realistic
+- Creates sustainable "ratcheting up" effect
 
 **Documentation and Closure:**
 
-- Document new baseline and rationale in Coverage Health Check
+- Document new baseline and rationale in commit message
 - Update project documentation with new coverage expectations
-- Record lessons learned and testing patterns for future improvements
-- Close related coverage improvement issues with baseline update notes
-- Verify CI workflows continue using comprehensive coverage methodology
+- Record lessons learned for future improvements
+- Close related coverage improvement issues
 
 ---
 
