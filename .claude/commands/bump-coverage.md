@@ -432,6 +432,100 @@ python ../../.github/scripts/coverage-health.py coverage-unit.xml
 - Ensure coverage measurement methodology matches CI (Combined Analysis approach)
 - Alert if significant discrepancies between local Combined Analysis and CI numbers
 
+## 🎯 Step 1.5: Smart Target Selection with Validation (Auto Mode)
+
+**⚠️ CRITICAL: Use select_coverage_target.py to prevent duplicate work**
+
+When running `/bump-coverage` in auto mode (no specific file/function specified), use the smart selection script to automatically identify the best coverage improvement target with multi-layer validation.
+
+**Auto Mode Detection:**
+
+```python
+# Auto mode: /bump-coverage 80
+# Manual mode: /bump-coverage 60 app.py /recognize endpoint
+if no file or function specified in arguments:
+    use_auto_selection = True
+```
+
+**Step 1.5a: Run Smart Selection Script**
+
+```bash
+cd face-rekon
+python scripts/select_coverage_target.py --verbose --min-lines 5
+```
+
+**Selection Algorithm:**
+
+1. Analyzes coverage JSON from `.coverage-results/coverage-integration.json`
+2. Identifies functions with <50% coverage and ≥5 lines
+3. Searches test files for existing test coverage patterns
+4. Cross-validates against integration coverage reports
+5. Returns first truly uncovered function
+
+**Validation Checks:**
+
+- ✅ Function has <50% coverage in combined analysis
+- ✅ No existing tests found in test files (searches for patterns)
+- ✅ Not already covered in integration tests (cross-check)
+- ✅ Has sufficient lines of code (minimum 5 lines)
+
+**Example Output:**
+
+```
+📊 Found coverage file: .coverage-results/coverage-integration.json
+
+📋 Found 8 functions with <50% coverage
+
+1. Evaluating: clasificador.py::update_face (0.0%)
+   ⚠️  Found existing tests in: test_integration.py, test_update_face_method.py
+
+2. Evaluating: app.py::Face.patch (0.0%)
+   ⚠️  Found existing tests in: test_integration.py
+
+3. Evaluating: qdrant_adapter.py::QdrantAdapter._connect_with_retry (45.8%)
+   ✅ Valid target found!
+
+Coverage: 45.8%
+Lines: 24 (13 missing)
+```
+
+**Step 1.5b: Validate Selection**
+
+Before proceeding, verify the selected target:
+
+- Read the source code to understand the function
+- Confirm it's not a trivial function (e.g., simple getter)
+- Check that improving this function aligns with project goals
+- Estimate the effort required (number of test cases needed)
+
+**Step 1.5c: Set Target Context**
+
+Based on the selected function, set up the targeting context for Step 2:
+
+```python
+selected_target = "qdrant_adapter.py::QdrantAdapter._connect_with_retry"
+file_target = "qdrant_adapter.py"
+function_target = "_connect_with_retry"
+coverage_current = 45.8
+lines_missing = 13
+```
+
+**Fallback to Manual Selection:**
+
+If auto-selection fails (no suitable targets found):
+
+- All functions have >50% coverage: ✅ Success! Consider raising baseline
+- All candidates already tested: Review test file organization
+- Script errors: Fall back to manual coverage analysis
+
+**Benefits of Smart Selection:**
+
+- ✅ Prevents duplicate test creation (like PR #135: Face.patch)
+- ✅ Ensures positive coverage delta (meets Criteria of Done)
+- ✅ Saves development time by avoiding wasted effort
+- ✅ Prioritizes truly uncovered functions
+- ✅ Validates against actual test execution, not just coverage JSON
+
 ## 📊 Step 2: Targeted Coverage Gap Analysis
 
 **Parse Arguments for Specific Targeting:**
