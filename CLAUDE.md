@@ -406,7 +406,7 @@ docker-compose -f docker-compose.test.yml run --rm integration-tests \
 
 #### How Smart Selection Works
 
-**Script:** [face-rekon/scripts/select_coverage_target.py](face-rekon/scripts/select_coverage_target.py)
+**Script:** [face-rekon/tests/utils/select_coverage_target.py](face-rekon/tests/utils/select_coverage_target.py)
 
 **Multi-Layer Validation Process:**
 
@@ -437,7 +437,7 @@ search_patterns = [
 
 ```bash
 cd face-rekon
-python scripts/select_coverage_target.py --verbose --min-lines 5
+python tests/utils/select_coverage_target.py --verbose --min-lines 5
 ```
 
 **Example Output:**
@@ -483,7 +483,7 @@ The smart selection script is now integrated into the `/bump-coverage` command w
 **Files Modified:**
 
 - `.claude/commands/bump-coverage.md` - Step 1.5 added for smart selection
-- `face-rekon/scripts/select_coverage_target.py` - Core validation script
+- `face-rekon/tests/utils/select_coverage_target.py` - Core validation script
 
 #### Lessons Learned (PR #135 Failure)
 
@@ -501,7 +501,7 @@ The smart selection script is now integrated into the `/bump-coverage` command w
 # Just pick lowest coverage from JSON → duplicate work
 
 # NEW approach (smart):
-python scripts/select_coverage_target.py
+python tests/utils/select_coverage_target.py
 # → Finds Face.patch at 0%
 # → Searches test files for "client.patch"
 # → Finds test_update_face_endpoint in test_integration.py
