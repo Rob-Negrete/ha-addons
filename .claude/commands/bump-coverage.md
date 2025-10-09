@@ -432,6 +432,89 @@ python ../../.github/scripts/coverage-health.py coverage-unit.xml
 - Ensure coverage measurement methodology matches CI (Combined Analysis approach)
 - Alert if significant discrepancies between local Combined Analysis and CI numbers
 
+## 🎯 Step 1.5: Smart Target Selection with Validation (Auto Mode)
+
+**⚠️ CRITICAL: Use select_coverage_target.py to prevent duplicate work**
+
+**When to Use:** If NO specific file/endpoint/function specified in arguments (auto mode)
+
+**Step 1.5a: Run Smart Selection Script**
+
+```bash
+cd face-rekon
+python scripts/select_coverage_target.py --verbose --min-lines 5
+```
+
+**Selection Algorithm:**
+
+1. Analyzes coverage JSON from `.coverage-results/coverage-integration.json`
+2. Identifies functions with <50% coverage and ≥5 lines
+3. Searches test files for existing test coverage patterns
+4. Cross-validates against integration coverage reports
+5. Returns first truly uncovered function
+
+**Validation Checks:**
+
+- ✅ Function has <50% coverage in combined analysis
+- ✅ No existing tests found in test files (searches for patterns)
+- ✅ Not already covered in integration tests (cross-check)
+- ✅ Has sufficient lines of code (minimum 5 lines)
+
+**Example Output:**
+
+```
+Analyzing coverage data...
+Found 12 candidates with <50% coverage
+
+1. Evaluating: app.py::Face.patch (0.0%)
+   ⚠️  Found existing tests in: tests/integration/test_integration.py
+   Lines: 161-182 (test_update_face_endpoint with client.patch call)
+   ❌ Skipping - already covered
+
+2. Evaluating: app.py::update_face (0.0%)
+   ⚠️  Found existing tests in: tests/integration/test_integration.py
+   ❌ Skipping - already covered
+
+3. Evaluating: qdrant_adapter.py::QdrantAdapter._connect_with_retry (45.8%)
+   ✅ No existing tests found
+   ✅ Valid target found!
+
+Selected target: qdrant_adapter.py::QdrantAdapter._connect_with_retry
+Coverage: 45.8% (11/24 lines covered)
+```
+
+**Pattern Detection Logic:**
+
+- **Flask REST Endpoints**: `Face.patch` → searches for `client.patch()` in test files
+- **Common Naming**: `Face.patch` → searches for `test_update_face_endpoint`
+- **Function References**: Direct function name matches in test files
+- **HTTP Methods**: Endpoint paths with HTTP verbs (GET, POST, PATCH, DELETE)
+
+**Why This Step is Critical:**
+
+- ✅ **Prevents PR #135 Issue**: Avoids selecting already-covered functions
+- ✅ **Ensures Positive Delta**: Only picks truly uncovered targets
+- ✅ **Saves Resources**: No wasted CI runs with +0.00% coverage gain
+- ✅ **Smart Validation**: Cross-checks coverage JSON against actual test files
+
+**Fallback Strategy:**
+
+If smart selection finds NO valid targets:
+
+1. Review coverage reports manually
+2. Check if project already meets coverage goals
+3. Consider edge cases or error paths in existing functions
+4. Update baseline if overall coverage is satisfactory
+
+**Step 1.5b: Parse Selected Target Information**
+
+Extract from script output:
+
+- **Target File**: e.g., `qdrant_adapter.py`
+- **Target Function**: e.g., `QdrantAdapter._connect_with_retry`
+- **Current Coverage**: e.g., `45.8%`
+- **Uncovered Lines**: Parse from coverage reports
+
 ## 📊 Step 2: Targeted Coverage Gap Analysis
 
 **Parse Arguments for Specific Targeting:**
