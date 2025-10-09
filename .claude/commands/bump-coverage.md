@@ -442,7 +442,7 @@ python ../../.github/scripts/coverage-health.py coverage-unit.xml
 
 ```bash
 cd face-rekon
-python scripts/select_coverage_target.py --verbose --min-lines 5
+python tests/utils/select_coverage_target.py --verbose --min-lines 5
 ```
 
 **Selection Algorithm:**
