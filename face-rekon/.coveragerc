@@ -14,6 +14,7 @@ omit =
     setup.py
     setup_*.py
     analyze_*.py
+    scripts/select_coverage_target.py
 
     # Development and build scripts
     migrate_*.py
