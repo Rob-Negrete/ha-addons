@@ -398,6 +398,124 @@ docker-compose -f docker-compose.test.yml run --rm integration-tests \
 
 **Remember:** No mocking of ML libraries, use Docker environment, tests should skip gracefully locally but run fully in CI.
 
+### Smart Coverage Target Selection (Auto Mode Enhancement)
+
+**🎯 Purpose:** Prevent wasted effort by automatically validating that selected coverage targets are truly uncovered.
+
+**Problem Solved:** In PR #135, the auto-selection picked `Face.patch` endpoint showing 0% coverage in JSON, but it was already 100% covered by existing tests in `test_integration.py`. This resulted in duplicate work and Coverage Health Check failure (Delta: +0.00%).
+
+#### How Smart Selection Works
+
+**Script:** [face-rekon/scripts/select_coverage_target.py](face-rekon/scripts/select_coverage_target.py)
+
+**Multi-Layer Validation Process:**
+
+1. **Coverage JSON Analysis** - Identifies functions with <50% coverage
+2. **Test File Pattern Search** - Searches all test files for existing coverage:
+   - Function name patterns (e.g., `update_face` → `test_update_face_endpoint`)
+   - Flask REST endpoint patterns (e.g., `Face.patch` → `client.patch()`)
+   - HTTP method patterns (e.g., `Face.patch` → `client.patch()`)
+   - Common naming conventions
+3. **Cross-Validation** - Verifies against integration coverage reports
+4. **Line Count Filter** - Requires minimum 5 lines of code
+
+**Example Detection Logic:**
+
+```python
+# For Face.patch endpoint:
+search_patterns = [
+    "Face.patch",              # Direct function reference
+    "client.patch(",           # Flask test client call
+    "test_update_face",        # Common test naming
+    "/face-rekon/",           # Endpoint path
+]
+```
+
+#### Usage in /bump-coverage Auto Mode
+
+**Step 1.5: Run Smart Selection**
+
+```bash
+cd face-rekon
+python scripts/select_coverage_target.py --verbose --min-lines 5
+```
+
+**Example Output:**
+
+```
+Analyzing coverage data...
+Found 12 candidates with <50% coverage
+
+1. Evaluating: app.py::Face.patch (0.0%)
+   ⚠️  Found existing tests in: tests/integration/test_integration.py
+   Lines: 161-182 (test_update_face_endpoint with client.patch call)
+   ❌ Skipping - already covered
+
+2. Evaluating: app.py::update_face (0.0%)
+   ⚠️  Found existing tests in: tests/integration/test_integration.py
+   ❌ Skipping - already covered
+
+3. Evaluating: qdrant_adapter.py::QdrantAdapter._connect_with_retry (45.8%)
+   ✅ No existing tests found
+   ✅ Valid target found!
+
+Selected target: qdrant_adapter.py::QdrantAdapter._connect_with_retry
+Coverage: 45.8% (11/24 lines covered)
+```
+
+#### Benefits
+
+- ✅ **Prevents Duplicate Work** - Skips already-covered functions automatically
+- ✅ **Ensures Positive Delta** - Only selects truly uncovered targets
+- ✅ **Saves CI Resources** - No wasted PRs with +0.00% coverage
+- ✅ **Validates Coverage JSON** - Cross-checks against actual test files
+- ✅ **Smart Pattern Matching** - Detects Flask endpoints, REST methods, naming conventions
+
+#### Integration into Workflow
+
+The smart selection script is now integrated into the `/bump-coverage` command workflow:
+
+1. **Auto Mode Detection** - If no function specified, enters auto mode
+2. **Smart Selection** - Runs `select_coverage_target.py` to pick valid target
+3. **Validation** - Ensures selected function needs coverage improvement
+4. **Fallback** - If no valid target found, prompts for manual selection
+
+**Files Modified:**
+
+- `.claude/commands/bump-coverage.md` - Step 1.5 added for smart selection
+- `face-rekon/scripts/select_coverage_target.py` - Core validation script
+
+#### Lessons Learned (PR #135 Failure)
+
+**What Went Wrong:**
+
+- Coverage JSON showed `Face.patch: 0%` (stale/incomplete data)
+- Auto-selection picked it without validating existing tests
+- Created 7 new tests duplicating existing coverage
+- Coverage Health Check: Delta +0.00% (FAIL)
+
+**How Smart Selection Fixes This:**
+
+```bash
+# OLD approach (failed):
+# Just pick lowest coverage from JSON → duplicate work
+
+# NEW approach (smart):
+python scripts/select_coverage_target.py
+# → Finds Face.patch at 0%
+# → Searches test files for "client.patch"
+# → Finds test_update_face_endpoint in test_integration.py
+# → ❌ Skips (already covered)
+# → Picks next valid target (e.g., _connect_with_retry at 45.8%)
+```
+
+**Success Validation:**
+
+- ✅ No duplicate test creation
+- ✅ Coverage Health Check shows positive delta
+- ✅ Efficient use of development time
+- ✅ CI resources saved
+
 ### Complete Coverage Improvement Workflow (Proven Process)
 
 **This is the DEFINITIVE workflow that guarantees real, verifiable coverage gains in CI.**
