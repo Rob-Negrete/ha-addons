@@ -1,7 +1,8 @@
 ---
 description: "Systematically improve test coverage using comprehensive unit+integration testing strategy"
-usage: "/bump-coverage {target_percentage} [file] [method/endpoint] [additional_context]"
+usage: "/bump-coverage [target_percentage] [file] [method/endpoint] [additional_context]"
 examples:
+  - "/bump-coverage"
   - "/bump-coverage 60"
   - "/bump-coverage 55 app.py"
   - "/bump-coverage 65 integration"
@@ -13,7 +14,9 @@ examples:
 
 # Test Coverage Improvement Workflow
 
-I'll systematically improve test coverage to **$ARGUMENTS** using the comprehensive testing strategy developed for face-rekon.
+I'll systematically improve test coverage using the comprehensive testing strategy developed for face-rekon.
+
+**Mode:** ${ARGUMENTS:-auto mode with smart selection}
 
 This automated workflow will execute a proven 8-step coverage improvement process:
 
