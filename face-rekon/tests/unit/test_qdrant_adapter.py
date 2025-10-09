@@ -15,7 +15,7 @@ import pytest
 class TestQdrantAdapterRemoteMode:
     """Test suite for QdrantAdapter remote server connection mode."""
 
-    @patch.dict(os.environ, {"FACE_REKON_USE_EMBEDDED_QDRANT": "false"})
+    @patch("scripts.qdrant_adapter.USE_EMBEDDED_QDRANT", False)
     @patch("scripts.qdrant_adapter.QdrantClient")
     def test_remote_connection_success_first_attempt(self, mock_qdrant_client):
         """Test successful remote connection on first attempt."""
@@ -38,7 +38,7 @@ class TestQdrantAdapterRemoteMode:
         # Called twice: once for connection test, once for _ensure_collection
         assert mock_client_instance.get_collections.call_count == 2
 
-    @patch.dict(os.environ, {"FACE_REKON_USE_EMBEDDED_QDRANT": "false"})
+    @patch("scripts.qdrant_adapter.USE_EMBEDDED_QDRANT", False)
     @patch("scripts.qdrant_adapter.QdrantClient")
     @patch("scripts.qdrant_adapter.time.sleep")
     def test_remote_connection_retry_with_exponential_backoff(
@@ -70,7 +70,7 @@ class TestQdrantAdapterRemoteMode:
         mock_sleep.assert_any_call(1)  # 2^0
         mock_sleep.assert_any_call(2)  # 2^1
 
-    @patch.dict(os.environ, {"FACE_REKON_USE_EMBEDDED_QDRANT": "false"})
+    @patch("scripts.qdrant_adapter.USE_EMBEDDED_QDRANT", False)
     @patch("scripts.qdrant_adapter.QdrantClient")
     def test_remote_connection_failure_after_max_retries(self, mock_qdrant_client):
         """Test connection failure after exceeding max retries."""
