@@ -22,5 +22,13 @@ lib/python*/site-packages/*
 # Ignore face rekon container files
 face-rekon/config
 
-# Ignore coverage report
-htmlcov
+# Ignore coverage reports and temporary coverage files
+htmlcov/
+.coverage
+.coverage.*
+coverage*.xml
+coverage*.json
+coverage-data/
+**/htmlcov/
+**/.coverage
+**/.coverage-results/
