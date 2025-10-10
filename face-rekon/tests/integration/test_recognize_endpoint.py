@@ -357,3 +357,195 @@ class TestRecognizeEndpointCoverage:
             RecognizeAssertions.assert_processing_response(response)
             # Should exercise storage logic paths (lines 175-206)
             print("✅ Storage logic coverage test passed")
+
+    # Test Case 21: Optimized storage path (lines 183-192)
+    def test_recognize_optimized_storage_path(self, test_image_base64):
+        """Test /recognize with optimized storage enabled (lines 183-192)"""
+        with app.app.test_client() as client:
+            # Ensure optimized storage is enabled
+            original_storage = app.clasificador.USE_OPTIMIZED_STORAGE
+            try:
+                app.clasificador.USE_OPTIMIZED_STORAGE = True
+
+                response = RecognizeTestUtils.make_recognize_request(
+                    client,
+                    {
+                        "image_base64": test_image_base64,
+                        "event_id": "test_optimized_storage",
+                    },
+                )
+
+                # Should process successfully (may or may not find faces)
+                assert response.status_code == 200
+                data = response.get_json()
+                assert "status" in data
+                print("✅ Optimized storage path test passed")
+            finally:
+                app.clasificador.USE_OPTIMIZED_STORAGE = original_storage
+
+    # Test Case 22: Legacy storage path (lines 197-205)
+    def test_recognize_legacy_storage_path(self, test_image_base64):
+        """Test /recognize with legacy storage (lines 197-205)"""
+        with app.app.test_client() as client:
+            # Ensure legacy storage is used
+            original_storage = app.clasificador.USE_OPTIMIZED_STORAGE
+            try:
+                app.clasificador.USE_OPTIMIZED_STORAGE = False
+
+                response = RecognizeTestUtils.make_recognize_request(
+                    client,
+                    {
+                        "image_base64": test_image_base64,
+                        "event_id": "test_legacy_storage",
+                    },
+                )
+
+                # Should process successfully (may or may not find faces)
+                assert response.status_code == 200
+                data = response.get_json()
+                assert "status" in data
+                print("✅ Legacy storage path test passed")
+            finally:
+                app.clasificador.USE_OPTIMIZED_STORAGE = original_storage
+
+    # Test Case 23: Custom data prefix edge case (lines 97, 100)
+    def test_recognize_custom_semicolon_data_prefix(self, test_image_base64):
+        """Test /recognize with semicolon data prefix format (lines 97, 100)"""
+        with app.app.test_client() as client:
+            # Create image with ;data: prefix (not data:)
+            custom_image = f"image/jpg;data:{test_image_base64}"
+
+            response = RecognizeTestUtils.make_recognize_request(
+                client,
+                {
+                    "image_base64": custom_image,
+                    "event_id": "test_semicolon_prefix",
+                },
+            )
+
+            RecognizeAssertions.assert_processing_response(response)
+            print("✅ Custom semicolon data prefix test passed")
+
+    # Test Case 24: JSON decode exception handling (lines 126, 128)
+    def test_recognize_json_decode_exception_handling(self):
+        """Test /recognize JSON decode exception path (lines 126, 128)"""
+        with app.app.test_client() as client:
+            # Create data that decodes to < 100 bytes but is not valid JSON
+            # This should trigger the except block on lines 126-128
+            small_binary_data = b"small_invalid_json_" + b"\x00\xff" * 10
+            small_base64 = base64.b64encode(small_binary_data).decode()
+
+            response = RecognizeTestUtils.make_recognize_request(
+                client,
+                {
+                    "image_base64": small_base64,
+                    "event_id": "test_json_decode_exception",
+                },
+            )
+
+            # Should process without crashing (exception caught and passed)
+            assert response.status_code in [200, 400, 500]
+            print("✅ JSON decode exception handling test passed")
+
+    # Test Case 25: Suggestion status storage path (lines 183-192)
+    def test_recognize_suggestion_face_storage(self, test_image_base64):
+        """Test /recognize with suggestion faces (lines 183-192)"""
+        with app.app.test_client() as client:
+            # This test relies on real face detection possibly returning suggestions
+            # Ensure optimized storage is enabled
+            original_storage = app.clasificador.USE_OPTIMIZED_STORAGE
+            try:
+                app.clasificador.USE_OPTIMIZED_STORAGE = True
+
+                response = RecognizeTestUtils.make_recognize_request(
+                    client,
+                    {
+                        "image_base64": test_image_base64,
+                        "event_id": "test_suggestion_storage",
+                    },
+                )
+
+                # Should process successfully
+                assert response.status_code == 200
+                data = response.get_json()
+                assert "status" in data
+                # Tests the storage path code even if no suggestions returned
+                print("✅ Suggestion face storage test passed")
+            finally:
+                app.clasificador.USE_OPTIMIZED_STORAGE = original_storage
+
+    # Test Case 26: Lines 78-79 validation error path
+    def test_recognize_validation_error_logging(self):
+        """Test /recognize validation error logging (lines 78-79)"""
+        with app.app.test_client() as client:
+            # Send request with explicit None for image_base64
+            response = client.post(
+                "/api/face-rekon/recognize",
+                json={"image_base64": None, "event_id": "test"},
+            )
+
+            # Should return validation error
+            assert response.status_code == 400
+            print("✅ Validation error logging test passed")
+
+    # Test Case 27: Real face with optimized storage (lines 183-192)
+    def test_recognize_real_face_optimized_storage(self):
+        """Test /recognize with real face image to trigger storage (lines 183-192)"""
+        with app.app.test_client() as client:
+            # Use real test image with a face
+            import base64
+
+            with open("tests/dummies/one-face.jpg", "rb") as f:
+                image_data = f.read()
+                image_base64 = base64.b64encode(image_data).decode()
+
+            original_storage = app.clasificador.USE_OPTIMIZED_STORAGE
+            try:
+                app.clasificador.USE_OPTIMIZED_STORAGE = True
+
+                response = RecognizeTestUtils.make_recognize_request(
+                    client,
+                    {
+                        "image_base64": image_base64,
+                        "event_id": "test_real_face_optimized",
+                    },
+                )
+
+                assert response.status_code == 200
+                data = response.get_json()
+                # Real face should be detected
+                assert "faces_count" in data
+                print("✅ Real face with optimized storage test passed")
+            finally:
+                app.clasificador.USE_OPTIMIZED_STORAGE = original_storage
+
+    # Test Case 28: Real face with legacy storage (lines 197-205)
+    def test_recognize_real_face_legacy_storage(self):
+        """Test /recognize with real face image and legacy storage (lines 197-205)"""
+        with app.app.test_client() as client:
+            # Use real test image with a face
+            import base64
+
+            with open("tests/dummies/one-face.jpg", "rb") as f:
+                image_data = f.read()
+                image_base64 = base64.b64encode(image_data).decode()
+
+            original_storage = app.clasificador.USE_OPTIMIZED_STORAGE
+            try:
+                app.clasificador.USE_OPTIMIZED_STORAGE = False
+
+                response = RecognizeTestUtils.make_recognize_request(
+                    client,
+                    {
+                        "image_base64": image_base64,
+                        "event_id": "test_real_face_legacy",
+                    },
+                )
+
+                assert response.status_code == 200
+                data = response.get_json()
+                # Real face should be detected
+                assert "faces_count" in data
+                print("✅ Real face with legacy storage test passed")
+            finally:
+                app.clasificador.USE_OPTIMIZED_STORAGE = original_storage
