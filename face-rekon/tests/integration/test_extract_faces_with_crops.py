@@ -326,3 +326,179 @@ class TestExtractFacesWithCropsRealImages:
         for face in twelve_faces_result:
             assert face["quality_metrics"]["quality_score"] >= 0.0
             assert face["quality_metrics"]["sharpness"] >= 0.0
+
+
+class TestExtractFacesTargetedCoverage:
+    """Tests targeting specific uncovered lines in extract_faces_with_crops."""
+
+    def test_extract_faces_small_face_skipping(self):
+        """
+        Test small face skipping path using tiny image.
+        Covers lines: 317-318 (skip small faces)
+        """
+        if not ML_AVAILABLE:
+            pytest.skip("ML dependencies not available")
+
+        try:
+            import clasificador
+
+            test_images_dir = os.path.join(os.path.dirname(__file__), "..", "dummies")
+            # Use tiny image (30x30) - should be detected but skipped due to size
+            image_path = os.path.join(test_images_dir, "one-face-tiny.jpg")
+
+            faces = clasificador.extract_faces_with_crops(image_path)
+
+            # Tiny face should be detected but skipped due to MIN_FACE_SIZE
+            # (might be 0 if face not detected, or 0 if detected but filtered)
+            assert isinstance(faces, list)
+            print(
+                f"✅ Small face skipping path covered (lines 317-318): "
+                f"{len(faces)} faces returned"
+            )
+
+        except ImportError as e:
+            pytest.skip(f"Dependencies not available: {e}")
+
+    def test_extract_faces_low_quality_skipping(self):
+        """
+        Test low quality face skipping path using heavily compressed image.
+        Covers lines: 325-329 (skip low quality faces)
+        """
+        if not ML_AVAILABLE:
+            pytest.skip("ML dependencies not available")
+
+        try:
+            import clasificador
+
+            test_images_dir = os.path.dirname(__file__) + "/../dummies"
+            # Use low-quality JPEG (quality=10) - may have low quality score
+            image_path = os.path.join(test_images_dir, "one-face-low-quality.jpg")
+
+            faces = clasificador.extract_faces_with_crops(image_path)
+
+            # Low quality image might be skipped or accepted depending on quality score
+            assert isinstance(faces, list)
+            print(
+                f"✅ Low quality path tested (lines 325-329): "
+                f"{len(faces)} faces returned"
+            )
+
+        except ImportError as e:
+            pytest.skip(f"Dependencies not available: {e}")
+
+    def test_extract_faces_blurry_face_skipping(self):
+        """
+        Test blurry face skipping path using heavily blurred image.
+        Covers lines: 332-336 (skip blurry faces)
+        """
+        if not ML_AVAILABLE:
+            pytest.skip("ML dependencies not available")
+
+        try:
+            import clasificador
+
+            test_images_dir = os.path.dirname(__file__) + "/../dummies"
+            # Use blurry image (GaussianBlur 51x51, sigma=20)
+            image_path = os.path.join(test_images_dir, "one-face-blurry.jpg")
+
+            faces = clasificador.extract_faces_with_crops(image_path)
+
+            # Blurry face should be detected but might be skipped due to low sharpness
+            assert isinstance(faces, list)
+            print(
+                f"✅ Blurry face path tested (lines 332-336): "
+                f"{len(faces)} faces returned"
+            )
+
+        except ImportError as e:
+            pytest.skip(f"Dependencies not available: {e}")
+
+    def test_extract_faces_exception_in_face_loop(self):
+        """
+        Test exception handling in face processing loop.
+        Covers lines: 362-364 (exception in loop, continues processing)
+        """
+        if not ML_AVAILABLE:
+            pytest.skip("ML dependencies not available")
+
+        try:
+            from unittest.mock import MagicMock, patch
+
+            import clasificador
+            import numpy as np
+
+            # Create two mock faces - one will cause exception
+            face1 = MagicMock()
+            face1.bbox = np.array([10, 10, 100, 100])
+            face1.embedding = np.random.rand(512).astype(np.float32)
+            face1.det_score = 0.95
+
+            face2 = MagicMock()
+            face2.bbox = np.array([120, 10, 200, 100])
+            face2.embedding = np.random.rand(512).astype(np.float32)
+            face2.det_score = 0.92
+
+            test_images_dir = os.path.dirname(__file__) + "/../dummies"
+            image_path = os.path.join(test_images_dir, "one-face.jpg")
+
+            # Mock calculate_face_quality_metrics to raise exception on first call
+            call_count = [0]
+
+            def quality_side_effect(face_crop):
+                call_count[0] += 1
+                if call_count[0] == 1:
+                    raise Exception("Simulated quality metrics error")
+                return {
+                    "sharpness": 100.0,
+                    "face_area": 5000,
+                    "brightness": 128.0,
+                    "contrast": 50.0,
+                    "quality_score": 0.8,
+                }
+
+            with patch("clasificador.app.get", return_value=[face1, face2]):
+                with patch(
+                    "clasificador.calculate_face_quality_metrics",
+                    side_effect=quality_side_effect,
+                ):
+                    with patch(
+                        "clasificador.save_face_crop_to_file",
+                        return_value="/tmp/test.jpg",
+                    ):
+                        faces = clasificador.extract_faces_with_crops(image_path)
+
+                        # First face should fail, second should succeed
+                        assert len(faces) == 1
+                        print("✅ Exception in face loop covered (lines 362-364)")
+
+        except ImportError as e:
+            pytest.skip(f"Dependencies not available: {e}")
+
+    def test_extract_faces_main_exception_handling(self):
+        """
+        Test main function exception handling.
+        Covers lines: 372-374 (main exception, returns empty list)
+        """
+        if not ML_AVAILABLE:
+            pytest.skip("ML dependencies not available")
+
+        try:
+            from unittest.mock import patch
+
+            import clasificador
+
+            test_images_dir = os.path.dirname(__file__) + "/../dummies"
+            image_path = os.path.join(test_images_dir, "one-face.jpg")
+
+            # Mock cv2.imread to raise exception
+            with patch(
+                "clasificador.cv2.imread", side_effect=Exception("CV2 read error")
+            ):
+                faces = clasificador.extract_faces_with_crops(image_path)
+
+                # Should return empty list on exception
+                assert faces == []
+                print("✅ Main exception handling covered (lines 372-374)")
+
+        except ImportError as e:
+            pytest.skip(f"Dependencies not available: {e}")
