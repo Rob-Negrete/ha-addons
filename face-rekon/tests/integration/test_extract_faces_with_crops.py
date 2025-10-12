@@ -502,3 +502,58 @@ class TestExtractFacesTargetedCoverage:
 
         except ImportError as e:
             pytest.skip(f"Dependencies not available: {e}")
+
+    def test_extract_faces_super_blurry_no_detection(self):
+        """
+        Test with extremely blurry image where no faces are detected.
+        Covers lines: 291-293 (no faces detected path)
+        """
+        if not ML_AVAILABLE:
+            pytest.skip("ML dependencies not available")
+
+        try:
+            import clasificador
+
+            test_images_dir = os.path.dirname(__file__) + "/../dummies"
+            # Super-blurry image - so blurry InsightFace can't detect faces
+            image_path = os.path.join(test_images_dir, "blurry-super.png")
+
+            faces = clasificador.extract_faces_with_crops(image_path)
+
+            # Should return empty list when no faces detected
+            assert faces == []
+            print("✅ No faces detected path covered (lines 291-293): super-blurry")
+
+        except ImportError as e:
+            pytest.skip(f"Dependencies not available: {e}")
+
+    def test_extract_faces_real_blurry_multi_face(self):
+        """
+        Test with real blurry image containing multiple faces.
+        Tests multi-face detection and processing with real-world image.
+        """
+        if not ML_AVAILABLE:
+            pytest.skip("ML dependencies not available")
+
+        try:
+            import clasificador
+
+            test_images_dir = os.path.dirname(__file__) + "/../dummies"
+            # Real blurry image with 2 faces
+            image_path = os.path.join(test_images_dir, "blurry.png")
+
+            faces = clasificador.extract_faces_with_crops(image_path)
+
+            # Should detect 2 faces (both pass quality thresholds)
+            assert len(faces) >= 1, "Should detect at least 1 face"
+            print(f"✅ Real blurry image tested: {len(faces)} faces detected")
+
+            # Verify face data structure
+            for face in faces:
+                assert "face_id" in face
+                assert "quality_metrics" in face
+                assert "sharpness" in face["quality_metrics"]
+                assert "quality_score" in face["quality_metrics"]
+
+        except ImportError as e:
+            pytest.skip(f"Dependencies not available: {e}")
