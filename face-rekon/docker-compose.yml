@@ -23,6 +23,10 @@ services:
       - FACE_REKON_SIMILARITY_THRESHOLD=0.35
       - FACE_REKON_BORDERLINE_THRESHOLD=0.50
       - FACE_REKON_DEDUPLICATION_WINDOW=60
+      - FACE_REKON_USE_SUPER_RESOLUTION=true
+      - FACE_REKON_SR_THRESHOLD=200
+      - FACE_REKON_SR_SCALE=4
+      - FACE_REKON_ADAPTIVE_INTERPOLATION=true
     volumes:
       - ./config:/config
       - ./tmp:/app/data/tmp # adjust as needed, depending on your local setup

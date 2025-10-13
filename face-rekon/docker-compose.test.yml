@@ -60,6 +60,11 @@ services:
       - FACE_REKON_BASE_PATH=/tmp/test_faces
       - FACE_REKON_UNKNOWN_PATH=/tmp/test_unknowns
       - FACE_REKON_THUMBNAIL_PATH=/tmp/test_thumbnails
+      # Super-resolution configuration (Real-ESRGAN)
+      - FACE_REKON_USE_SUPER_RESOLUTION=true
+      - FACE_REKON_SR_THRESHOLD=200
+      - FACE_REKON_SR_SCALE=4
+      - FACE_REKON_ADAPTIVE_INTERPOLATION=true
     deploy:
       resources:
         limits:

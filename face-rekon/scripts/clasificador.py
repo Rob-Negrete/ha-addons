@@ -76,6 +76,9 @@ USE_SUPER_RESOLUTION = (
 SR_THRESHOLD = int(
     os.environ.get("FACE_REKON_SR_THRESHOLD", "100")
 )  # Apply SR to faces smaller than this
+SR_SCALE = int(
+    os.environ.get("FACE_REKON_SR_SCALE", "2")
+)  # Super-resolution upscaling factor (2 or 4)
 ADAPTIVE_INTERPOLATION = (
     os.environ.get("FACE_REKON_ADAPTIVE_INTERPOLATION", "true").lower() == "true"
 )  # Use adaptive interpolation (always recommended)
@@ -284,9 +287,12 @@ def apply_unsharp_mask(
 
 def apply_super_resolution(face_crop: np.ndarray, scale: int = 2) -> np.ndarray:
     """
-    Apply super-resolution to upscale small faces.
+    Apply super-resolution to upscale small faces using Real-ESRGAN.
 
-    Uses Real-ESRGAN model for high-quality upscaling.
+    Uses Real-ESRGAN (general purpose SR) which is more conservative than GFPGAN
+    and doesn't hallucinate facial features. Better for tiny faces where we want
+    realistic upscaling without creative "enhancements".
+
     This function is only called when USE_SUPER_RESOLUTION=true.
 
     Args:
@@ -301,51 +307,83 @@ def apply_super_resolution(face_crop: np.ndarray, scale: int = 2) -> np.ndarray:
         from basicsr.archs.rrdbnet_arch import RRDBNet
         from realesrgan import RealESRGANer
 
-        # Initialize model (cached globally after first use)
-        if not hasattr(apply_super_resolution, "model"):
-            logger.info("🚀 Initializing Real-ESRGAN model...")
+        # Initialize Real-ESRGAN model (cached globally after first use)
+        if not hasattr(apply_super_resolution, "realesrgan_model"):
+            logger.info("🚀 Initializing Real-ESRGAN model (general purpose SR)...")
 
-            # Use lightweight x2 model for faces
+            # Use RealESRGAN_x4plus for 4x upscaling (or x2 for 2x)
+            model_name = "RealESRGAN_x4plus" if scale == 4 else "RealESRGAN_x2plus"
+
+            # Initialize RRDBNet model architecture
             model = RRDBNet(
                 num_in_ch=3,
                 num_out_ch=3,
                 num_feat=64,
                 num_block=23,
                 num_grow_ch=32,
-                scale=2,
+                scale=scale,
             )
 
-            model_path = os.environ.get(
-                "FACE_REKON_SR_MODEL_PATH",
-                "/app/models/RealESRGAN_x2plus.pth",
-            )
+            # Model download URLs (Real-ESRGAN official releases)
+            model_urls = {
+                "RealESRGAN_x2plus": (
+                    "https://github.com/xinntao/Real-ESRGAN/releases/"
+                    "download/v0.2.1/RealESRGAN_x2plus.pth"
+                ),
+                "RealESRGAN_x4plus": (
+                    "https://github.com/xinntao/Real-ESRGAN/releases/"
+                    "download/v0.1.0/RealESRGAN_x4plus.pth"
+                ),
+            }
 
+            # Initialize Real-ESRGAN upsampler
             upsampler = RealESRGANer(
-                scale=2,
-                model_path=model_path,
+                scale=scale,
+                model_path=model_urls[model_name],
                 model=model,
-                tile=0,  # No tiling for small faces
+                tile=0,  # No tiling for small face crops
                 tile_pad=10,
                 pre_pad=0,
-                half=False,  # Use FP32 for CPU
+                half=False,  # Use FP32 for better quality
             )
 
-            apply_super_resolution.model = upsampler
-            logger.info("✅ Real-ESRGAN model loaded")
+            apply_super_resolution.realesrgan_model = upsampler
+            logger.info(
+                f"✅ Real-ESRGAN model loaded (scale={scale}x, model={model_name})"
+            )
 
-        # Apply super-resolution
-        output, _ = apply_super_resolution.model.enhance(face_crop, outscale=scale)
-
-        return output
-
-    except ImportError:
-        logger.warning(
-            "⚠️ Real-ESRGAN not installed. Install with: "
-            "pip install realesrgan basicsr"
+        # Apply Real-ESRGAN enhancement
+        logger.info(
+            f"🔍 Applying Real-ESRGAN to crop: "
+            f"shape={face_crop.shape}, scale={scale}x"
         )
+
+        try:
+            # Real-ESRGAN.enhance() returns (output, _)
+            output, _ = apply_super_resolution.realesrgan_model.enhance(
+                face_crop, outscale=scale
+            )
+
+            if output is not None:
+                logger.info(
+                    f"✅ Real-ESRGAN enhanced: {face_crop.shape} → {output.shape}"
+                )
+                return output
+            else:
+                logger.warning("⚠️ Real-ESRGAN returned None, using original")
+                return face_crop
+
+        except Exception as realesrgan_error:
+            logger.error(f"❌ Real-ESRGAN enhance() failed: {realesrgan_error}")
+            logger.exception(realesrgan_error)
+            return face_crop
+
+    except ImportError as e:
+        logger.warning(f"⚠️ Real-ESRGAN not installed: {e}")
         return face_crop
     except Exception as e:
-        logger.error(f"❌ Error in super-resolution: {e}")
+        logger.error(f"❌ Error in Real-ESRGAN super-resolution: {e}")
+        logger.exception(e)
         return face_crop  # Fallback to original
 
 
@@ -464,18 +502,16 @@ def create_enhanced_thumbnail_hybrid(
         # Step 1: Check if super-resolution is needed and enabled
         if USE_SUPER_RESOLUTION and max_dim < SR_THRESHOLD:
             logger.info(
-                f"🎯 Applying super-resolution to tiny face "
-                f"({max_dim}px < {SR_THRESHOLD}px threshold)"
+                f"🎯 Applying Real-ESRGAN super-resolution to tiny face "
+                f"({max_dim}px < {SR_THRESHOLD}px threshold, scale={SR_SCALE}x)"
             )
 
-            # Upscale 2x with SR
-            face_crop = apply_super_resolution(face_crop, scale=2)
+            # Upscale with Real-ESRGAN (using SR_SCALE from config)
+            face_crop = apply_super_resolution(face_crop, scale=SR_SCALE)
 
             # Log new size after SR
             h_new, w_new = face_crop.shape[:2]
-            logger.info(
-                f"✨ Super-resolution complete: {max_dim}px → {max(h_new, w_new)}px"
-            )
+            logger.info(f"✨ Real-ESRGAN complete: {max_dim}px → {max(h_new, w_new)}px")
 
         # Step 2: Apply adaptive interpolation (always, even after SR)
         if ADAPTIVE_INTERPOLATION:
