@@ -2,10 +2,8 @@
 """
 Coverage Health Check Script for ha-addons repository.
 
-This script analyzes test coverage and provides health status indicators:
-- 🟢 Green: Coverage maintained or improved (≥80%)
-- 🟡 Amber: Minor coverage decrease (70-79%)
-- 🔴 Red: Significant coverage drop (<70%)
+This script analyzes test coverage and provides health status indicators.
+All thresholds are centralized in .github/config/coverage-thresholds.yml.
 """
 
 import ast
@@ -15,19 +13,23 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
+# Import centralized coverage configuration
+from coverage_config import CoverageConfig
+
 
 class CoverageHealthChecker:
-    def __init__(self, baseline_coverage: float = 80.0):
+    def __init__(self, config: Optional[CoverageConfig] = None):
         """
         Initialize coverage health checker.
 
         Args:
-            baseline_coverage: The baseline coverage percentage to maintain
+            config: CoverageConfig instance (uses default if None)
         """
-        self.baseline = baseline_coverage
-        self.green_threshold = baseline_coverage  # ≥baseline%
-        self.amber_threshold = max(70.0, baseline_coverage - 10.0)  # 10% below baseline
-        # Red threshold < amber%
+        self.config = config or CoverageConfig()
+        self.baseline = self.config.baseline_coverage
+        self.green_threshold = self.config.green_threshold
+        self.amber_threshold = self.config.amber_threshold
+        # Red threshold < amber threshold
 
     def extract_functions_from_source(self, filepath: Path) -> List[Dict]:
         """
@@ -461,13 +463,8 @@ class CoverageHealthChecker:
                     covered_lines = item["covered_lines"]
                     all_lines = item["all_lines"]
 
-                    # Determine file-level priority
-                    if file_coverage < 60:
-                        file_priority = "🔴 HIGH"
-                    elif file_coverage < 80:
-                        file_priority = "🟡 MEDIUM"
-                    else:
-                        file_priority = "🟢 LOW"
+                    # Determine file-level priority using centralized config
+                    file_priority = self.config.get_file_priority(file_coverage)
 
                     # Try to find source file and extract functions
                     source_path = Path.cwd() / "scripts" / file_name
@@ -646,11 +643,10 @@ def main():
         print(f"❌ Primary coverage file not found: {primary_coverage_file}")
         sys.exit(1)
 
-    # Initialize checker with baseline from environment or default
-    import os
-
-    baseline_percentage = float(os.getenv("BASELINE_COVERAGE", "80.0"))
-    checker = CoverageHealthChecker(baseline_percentage)
+    # Initialize checker with centralized configuration
+    # (config automatically reads from .github/config/coverage-thresholds.yml)
+    config = CoverageConfig()
+    checker = CoverageHealthChecker(config)
 
     # Discover all available coverage files for comprehensive analysis
     current_dir = Path.cwd()
