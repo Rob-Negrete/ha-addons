@@ -146,6 +146,8 @@ class TestEnhancedThumbnailsRealML:
 
         Embeddings from enhanced thumbnails should be closer to original
         face embeddings than old method.
+
+        NOTE: This test disables Real-ESRGAN to test adaptive interpolation only.
         """
         if not ML_AVAILABLE:
             pytest.skip("ML dependencies not available")
@@ -153,95 +155,108 @@ class TestEnhancedThumbnailsRealML:
         try:
             import clasificador
 
-            # Initialize InsightFace
-            app = FaceAnalysis(providers=["CPUExecutionProvider"])
-            app.prepare(ctx_id=0, det_size=(640, 640))
+            # Disable Real-ESRGAN for this test (testing adaptive interpolation only)
+            original_sr = clasificador.USE_SUPER_RESOLUTION
+            clasificador.USE_SUPER_RESOLUTION = False
 
-            # Load test image
-            test_image_path = "tests/dummies/three-tiny-faces.png"
-            img = cv2.imread(test_image_path)
-            assert img is not None
+            try:
+                # Initialize InsightFace
+                app = FaceAnalysis(providers=["CPUExecutionProvider"])
+                app.prepare(ctx_id=0, det_size=(640, 640))
 
-            # Detect faces
-            faces = app.get(img)
-            assert len(faces) > 0
+                # Load test image
+                test_image_path = "tests/dummies/three-tiny-faces.png"
+                img = cv2.imread(test_image_path)
+                assert img is not None
 
-            print(f"\n🎯 Testing embedding preservation for {len(faces)} faces")
+                # Detect faces
+                faces = app.get(img)
+                assert len(faces) > 0
 
-            old_distances = []
-            new_distances = []
+                print(f"\n🎯 Testing embedding preservation for {len(faces)} faces")
 
-            for i, face in enumerate(faces, 1):
-                # Extract face crop
-                bbox = face.bbox.astype(int)
-                x1, y1, x2, y2 = bbox
-                padding = 20
-                x1_padded = max(0, x1 - padding)
-                y1_padded = max(0, y1 - padding)
-                x2_padded = min(img.shape[1], x2 + padding)
-                y2_padded = min(img.shape[0], y2 + padding)
-                face_crop = img[y1_padded:y2_padded, x1_padded:x2_padded]
+                old_distances = []
+                new_distances = []
 
-                # Original embedding
-                original_embedding = face.embedding
+                for i, face in enumerate(faces, 1):
+                    # Extract face crop
+                    bbox = face.bbox.astype(int)
+                    x1, y1, x2, y2 = bbox
+                    padding = 20
+                    x1_padded = max(0, x1 - padding)
+                    y1_padded = max(0, y1 - padding)
+                    x2_padded = min(img.shape[1], x2 + padding)
+                    y2_padded = min(img.shape[0], y2 + padding)
+                    face_crop = img[y1_padded:y2_padded, x1_padded:x2_padded]
 
-                # OLD method thumbnail → embedding
-                old_thumbnail = cv2.resize(
-                    face_crop, (160, 160), interpolation=cv2.INTER_AREA
-                )
-                old_thumb_full = cv2.resize(
-                    old_thumbnail, (face_crop.shape[1], face_crop.shape[0])
-                )
-                old_faces = app.get(old_thumb_full)
+                    # Original embedding
+                    original_embedding = face.embedding
 
-                # NEW method thumbnail → embedding
-                new_thumbnail = clasificador.create_enhanced_thumbnail_hybrid(
-                    face_crop, (160, 160)
-                )
-                new_thumb_full = cv2.resize(
-                    new_thumbnail, (face_crop.shape[1], face_crop.shape[0])
-                )
-                new_faces = app.get(new_thumb_full)
-
-                if old_faces and new_faces:
-                    # Cosine distance
-                    def cosine_distance(emb1, emb2):
-                        return float(np.linalg.norm(emb1 - emb2))
-
-                    old_dist = cosine_distance(
-                        original_embedding, old_faces[0].embedding
+                    # OLD method thumbnail → embedding
+                    old_thumbnail = cv2.resize(
+                        face_crop, (160, 160), interpolation=cv2.INTER_AREA
                     )
-                    new_dist = cosine_distance(
-                        original_embedding, new_faces[0].embedding
+                    old_thumb_full = cv2.resize(
+                        old_thumbnail, (face_crop.shape[1], face_crop.shape[0])
                     )
+                    old_faces = app.get(old_thumb_full)
 
-                    old_distances.append(old_dist)
-                    new_distances.append(new_dist)
+                    # NEW method thumbnail → embedding
+                    new_thumbnail = clasificador.create_enhanced_thumbnail_hybrid(
+                        face_crop, (160, 160)
+                    )
+                    new_thumb_full = cv2.resize(
+                        new_thumbnail, (face_crop.shape[1], face_crop.shape[0])
+                    )
+                    new_faces = app.get(new_thumb_full)
 
-                    improvement = (old_dist - new_dist) / old_dist * 100
+                    if old_faces and new_faces:
+                        # Cosine distance
+                        def cosine_distance(emb1, emb2):
+                            return float(np.linalg.norm(emb1 - emb2))
+
+                        old_dist = cosine_distance(
+                            original_embedding, old_faces[0].embedding
+                        )
+                        new_dist = cosine_distance(
+                            original_embedding, new_faces[0].embedding
+                        )
+
+                        old_distances.append(old_dist)
+                        new_distances.append(new_dist)
+
+                        improvement = (old_dist - new_dist) / old_dist * 100
+                        print(
+                            f"   Face {i}: OLD dist={old_dist:.4f}, "
+                            f"NEW dist={new_dist:.4f}, "
+                            f"Improvement={improvement:+.1f}%"
+                        )
+
+                if len(old_distances) > 0:
+                    avg_old_dist = np.mean(old_distances)
+                    avg_new_dist = np.mean(new_distances)
+                    avg_improvement = (avg_old_dist - avg_new_dist) / avg_old_dist * 100
+
                     print(
-                        f"   Face {i}: OLD dist={old_dist:.4f}, "
-                        f"NEW dist={new_dist:.4f}, "
-                        f"Improvement={improvement:+.1f}%"
+                        f"\n   ✅ Average embedding preservation: "
+                        f"{avg_improvement:+.1f}%"
                     )
 
-            if len(old_distances) > 0:
-                avg_old_dist = np.mean(old_distances)
-                avg_new_dist = np.mean(new_distances)
-                avg_improvement = (avg_old_dist - avg_new_dist) / avg_old_dist * 100
+                    # Assert embedding improvement or at least no degradation
+                    assert avg_new_dist <= avg_old_dist * 1.05, (
+                        f"NEW method should preserve embeddings, "
+                        f"but distance increased: "
+                        f"{avg_old_dist:.4f} → {avg_new_dist:.4f}"
+                    )
 
-                print(f"\n   ✅ Average embedding preservation: {avg_improvement:+.1f}%")
+                    print(
+                        f"🎉 SUCCESS: Embeddings preserved "
+                        f"(improvement: {avg_improvement:+.1f}%)"
+                    )
 
-                # Assert embedding improvement or at least no degradation
-                assert avg_new_dist <= avg_old_dist * 1.05, (
-                    f"NEW method should preserve embeddings, "
-                    f"but distance increased: {avg_old_dist:.4f} → {avg_new_dist:.4f}"
-                )
-
-                print(
-                    f"🎉 SUCCESS: Embeddings preserved "
-                    f"(improvement: {avg_improvement:+.1f}%)"
-                )
+            finally:
+                # Restore original SR setting
+                clasificador.USE_SUPER_RESOLUTION = original_sr
 
         except ImportError as e:
             pytest.skip(f"Dependencies not available: {e}")
