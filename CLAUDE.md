@@ -410,7 +410,7 @@ docker-compose -f docker-compose.test.yml run --rm integration-tests \
 
 **Multi-Layer Validation Process:**
 
-1. **Coverage JSON Analysis** - Identifies functions with <50% coverage
+1. **Coverage JSON Analysis** - Identifies functions with <80% coverage
 2. **Test File Pattern Search** - Searches all test files for existing coverage:
    - Function name patterns (e.g., `update_face` → `test_update_face_endpoint`)
    - Flask REST endpoint patterns (e.g., `Face.patch` → `client.patch()`)
@@ -444,7 +444,7 @@ python tests/utils/select_coverage_target.py --verbose --min-lines 5
 
 ```
 Analyzing coverage data...
-Found 12 candidates with <50% coverage
+Found 12 candidates with <80% coverage
 
 1. Evaluating: app.py::Face.patch (0.0%)
    ⚠️  Found existing tests in: tests/integration/test_integration.py
@@ -676,7 +676,7 @@ python tests/utils/select_coverage_target.py
 
     - **CRITICAL**: Coverage must show improvement vs baseline
     - Status must be: 🟢 PASS
-    - Coverage % must exceed 72% baseline
+    - Coverage % must exceed 80% baseline
     - If delta is 0 or negative, investigate and fix before merging
 
 13. **Merge When All Green**
@@ -692,7 +692,7 @@ python tests/utils/select_coverage_target.py
 - ✅ Docker Build Test: PASS
 - ✅ Test Face Rekon: PASS
 - ✅ Coverage Health Check: PASS with positive delta
-- ✅ Overall coverage: ≥72% (preferably improved)
+- ✅ Overall coverage: ≥80% (preferably improved)
 - ✅ All linting rules followed (black, isort, flake8)
 - ✅ No ML dependency mocking in integration tests
 

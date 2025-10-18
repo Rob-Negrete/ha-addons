@@ -285,7 +285,7 @@ jobs:
       - name: Run coverage health analysis
         id: coverage-health
         env:
-          BASELINE_COVERAGE: "72.0"
+          BASELINE_COVERAGE: "80.0"
         run: |
           # Restore coverage files from /tmp (where they were saved before git checkouts)
           echo "🔄 Restoring coverage files from /tmp"
