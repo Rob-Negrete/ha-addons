@@ -177,6 +177,58 @@ def example_function():
     """
 ```
 
+## Coverage Configuration (Centralized)
+
+**⚠️ IMPORTANT:** All coverage baselines and thresholds are now centralized in a single configuration file.
+
+### Configuration File
+
+**Location:** [`.github/config/coverage-thresholds.yml`](.github/config/coverage-thresholds.yml)
+
+This YAML file is the **single source of truth** for all coverage-related values:
+
+- Baseline coverage percentage (currently: 80%)
+- Status thresholds (Green/Amber/Red)
+- File priority thresholds
+- Smart target selection criteria
+
+### How to Change Coverage Baseline
+
+**✅ NEW WAY (Recommended):**
+
+1. Edit `.github/config/coverage-thresholds.yml`
+2. Update `baseline_coverage` and related thresholds
+3. Commit the file
+4. All scripts and workflows automatically use the new values
+
+**❌ OLD WAY (Deprecated):**
+
+- Don't manually edit Python scripts or workflow files
+- Don't hardcode threshold values in multiple places
+
+### Benefits
+
+- ✅ **Single file update** changes baseline everywhere
+- ✅ **No code changes** needed to adjust thresholds
+- ✅ **Self-documenting** YAML configuration
+- ✅ **Type-safe** Python module with properties
+- ✅ **Backward compatible** with environment variables
+
+### Documentation
+
+See [`.github/config/README.md`](.github/config/README.md) for complete documentation on:
+
+- Configuration structure
+- Usage examples
+- How to change baselines
+- Testing configuration changes
+
+### Scripts Using Centralized Config
+
+1. **Coverage Health Check** (`.github/scripts/coverage-health.py`)
+2. **Smart Target Selection** (`face-rekon/tests/utils/select_coverage_target.py`)
+3. **GitHub Actions Workflow** (`.github/workflows/coverage-health.yml`)
+
 ## Project Analysis Summary (face-rekon)
 
 **Primary Goal:** Home Assistant add-on for real-time face recognition that identifies people from camera images using AI/ML models.
@@ -410,7 +462,7 @@ docker-compose -f docker-compose.test.yml run --rm integration-tests \
 
 **Multi-Layer Validation Process:**
 
-1. **Coverage JSON Analysis** - Identifies functions with <50% coverage
+1. **Coverage JSON Analysis** - Identifies functions with <80% coverage
 2. **Test File Pattern Search** - Searches all test files for existing coverage:
    - Function name patterns (e.g., `update_face` → `test_update_face_endpoint`)
    - Flask REST endpoint patterns (e.g., `Face.patch` → `client.patch()`)
@@ -444,7 +496,7 @@ python tests/utils/select_coverage_target.py --verbose --min-lines 5
 
 ```
 Analyzing coverage data...
-Found 12 candidates with <50% coverage
+Found 12 candidates with <80% coverage
 
 1. Evaluating: app.py::Face.patch (0.0%)
    ⚠️  Found existing tests in: tests/integration/test_integration.py
@@ -676,7 +728,7 @@ python tests/utils/select_coverage_target.py
 
     - **CRITICAL**: Coverage must show improvement vs baseline
     - Status must be: 🟢 PASS
-    - Coverage % must exceed 72% baseline
+    - Coverage % must exceed 80% baseline
     - If delta is 0 or negative, investigate and fix before merging
 
 13. **Merge When All Green**
@@ -692,7 +744,7 @@ python tests/utils/select_coverage_target.py
 - ✅ Docker Build Test: PASS
 - ✅ Test Face Rekon: PASS
 - ✅ Coverage Health Check: PASS with positive delta
-- ✅ Overall coverage: ≥72% (preferably improved)
+- ✅ Overall coverage: ≥80% (preferably improved)
 - ✅ All linting rules followed (black, isort, flake8)
 - ✅ No ML dependency mocking in integration tests
 

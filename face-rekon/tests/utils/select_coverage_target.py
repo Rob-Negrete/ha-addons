@@ -3,7 +3,8 @@
 Smart coverage target selection for /bump-coverage workflow.
 
 This script analyzes coverage data and validates that the selected function
-truly has 0% coverage by checking against actual test execution results.
+truly has low coverage by checking against actual test execution results.
+All thresholds are centralized in .github/config/coverage-thresholds.yml.
 
 Usage:
     python scripts/select_coverage_target.py [--min-lines MIN] [--exclude PATTERN]
@@ -16,6 +17,11 @@ import sys
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
+# Add .github/scripts to path for importing centralized coverage config
+sys.path.insert(0, str(Path(__file__).parent / "../../../.github/scripts"))
+
+from coverage_config import get_config  # noqa: E402
+
 
 def parse_coverage_json(json_path: Path) -> Dict:
     """Parse coverage JSON file."""
@@ -24,19 +30,24 @@ def parse_coverage_json(json_path: Path) -> Dict:
 
 
 def extract_functions_with_low_coverage(
-    coverage_data: Dict, min_lines: int = 5, max_coverage: float = 50.0
+    coverage_data: Dict, min_lines: int = None, max_coverage: float = None
 ) -> List[Dict]:
     """
     Extract functions with coverage below threshold.
 
     Args:
         coverage_data: Parsed coverage JSON
-        min_lines: Minimum number of lines for a function to be considered
-        max_coverage: Maximum coverage percentage to include
+        min_lines: Minimum number of lines (uses config default if None)
+        max_coverage: Maximum coverage percentage (uses config default if None)
 
     Returns:
         List of function dictionaries sorted by coverage (lowest first)
     """
+    config = get_config()
+    if min_lines is None:
+        min_lines = config.min_lines
+    if max_coverage is None:
+        max_coverage = config.max_coverage_threshold
     functions = []
 
     for file_path, file_data in coverage_data.get("files", {}).items():
@@ -179,8 +190,9 @@ def validate_with_actual_coverage(
                 if func_name == function_info["function"]:
                     actual_coverage = func_data["summary"]["percent_covered"]
 
-                    # If actual coverage is > 50%, this function is already covered
-                    if actual_coverage > 50.0:
+                    # If actual coverage is above threshold, skip it
+                    config = get_config()
+                    if actual_coverage > config.max_coverage_threshold:
                         print(
                             f"⚠️  {function_info['function']} shows "
                             f"{actual_coverage:.1f}% coverage in "
@@ -239,18 +251,23 @@ def select_target(
         print("❌ No coverage JSON found. Run tests first.", file=sys.stderr)
         return None
 
-    # Extract low-coverage functions
+    # Extract low-coverage functions (uses centralized config defaults)
+    config = get_config()
     candidates = extract_functions_with_low_coverage(
-        coverage_data, min_lines=min_lines, max_coverage=50.0
+        coverage_data, min_lines=min_lines  # max_coverage uses config default
     )
 
     if not candidates:
-        print("✅ All functions have >50% coverage!", file=sys.stderr)
+        print(
+            f"✅ All functions have >{config.max_coverage_threshold}% coverage!",
+            file=sys.stderr,
+        )
         return None
 
     if verbose:
         print(
-            f"\n📋 Found {len(candidates)} functions with <50% coverage",
+            f"\n📋 Found {len(candidates)} functions with "
+            f"<{config.max_coverage_threshold}% coverage",
             file=sys.stderr,
         )
 

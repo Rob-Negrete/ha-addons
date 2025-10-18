@@ -284,9 +284,9 @@ jobs:
 
       - name: Run coverage health analysis
         id: coverage-health
-        env:
-          BASELINE_COVERAGE: "72.0"
         run: |
+          # Coverage thresholds are now centralized in .github/config/coverage-thresholds.yml
+          # The coverage-health.py script automatically reads from this file
           # Restore coverage files from /tmp (where they were saved before git checkouts)
           echo "🔄 Restoring coverage files from /tmp"
           if [ -d "/tmp/coverage-pr" ]; then
