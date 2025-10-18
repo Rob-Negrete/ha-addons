@@ -24,7 +24,7 @@ def parse_coverage_json(json_path: Path) -> Dict:
 
 
 def extract_functions_with_low_coverage(
-    coverage_data: Dict, min_lines: int = 5, max_coverage: float = 50.0
+    coverage_data: Dict, min_lines: int = 5, max_coverage: float = 80.0
 ) -> List[Dict]:
     """
     Extract functions with coverage below threshold.
@@ -32,7 +32,7 @@ def extract_functions_with_low_coverage(
     Args:
         coverage_data: Parsed coverage JSON
         min_lines: Minimum number of lines for a function to be considered
-        max_coverage: Maximum coverage percentage to include
+        max_coverage: Maximum coverage percentage to include (default: 80%)
 
     Returns:
         List of function dictionaries sorted by coverage (lowest first)
@@ -179,8 +179,8 @@ def validate_with_actual_coverage(
                 if func_name == function_info["function"]:
                     actual_coverage = func_data["summary"]["percent_covered"]
 
-                    # If actual coverage is > 50%, this function is already covered
-                    if actual_coverage > 50.0:
+                    # If actual coverage is > 80%, this function is already covered
+                    if actual_coverage > 80.0:
                         print(
                             f"⚠️  {function_info['function']} shows "
                             f"{actual_coverage:.1f}% coverage in "
@@ -241,16 +241,16 @@ def select_target(
 
     # Extract low-coverage functions
     candidates = extract_functions_with_low_coverage(
-        coverage_data, min_lines=min_lines, max_coverage=50.0
+        coverage_data, min_lines=min_lines, max_coverage=80.0
     )
 
     if not candidates:
-        print("✅ All functions have >50% coverage!", file=sys.stderr)
+        print("✅ All functions have >80% coverage!", file=sys.stderr)
         return None
 
     if verbose:
         print(
-            f"\n📋 Found {len(candidates)} functions with <50% coverage",
+            f"\n📋 Found {len(candidates)} functions with <80% coverage",
             file=sys.stderr,
         )
 

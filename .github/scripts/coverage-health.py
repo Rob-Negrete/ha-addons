@@ -3,9 +3,9 @@
 Coverage Health Check Script for ha-addons repository.
 
 This script analyzes test coverage and provides health status indicators:
-- 🟢 Green: Coverage maintained or improved (≥72%)
-- 🟡 Amber: Minor coverage decrease (65-71%)
-- 🔴 Red: Significant coverage drop (<65%)
+- 🟢 Green: Coverage maintained or improved (≥80%)
+- 🟡 Amber: Minor coverage decrease (70-79%)
+- 🔴 Red: Significant coverage drop (<70%)
 """
 
 import ast
@@ -17,7 +17,7 @@ from typing import Dict, List, Optional, Tuple
 
 
 class CoverageHealthChecker:
-    def __init__(self, baseline_coverage: float = 72.0):
+    def __init__(self, baseline_coverage: float = 80.0):
         """
         Initialize coverage health checker.
 
@@ -26,7 +26,7 @@ class CoverageHealthChecker:
         """
         self.baseline = baseline_coverage
         self.green_threshold = baseline_coverage  # ≥baseline%
-        self.amber_threshold = max(65.0, baseline_coverage - 7.0)  # 7% below baseline
+        self.amber_threshold = max(70.0, baseline_coverage - 10.0)  # 10% below baseline
         # Red threshold < amber%
 
     def extract_functions_from_source(self, filepath: Path) -> List[Dict]:
@@ -462,9 +462,9 @@ class CoverageHealthChecker:
                     all_lines = item["all_lines"]
 
                     # Determine file-level priority
-                    if file_coverage < 50:
+                    if file_coverage < 60:
                         file_priority = "🔴 HIGH"
-                    elif file_coverage < 65:
+                    elif file_coverage < 80:
                         file_priority = "🟡 MEDIUM"
                     else:
                         file_priority = "🟢 LOW"
@@ -649,7 +649,7 @@ def main():
     # Initialize checker with baseline from environment or default
     import os
 
-    baseline_percentage = float(os.getenv("BASELINE_COVERAGE", "72.0"))
+    baseline_percentage = float(os.getenv("BASELINE_COVERAGE", "80.0"))
     checker = CoverageHealthChecker(baseline_percentage)
 
     # Discover all available coverage files for comprehensive analysis
