@@ -545,6 +545,14 @@ def create_face_thumbnail(face_crop: np.ndarray) -> str:
         Base64-encoded JPEG thumbnail
     """
     try:
+        # Validate input dimensions (must be 2D or 3D array)
+        if len(face_crop.shape) not in [2, 3]:
+            logger.error(
+                f"❌ Invalid array dimensions: {face_crop.shape}. "
+                "Expected 2D (grayscale) or 3D (color) array."
+            )
+            return ""
+
         # Use enhanced hybrid thumbnail generation
         thumbnail = create_enhanced_thumbnail_hybrid(face_crop, THUMBNAIL_SIZE)
 
