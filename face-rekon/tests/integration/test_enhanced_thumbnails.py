@@ -605,6 +605,156 @@ class TestSuperResolutionRealESRGAN:
         except ImportError as e:
             pytest.skip(f"Real-ESRGAN dependencies not available: {e}")
 
+    def test_super_resolution_import_error_fallback(self):
+        """Test that apply_super_resolution falls back gracefully on ImportError."""
+        if not ML_AVAILABLE:
+            pytest.skip("ML dependencies not available")
+
+        try:
+            import sys
+            from unittest import mock
+
+            import clasificador
+
+            # Create test face
+            test_face = np.random.randint(0, 256, (80, 80, 3), dtype=np.uint8)
+
+            # Mock import to raise ImportError
+            with mock.patch.dict(sys.modules, {"basicsr.archs.rrdbnet_arch": None}):
+                with mock.patch("clasificador.logger.warning") as mock_warning:
+                    result = clasificador.apply_super_resolution(test_face, scale=2)
+
+                    # Should return original image
+                    assert result is test_face
+                    # Should log warning
+                    mock_warning.assert_called()
+
+            print("\n✅ ImportError fallback works correctly")
+
+        except ImportError as e:
+            pytest.skip(f"Dependencies not available: {e}")
+
+    def test_super_resolution_enhance_returns_none(self):
+        """Test fallback when enhance() returns None."""
+        if not ML_AVAILABLE:
+            pytest.skip("ML dependencies not available")
+
+        try:
+            from unittest import mock
+
+            import clasificador
+
+            test_face = np.random.randint(0, 256, (80, 80, 3), dtype=np.uint8)
+
+            # Clear cached model to force reinitialization
+            if hasattr(clasificador.apply_super_resolution, "realesrgan_model"):
+                delattr(clasificador.apply_super_resolution, "realesrgan_model")
+
+            # Mock enhance() to return (None, None)
+            with mock.patch.object(
+                clasificador.apply_super_resolution,
+                "realesrgan_model",
+                create=True,
+            ):
+                mock_model = mock.MagicMock()
+                mock_model.enhance.return_value = (None, None)
+                clasificador.apply_super_resolution.realesrgan_model = mock_model
+
+                with mock.patch("clasificador.logger.warning") as mock_warning:
+                    result = clasificador.apply_super_resolution(test_face, scale=2)
+
+                    # Should return original image
+                    np.testing.assert_array_equal(result, test_face)
+                    # Should log warning
+                    assert any(
+                        "Real-ESRGAN returned None" in str(call)
+                        for call in mock_warning.call_args_list
+                    )
+
+            print("\n✅ enhance() None return fallback works correctly")
+
+        except ImportError as e:
+            pytest.skip(f"Dependencies not available: {e}")
+
+    def test_super_resolution_enhance_raises_exception(self):
+        """Test fallback when enhance() raises an exception."""
+        if not ML_AVAILABLE:
+            pytest.skip("ML dependencies not available")
+
+        try:
+            from unittest import mock
+
+            import clasificador
+
+            test_face = np.random.randint(0, 256, (80, 80, 3), dtype=np.uint8)
+
+            # Clear cached model
+            if hasattr(clasificador.apply_super_resolution, "realesrgan_model"):
+                delattr(clasificador.apply_super_resolution, "realesrgan_model")
+
+            # Mock enhance() to raise exception
+            with mock.patch.object(
+                clasificador.apply_super_resolution,
+                "realesrgan_model",
+                create=True,
+            ):
+                mock_model = mock.MagicMock()
+                mock_model.enhance.side_effect = RuntimeError("Enhance failed")
+                clasificador.apply_super_resolution.realesrgan_model = mock_model
+
+                with mock.patch("clasificador.logger.error") as mock_error:
+                    result = clasificador.apply_super_resolution(test_face, scale=2)
+
+                    # Should return original image
+                    np.testing.assert_array_equal(result, test_face)
+                    # Should log error
+                    assert any(
+                        "Real-ESRGAN enhance() failed" in str(call)
+                        for call in mock_error.call_args_list
+                    )
+
+            print("\n✅ enhance() exception fallback works correctly")
+
+        except ImportError as e:
+            pytest.skip(f"Dependencies not available: {e}")
+
+    def test_super_resolution_general_exception_handling(self):
+        """Test general exception handling in apply_super_resolution."""
+        if not ML_AVAILABLE:
+            pytest.skip("ML dependencies not available")
+
+        try:
+            from unittest import mock
+
+            import clasificador
+
+            test_face = np.random.randint(0, 256, (80, 80, 3), dtype=np.uint8)
+
+            # Clear cached model
+            if hasattr(clasificador.apply_super_resolution, "realesrgan_model"):
+                delattr(clasificador.apply_super_resolution, "realesrgan_model")
+
+            # Mock RRDBNet at the actual import path to raise exception
+            with mock.patch(
+                "basicsr.archs.rrdbnet_arch.RRDBNet",
+                side_effect=ValueError("Unexpected error"),
+            ):
+                with mock.patch("clasificador.logger.error") as mock_error:
+                    result = clasificador.apply_super_resolution(test_face, scale=2)
+
+                    # Should return original image
+                    np.testing.assert_array_equal(result, test_face)
+                    # Should log error
+                    assert any(
+                        "Error in Real-ESRGAN super-resolution" in str(call)
+                        for call in mock_error.call_args_list
+                    )
+
+            print("\n✅ General exception handling works correctly")
+
+        except ImportError as e:
+            pytest.skip(f"Dependencies not available: {e}")
+
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v", "--tb=short"])
