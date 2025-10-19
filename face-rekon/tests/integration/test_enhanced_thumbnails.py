@@ -734,9 +734,10 @@ class TestSuperResolutionRealESRGAN:
             if hasattr(clasificador.apply_super_resolution, "realesrgan_model"):
                 delattr(clasificador.apply_super_resolution, "realesrgan_model")
 
-            # Mock RRDBNet to raise unexpected exception during initialization
+            # Mock RRDBNet at the actual import path to raise exception
             with mock.patch(
-                "clasificador.RRDBNet", side_effect=ValueError("Unexpected error")
+                "basicsr.archs.rrdbnet_arch.RRDBNet",
+                side_effect=ValueError("Unexpected error"),
             ):
                 with mock.patch("clasificador.logger.error") as mock_error:
                     result = clasificador.apply_super_resolution(test_face, scale=2)
