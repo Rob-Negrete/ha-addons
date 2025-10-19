@@ -375,3 +375,119 @@ class TestIdentifyAllFacesTargetedCoverage:
 
         except ImportError as e:
             pytest.skip(f"Dependencies not available: {e}")
+
+    def test_borderline_match_deterministic(self):
+        """
+        Test borderline match path with mocked distance (0.35 < distance <= 0.50).
+        Guarantees coverage of lines 817-835.
+        """
+        if not ML_AVAILABLE:
+            pytest.skip("ML dependencies not available")
+
+        try:
+            from unittest.mock import patch
+
+            import clasificador
+            from qdrant_adapter import QdrantAdapter
+
+            test_images_dir = os.path.join(os.path.dirname(__file__), "..", "dummies")
+            image_path = os.path.join(test_images_dir, "one-face.jpg")
+
+            # Mock search_similar_faces to return borderline distance (0.42)
+            mock_match = [
+                (
+                    "test_face_id_borderline",
+                    0.42,  # Distance in borderline range (0.35 < 0.42 <= 0.50)
+                    {
+                        "face_id": "test_face_id_borderline",
+                        "name": "Jane Borderline",
+                        "event_id": "test_event",
+                        "timestamp": 1234567890,
+                    },
+                )
+            ]
+
+            with patch.object(
+                QdrantAdapter,
+                "search_similar_faces",
+                return_value=mock_match,
+            ):
+                results = clasificador.identify_all_faces(image_path)
+
+                # Should have at least one result
+                assert len(results) > 0
+
+                # Find the suggestion result
+                suggestion = next(
+                    (r for r in results if r["status"] == "suggestion"), None
+                )
+                assert suggestion is not None, "Expected suggestion status"
+
+                # Verify all borderline path fields (lines 819-830)
+                assert suggestion["status"] == "suggestion"
+                assert suggestion["suggested_name"] == "Jane Borderline"
+                assert suggestion["match_confidence"] == 1.0 - 0.42
+                assert suggestion["distance"] == 0.42
+                assert suggestion["suggested_face_id"] == "test_face_id_borderline"
+                assert "Possible match with Jane Borderline" in suggestion["message"]
+                assert "confidence:" in suggestion["message"]
+
+                print("\n✅ Borderline path covered (distance: 0.42)")
+
+        except ImportError as e:
+            pytest.skip(f"Dependencies not available: {e}")
+
+    def test_unknown_face_deterministic(self):
+        """
+        Test unknown face path with mocked distance (distance > 0.50).
+        Guarantees coverage of lines 837-846.
+        """
+        if not ML_AVAILABLE:
+            pytest.skip("ML dependencies not available")
+
+        try:
+            from unittest.mock import patch
+
+            import clasificador
+            from qdrant_adapter import QdrantAdapter
+
+            test_images_dir = os.path.join(os.path.dirname(__file__), "..", "dummies")
+            image_path = os.path.join(test_images_dir, "one-face.jpg")
+
+            # Mock search_similar_faces to return high distance (0.75 > 0.50)
+            mock_match = [
+                (
+                    "test_face_id_distant",
+                    0.75,  # Distance > BORDERLINE_THRESHOLD (0.50)
+                    {
+                        "face_id": "test_face_id_distant",
+                        "name": "Someone Distant",
+                        "event_id": "test_event",
+                        "timestamp": 1234567890,
+                    },
+                )
+            ]
+
+            with patch.object(
+                QdrantAdapter,
+                "search_similar_faces",
+                return_value=mock_match,
+            ):
+                results = clasificador.identify_all_faces(image_path)
+
+                # Should have at least one result
+                assert len(results) > 0
+
+                # Find the unknown result
+                unknown = next((r for r in results if r["status"] == "unknown"), None)
+                assert unknown is not None, "Expected unknown status"
+
+                # Verify all unknown path fields (lines 839-844)
+                assert unknown["status"] == "unknown"
+                assert unknown["name"] == "unknown"
+                assert unknown["message"] == "No matching face found"
+
+                print("\n✅ Unknown path covered (distance: 0.75)")
+
+        except ImportError as e:
+            pytest.skip(f"Dependencies not available: {e}")
