@@ -553,9 +553,12 @@ class TestRecognizeEndpointCoverage:
     # Test Case 29: Main exception handler (lines 223-234)
     def test_recognize_main_exception_handler(self, test_image_base64):
         """Test /recognize main exception handling (lines 223-234)"""
+        import app
+
         with app.app.test_client() as client:
             # Mock identify_all_faces to raise an exception
-            with patch("app.clasificador.identify_all_faces") as mock_identify:
+            # Patch clasificador module (app.py imports: import clasificador)
+            with patch("clasificador.identify_all_faces") as mock_identify:
                 mock_identify.side_effect = RuntimeError(
                     "Simulated face recognition failure"
                 )
