@@ -549,3 +549,38 @@ class TestRecognizeEndpointCoverage:
                 print("✅ Real face with legacy storage test passed")
             finally:
                 app.clasificador.USE_OPTIMIZED_STORAGE = original_storage
+
+    # Test Case 29: Main exception handler (lines 223-234)
+    def test_recognize_main_exception_handler(self, test_image_base64):
+        """Test /recognize main exception handling (lines 223-234)"""
+        import app
+
+        with app.app.test_client() as client:
+            # Mock identify_all_faces to raise an exception
+            # Patch clasificador module (app.py imports: import clasificador)
+            with patch("clasificador.identify_all_faces") as mock_identify:
+                mock_identify.side_effect = RuntimeError(
+                    "Simulated face recognition failure"
+                )
+
+                response = RecognizeTestUtils.make_recognize_request(
+                    client,
+                    {
+                        "image_base64": test_image_base64,
+                        "event_id": "test_main_exception",
+                    },
+                )
+
+                # Should return 500 error response
+                assert response.status_code == 500
+                data = response.get_json()
+
+                # Verify error response structure (lines 226-232)
+                assert "error" in data
+                assert "Simulated face recognition failure" in data["error"]
+                assert data["event_id"] == "test_main_exception"
+                assert data["status"] == "error"
+                assert data["faces_count"] == 0
+                assert data["faces"] == []
+
+                print("✅ Main exception handler test passed")
