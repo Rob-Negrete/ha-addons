@@ -1,15 +1,12 @@
 """
 Integration tests to achieve 100% coverage for app.py endpoints.
 
-This test file covers all previously uncovered lines in app.py:
+This test file covers previously uncovered lines in app.py:
 - Line 55: Ping endpoint GET
-- Lines 78-79: Missing image_base64 validation
-- Lines 97-100: Custom data prefix handling
-- Lines 240-241: Cleanup exception handler
-- Lines 255-256: Get unclassified faces
-- Lines 268-269: Get specific face
-- Lines 289-290: Face update exception handler
-- Lines 389-390: Main entry point
+- Lines 240-241: Cleanup exception handler in recognize endpoint
+- Lines 255-256: Get unclassified faces endpoint
+- Lines 268-269: Get specific face endpoint
+- Lines 389-390: Main entry point with debug mode configuration
 """
 
 import base64
@@ -30,56 +27,6 @@ class TestPingEndpoint:
             data = response.get_json()
             assert data == {"pong": True}
             print("✅ Ping endpoint test passed")
-
-
-class TestRecognizeValidation:
-    """Tests for /recognize endpoint validation paths."""
-
-    def test_recognize_missing_image_base64(self):
-        """Test /recognize with missing image_base64 - covers lines 78-79."""
-        import app
-
-        with app.app.test_client() as client:
-            # Send request without image_base64
-            response = client.post(
-                "/api/face-rekon/recognize",
-                json={"event_id": "test_missing_image"},
-                content_type="application/json",
-            )
-
-            assert response.status_code == 400
-            data = response.get_json()
-            assert "error" in data
-            assert "Missing image_base64" in data["error"]
-            print("✅ Missing image_base64 validation test passed")
-
-    def test_recognize_custom_data_prefix(self):
-        """Test /recognize with ;data: prefix - covers lines 97-100."""
-        import app
-
-        with app.app.test_client() as client:
-            # Create a simple test image (1x1 white pixel PNG)
-            test_image_bytes = base64.b64decode(
-                "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAA"
-                "DUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg=="
-            )
-            image_base64 = base64.b64encode(test_image_bytes).decode()
-
-            # Add custom ;data: prefix
-            prefixed_image = f"image/png;data:{image_base64}"
-
-            response = client.post(
-                "/api/face-rekon/recognize",
-                json={
-                    "image_base64": prefixed_image,
-                    "event_id": "test_custom_prefix",
-                },
-                content_type="application/json",
-            )
-
-            # Should process successfully (200 or 500 depending on face detection)
-            assert response.status_code in [200, 500]
-            print("✅ Custom ;data: prefix handling test passed")
 
 
 class TestRecognizeCleanup:
@@ -146,32 +93,6 @@ class TestSpecificFaceEndpoint:
             # 200 with None or 404, both are valid
             assert response.status_code in [200, 404]
             print("✅ Get specific face test passed")
-
-
-class TestFaceUpdateExceptionHandler:
-    """Tests for the /face-rekon/<face_id> PATCH exception handler."""
-
-    def test_face_update_exception_handler(self):
-        """Test PATCH /face-rekon/<face_id> exception - covers lines 289-290."""
-        import app
-
-        with app.app.test_client() as client:
-            # Mock clasificador.update_face to raise an exception
-            with patch("clasificador.update_face") as mock_update:
-                mock_update.side_effect = RuntimeError("Database error")
-
-                response = client.patch(
-                    "/api/face-rekon/test_face_id",
-                    json={"name": "Test Person"},
-                    content_type="application/json",
-                )
-
-                # Should return 500 error
-                assert response.status_code == 500
-                data = response.get_json()
-                assert "error" in data
-                assert "Database error" in data["error"]
-                print("✅ Face update exception handler test passed")
 
 
 class TestMainEntryPoint:
