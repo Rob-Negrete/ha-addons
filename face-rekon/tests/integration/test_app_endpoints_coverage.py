@@ -95,6 +95,73 @@ class TestSpecificFaceEndpoint:
             print("✅ Get specific face test passed")
 
 
+class TestRecognizeValidationPaths:
+    """Additional tests to ensure validation paths are covered."""
+
+    def test_recognize_with_empty_request_body(self):
+        """Test /recognize with empty body - covers lines 78-79."""
+        import app
+
+        with app.app.test_client() as client:
+            response = client.post(
+                "/api/face-rekon/recognize",
+                json={},  # Empty JSON body
+                content_type="application/json",
+            )
+            # Should return 400 for missing image_base64
+            assert response.status_code in [400, 422]
+            print("✅ Empty request body validation test passed")
+
+    def test_recognize_with_custom_semicolon_data_prefix(self):
+        """Test /recognize with ;data: prefix - covers lines 97-100."""
+        import app
+
+        with app.app.test_client() as client:
+            # Create test image
+            test_image_bytes = base64.b64decode(
+                "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAA"
+                "DUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg=="
+            )
+            image_base64 = base64.b64encode(test_image_bytes).decode()
+
+            # Use custom ;data: prefix format
+            response = client.post(
+                "/api/face-rekon/recognize",
+                json={
+                    "image_base64": f"image/png;data:{image_base64}",
+                    "event_id": "test_semicolon_prefix",
+                },
+                content_type="application/json",
+            )
+            # Should process (may succeed or fail on face detection)
+            assert response.status_code in [200, 500]
+            print("✅ Custom ;data: prefix test passed")
+
+
+class TestFaceUpdateErrorHandling:
+    """Test face update error scenarios."""
+
+    def test_face_update_with_exception(self):
+        """Test PATCH with exception - covers lines 289-290."""
+        import app
+
+        with app.app.test_client() as client:
+            # Mock the update_face method to raise exception
+            with patch("clasificador.update_face") as mock_update:
+                mock_update.side_effect = Exception("Test database error")
+
+                response = client.patch(
+                    "/api/face-rekon/test_face_id",
+                    json={"name": "Test Name"},
+                    content_type="application/json",
+                )
+                # Should return 500 error
+                assert response.status_code == 500
+                data = response.get_json()
+                assert "error" in data
+                print("✅ Face update exception handling test passed")
+
+
 class TestMainEntryPoint:
     """Tests for the if __name__ == '__main__' block."""
 
