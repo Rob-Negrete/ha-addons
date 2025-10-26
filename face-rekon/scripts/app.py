@@ -74,10 +74,7 @@ class Recognize(Resource):
 
         try:
             data = request.get_json()
-            if not data or "image_base64" not in data:
-                logger.error("❌ Missing image_base64 in request")
-                return {"error": "Missing image_base64"}, 400
-
+            # Flask-RESTX @api.expect validates required fields before this code runs
             event_id = data.get("event_id", "unknown")
             logger.info(f"📝 Processing event_id: {event_id}")
 
@@ -88,7 +85,7 @@ class Recognize(Resource):
 
             # Handle data URI format (e.g., "data:image/jpeg;base64,..."
             # or "image/jpg;data:...")
-            if "data:" in image_base64:
+            if image_base64.startswith("data:"):
                 image_base64 = image_base64.split(",", 1)[
                     1
                 ]  # Remove "data:image/jpeg;base64," prefix
