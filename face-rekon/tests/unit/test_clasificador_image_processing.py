@@ -5,8 +5,6 @@ Tests calculate_face_quality_metrics(), create_face_thumbnail(),
 and save_face_crop_to_file() functions with comprehensive coverage.
 """
 
-import base64
-import io
 import os
 import tempfile
 from unittest.mock import patch
@@ -185,109 +183,6 @@ class TestCalculateFaceQualityMetrics:
                 assert metrics["brightness"] == 0.0
                 assert metrics["contrast"] == 0.0
                 assert metrics["quality_score"] == 0.0
-
-        except ImportError as e:
-            pytest.skip(f"ML dependencies not available: {e}")
-
-
-class TestCreateFaceThumbnail:
-    """Test suite for create_face_thumbnail function."""
-
-    def test_create_thumbnail_from_color_image(self):
-        """Test thumbnail creation from color image."""
-        try:
-            import scripts.clasificador as clasificador
-
-            # Create test color image
-            face_crop = np.random.randint(0, 255, (200, 200, 3), dtype=np.uint8)
-
-            thumbnail_b64 = clasificador.create_face_thumbnail(face_crop)
-
-            # Verify base64 string is returned
-            assert isinstance(thumbnail_b64, str)
-            assert len(thumbnail_b64) > 0
-
-            # Verify it's valid base64
-            decoded = base64.b64decode(thumbnail_b64)
-            assert len(decoded) > 0
-
-            # Verify it's a valid JPEG image
-            img = Image.open(io.BytesIO(decoded))
-            assert img.format == "JPEG"
-            assert img.size == (160, 160)  # THUMBNAIL_SIZE
-
-        except ImportError as e:
-            pytest.skip(f"ML dependencies not available: {e}")
-
-    def test_create_thumbnail_from_grayscale_image(self):
-        """Test thumbnail creation from grayscale image."""
-        try:
-            import scripts.clasificador as clasificador
-
-            # Create grayscale image
-            face_crop = np.random.randint(0, 255, (200, 200), dtype=np.uint8)
-
-            thumbnail_b64 = clasificador.create_face_thumbnail(face_crop)
-
-            assert isinstance(thumbnail_b64, str)
-            assert len(thumbnail_b64) > 0
-
-            # Decode and verify
-            decoded = base64.b64decode(thumbnail_b64)
-            img = Image.open(io.BytesIO(decoded))
-            assert img.format == "JPEG"
-
-        except ImportError as e:
-            pytest.skip(f"ML dependencies not available: {e}")
-
-    def test_create_thumbnail_resizes_correctly(self):
-        """Test thumbnail resizing to THUMBNAIL_SIZE."""
-        try:
-            import scripts.clasificador as clasificador
-
-            # Large image
-            large_crop = np.zeros((500, 500, 3), dtype=np.uint8)
-
-            thumbnail_b64 = clasificador.create_face_thumbnail(large_crop)
-
-            decoded = base64.b64decode(thumbnail_b64)
-            img = Image.open(io.BytesIO(decoded))
-
-            # Should be resized to 160x160
-            assert img.size == (160, 160)
-
-        except ImportError as e:
-            pytest.skip(f"ML dependencies not available: {e}")
-
-    def test_create_thumbnail_jpeg_quality(self):
-        """Test JPEG quality setting."""
-        try:
-            import scripts.clasificador as clasificador
-
-            face_crop = np.random.randint(0, 255, (200, 200, 3), dtype=np.uint8)
-
-            thumbnail_b64 = clasificador.create_face_thumbnail(face_crop)
-
-            # Verify it's a valid JPEG (quality=85 set in function)
-            decoded = base64.b64decode(thumbnail_b64)
-            img = Image.open(io.BytesIO(decoded))
-            assert img.format == "JPEG"
-
-        except ImportError as e:
-            pytest.skip(f"ML dependencies not available: {e}")
-
-    def test_create_thumbnail_error_handling(self):
-        """Test error handling returns empty string."""
-        try:
-            import scripts.clasificador as clasificador
-
-            # Mock cv2.resize to raise exception
-            with patch("cv2.resize", side_effect=Exception("Test error")):
-                face_crop = np.zeros((100, 100, 3), dtype=np.uint8)
-                thumbnail_b64 = clasificador.create_face_thumbnail(face_crop)
-
-                # Should return empty string on error
-                assert thumbnail_b64 == ""
 
         except ImportError as e:
             pytest.skip(f"ML dependencies not available: {e}")

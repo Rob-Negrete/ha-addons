@@ -40,50 +40,6 @@ class TestClasificadorFunctionality:
             np.random.random(512).astype(np.float32),
         ]
 
-    def test_face_embedding_extraction_logic(self):
-        """Test face embedding extraction logic"""
-        # Mock the face analysis app
-        mock_face = Mock()
-        mock_face.embedding = self.test_embedding
-
-        clasificador.app = Mock()
-        clasificador.app.get.return_value = [mock_face]
-        clasificador.cv2 = Mock()
-        clasificador.cv2.imread.return_value = np.random.randint(
-            0, 255, (480, 640, 3), dtype=np.uint8
-        )
-
-        # Test the logic
-        result = clasificador.extract_face_embedding("test_image.jpg")
-
-        assert result is not None
-        assert isinstance(result, np.ndarray)
-        assert result.shape == (512,)
-        clasificador.cv2.imread.assert_called_once_with("test_image.jpg")
-        clasificador.app.get.assert_called_once()
-
-    def test_face_embedding_extraction_no_image(self):
-        """Test handling of unreadable image"""
-        clasificador.cv2 = Mock()
-        clasificador.cv2.imread.return_value = None
-
-        result = clasificador.extract_face_embedding("nonexistent.jpg")
-
-        assert result is None
-
-    def test_face_embedding_extraction_no_face(self):
-        """Test handling when no face is detected"""
-        clasificador.app = Mock()
-        clasificador.app.get.return_value = []
-        clasificador.cv2 = Mock()
-        clasificador.cv2.imread.return_value = np.random.randint(
-            0, 255, (480, 640, 3), dtype=np.uint8
-        )
-
-        result = clasificador.extract_face_embedding("test_image.jpg")
-
-        assert result is None
-
     def test_multiple_face_embeddings_extraction(self):
         """Test extracting face crops with embeddings from multiple faces"""
         clasificador.cv2 = Mock()

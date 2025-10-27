@@ -1,21 +1,31 @@
-## 🟢 Coverage Health Check: PASS
+## 🔴 Coverage Health Check: FAIL
 
-**Current Coverage:** 41.39%
-**Baseline Coverage:** 41.2%
-**Coverage Delta:** +0.0% (maintained)
+**Overall Coverage:** 49.22% (-41.36% vs baseline 90.58%)
+**Lines Covered:** 345/701
 
-**Lines Covered:** 279/674
+_📖 [Coverage Metrics Guide](../COVERAGE-GUIDE.md#understanding-coverage-metrics)_
 
-_Coverage includes comprehensive results from both unit and integration tests_
+### 🎯 Priority: Undercovered Files (< 70%)
+
+| File              | Function    | Coverage | Lines Missing | Priority |
+| ----------------- | ----------- | -------- | ------------- | -------- |
+| `app.py`          | _(overall)_ | 31.6%    | 121 lines     | 🔴 HIGH  |
+| `clasificador.py` | _(overall)_ | 43.8%    | 203 lines     | 🔴 HIGH  |
 
 ### Status Thresholds
 
-- 🟢 **Green (Pass):** ≥ 41.2%
-- 🟡 **Amber (Warning):** 35.0% - 41.190000000000005%
-- 🔴 **Red (Fail):** < 35.0%
+- 🟢 **Green (Pass):** ≥ 80.0%
+- 🟡 **Amber (Warning):** 70.0% - 79.99%
+- 🔴 **Red (Fail):** < 70.0%
 
 ### Package Coverage
 
-- 🟢 **.**: 41.4%
+- 🔴 **.**: 49.2%
 
-### ✅ Great job maintaining test coverage!
+### ⚠️ Action Required
+
+Coverage has dropped below the critical threshold of 70.0%. Please:
+
+1. Add tests for new code
+2. Review untested code paths
+3. Consider refactoring complex functions

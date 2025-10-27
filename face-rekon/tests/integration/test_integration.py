@@ -749,55 +749,6 @@ class TestClasificadorExtended:
         except ImportError:
             pytest.skip("Face management not available")
 
-    def test_face_processing_edge_cases(self, test_image_base64):
-        """Test face processing with various edge cases"""
-        try:
-            import clasificador
-
-            # Test with the test image
-            try:
-                img_data = base64.b64decode(test_image_base64)
-                embedding = clasificador.extract_face_embedding(img_data)
-                print(f"✅ Embedding extraction: {embedding is not None}")
-            except Exception as e:
-                print(f"✅ Embedding extraction handled: {type(e).__name__}")
-
-            # Test with different image sizes for coverage
-            image_sizes = [(64, 64), (320, 240), (1024, 768)]
-
-            for width, height in image_sizes:
-                try:
-                    from PIL import ImageDraw
-
-                    img = Image.new("RGB", (width, height), color=(200, 200, 200))
-                    draw = ImageDraw.Draw(img)
-
-                    # Add simple face-like pattern
-                    cx, cy = width // 2, height // 2
-                    face_size = min(width, height) // 4
-                    draw.ellipse(
-                        [
-                            cx - face_size,
-                            cy - face_size,
-                            cx + face_size,
-                            cy + face_size,
-                        ],
-                        fill=(255, 220, 177),
-                    )
-
-                    buffer = io.BytesIO()
-                    img.save(buffer, format="JPEG")
-                    img_data = buffer.getvalue()
-
-                    embedding = clasificador.extract_face_embedding(img_data)
-                    print(f"✅ Embedding {width}x{height}: {embedding is not None}")
-
-                except Exception as e:
-                    print(f"✅ Embedding {width}x{height} handled: {type(e).__name__}")
-
-        except ImportError:
-            pytest.skip("Face processing not available")
-
 
 @pytest.mark.integration
 class TestErrorHandlingComprehensive:

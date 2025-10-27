@@ -1,5 +1,3 @@
-import base64
-import io
 import logging
 import os
 import sys
@@ -147,42 +145,6 @@ def db_get_unclassified_faces() -> List[Dict[str, Any]]:
 def db_check_recent_detection(event_id: str) -> bool:
     """Check for recent detections using Qdrant."""
     return get_qdrant_adapter_instance().check_recent_detection(event_id)
-
-
-def extract_face_embedding(image_path: str) -> Optional[np.ndarray]:
-    """Extract face embedding from image using InsightFace.
-
-    Args:
-        image_path: Path to the image file
-
-    Returns:
-        Face embedding as numpy array, or None if no face found
-    """
-    try:
-        logger.info(f"🔍 Extracting embedding from: {image_path}")
-
-        # Read image
-        img = cv2.imread(image_path)
-        if img is None:
-            logger.error(f"❌ Could not read image: {image_path}")
-            return None
-
-        # Detect faces
-        faces = app.get(img)
-        if not faces:
-            logger.warning(f"⚠️ No faces detected in: {image_path}")
-            return None
-
-        # Return embedding of first/best face
-        face = faces[0]  # Take the first detected face
-        embedding = face.embedding
-        logger.info(f"✅ Extracted {len(embedding)}-dimensional embedding")
-
-        return embedding
-
-    except Exception as e:
-        logger.error(f"❌ Error extracting embedding: {e}")
-        return None
 
 
 def calculate_face_quality_metrics(face_crop: np.ndarray) -> Dict[str, float]:
@@ -531,51 +493,6 @@ def create_enhanced_thumbnail_hybrid(
 # ============================================================================
 # END: Enhanced Thumbnail Generation
 # ============================================================================
-
-
-def create_face_thumbnail(face_crop: np.ndarray) -> str:
-    """Create base64-encoded thumbnail from face crop.
-
-    Uses hybrid enhancement: adaptive interpolation + optional super-resolution.
-
-    Args:
-        face_crop: Face crop as numpy array
-
-    Returns:
-        Base64-encoded JPEG thumbnail
-    """
-    try:
-        # Validate input dimensions (must be 2D or 3D array)
-        if len(face_crop.shape) not in [2, 3]:
-            logger.error(
-                f"❌ Invalid array dimensions: {face_crop.shape}. "
-                "Expected 2D (grayscale) or 3D (color) array."
-            )
-            return ""
-
-        # Use enhanced hybrid thumbnail generation
-        thumbnail = create_enhanced_thumbnail_hybrid(face_crop, THUMBNAIL_SIZE)
-
-        # Convert to PIL Image and save as JPEG in memory
-        if len(thumbnail.shape) == 3:
-            # Convert BGR to RGB for PIL
-            thumbnail_rgb = cv2.cvtColor(thumbnail, cv2.COLOR_BGR2RGB)
-            pil_image = Image.fromarray(thumbnail_rgb)
-        else:
-            pil_image = Image.fromarray(thumbnail)
-
-        # Save to bytes buffer
-        buffer = io.BytesIO()
-        pil_image.save(buffer, format="JPEG", quality=85)
-
-        # Encode as base64
-        thumbnail_b64 = base64.b64encode(buffer.getvalue()).decode("utf-8")
-
-        return thumbnail_b64
-
-    except Exception as e:
-        logger.error(f"❌ Error creating thumbnail: {e}")
-        return ""
 
 
 def extract_faces_with_crops(image_path: str) -> List[Dict[str, Any]]:
