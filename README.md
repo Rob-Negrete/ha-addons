@@ -1,6 +1,6 @@
 # Home Assistant Add-ons Repository
 
-![Coverage](https://img.shields.io/badge/coverage-49%25-yellow)
+![Coverage](https://img.shields.io/badge/coverage-91.72%25-brightgreen)
 ![CI](https://github.com/Rob-Negrete/ha-addons/workflows/CI/badge.svg)
 ![Coverage Health](https://github.com/Rob-Negrete/ha-addons/workflows/Coverage%20Health%20Check/badge.svg)
 
@@ -24,7 +24,7 @@ This repository contains custom Home Assistant add-ons for enhanced home automat
 - Real-time face detection and recognition
 - Unknown face storage and classification workflow
 - REST API with Swagger documentation
-- Professional testing infrastructure with 49% coverage and automated health checks
+- Professional testing infrastructure with 91.72% coverage and automated health checks
 - Qdrant vector database for optimized face similarity search
 - Comprehensive web UI for face management
 

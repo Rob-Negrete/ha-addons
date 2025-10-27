@@ -1,6 +1,6 @@
 {
-  "state": "success",
+  "state": "failure",
   "target_url": null,
-  "description": "Coverage: 41.39% (\u0394+0.0%) - PASS",
+  "description": "Coverage: 49.22% (\u0394-41.4%) - FAIL",
   "context": "coverage/health"
 }
