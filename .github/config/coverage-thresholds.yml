@@ -3,34 +3,34 @@
 # Update these values in ONE place to change coverage requirements project-wide.
 
 # Primary baseline coverage percentage (used by CI/CD and all coverage tools)
-baseline_coverage: 80.0
+baseline_coverage: 90.0
 
 # Status thresholds (derived from baseline)
 thresholds:
   # Green: Coverage at or above baseline (PASS)
-  green_min: 80.0 # baseline_coverage
+  green_min: 90.0 # baseline_coverage
 
   # Amber: Coverage slightly below baseline (WARNING)
-  amber_min: 70.0 # baseline_coverage - 10.0
-  amber_max: 79.9 # baseline_coverage - 0.1
+  amber_min: 80.0 # baseline_coverage - 10.0
+  amber_max: 89.9 # baseline_coverage - 0.1
 
   # Red: Coverage significantly below amber threshold (FAIL)
-  red_max: 69.9 # amber_min - 0.1
+  red_max: 79.9 # amber_min - 0.1
 
 # File-level priority thresholds (for identifying improvement targets)
 file_priorities:
   # Files with coverage below this are HIGH priority
-  high_priority_max: 60.0
+  high_priority_max: 70.0
 
   # Files with coverage below this are MEDIUM priority
-  medium_priority_max: 80.0 # baseline_coverage
+  medium_priority_max: 90.0 # baseline_coverage
 
   # Files above medium_priority_max are LOW priority
 
 # Smart target selection thresholds
 target_selection:
   # Maximum coverage percentage for a function to be considered a valid improvement target
-  max_coverage_threshold: 80.0 # baseline_coverage
+  max_coverage_threshold: 90.0 # baseline_coverage
 
   # Minimum number of lines for a function to be considered worth improving
   min_lines: 5
