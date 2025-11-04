@@ -557,3 +557,65 @@ class TestExtractFacesTargetedCoverage:
 
         except ImportError as e:
             pytest.skip(f"Dependencies not available: {e}")
+
+    def test_extract_faces_false_positive_wheel_detection(self):
+        """
+        Test false positive detection (e.g., wheel misidentified as face).
+        This test documents a known issue where circular objects with texture
+        (like car wheels) can trigger face detection. Covers real-world
+        scenario from security camera footage.
+
+        Expected behavior: Should detect child on tricycle, NOT the wheel.
+        Current behavior: May detect wheel as false positive face.
+        """
+        if not ML_AVAILABLE:
+            pytest.skip("ML dependencies not available")
+
+        try:
+            import clasificador
+
+            test_images_dir = os.path.dirname(__file__) + "/../dummies"
+            # Security camera snapshot with child on tricycle
+            image_path = os.path.join(test_images_dir, "original-snapshot-clean.png")
+
+            faces = clasificador.extract_faces_with_crops(image_path)
+
+            # Document current behavior
+            print("\n🔍 False Positive Test Results:")
+            print(f"  - Detected {len(faces)} face(s)")
+
+            if len(faces) > 0:
+                for i, face in enumerate(faces, 1):
+                    bbox = face["face_bbox"]
+                    x1, y1, x2, y2 = bbox
+                    width = x2 - x1
+                    height = y2 - y1
+                    print(f"\n  Face {i}:")
+                    print(f"    - Confidence: {face['detection_confidence']:.3f}")
+                    print(
+                        f"    - Quality: "
+                        f"{face['quality_metrics']['quality_score']:.3f}"
+                    )
+                    print(f"    - Size: {width}x{height}px")
+                    print(f"    - BBox: [{x1}, {y1}, {x2}, {y2}]")
+
+                    # Check if detection is suspiciously low-confidence
+                    # (likely false positive)
+                    if face["detection_confidence"] < 0.7:
+                        print("    ⚠️  Low confidence - potential false positive")
+
+            # Validate function executes without crashing
+            assert isinstance(faces, list)
+
+            # NOTE: This test DOCUMENTS the issue, not enforces ideal behavior
+            # Ideal: Detect 1 face (child), Quality > 0.5, Confidence > 0.7
+            # If test fails with wheel detected, increase thresholds:
+            # - FACE_REKON_MIN_DETECTION_CONFIDENCE=0.7 (from 0.5)
+            # - FACE_REKON_MIN_QUALITY_SCORE=0.5 (from 0.3)
+
+            print(
+                "\n✅ False positive test completed - " "see results above for analysis"
+            )
+
+        except ImportError as e:
+            pytest.skip(f"Dependencies not available: {e}")
