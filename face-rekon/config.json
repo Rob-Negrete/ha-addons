@@ -4,16 +4,9 @@
   "slug": "face_rekon",
   "description": "AI-powered face recognition with comprehensive web UI for managing and labeling faces. Features real-time detection, Qdrant vector similarity search, optimized storage, and seamless Home Assistant integration.",
   "startup": "application",
-  "arch": [
-    "amd64",
-    "armv7",
-    "aarch64"
-  ],
+  "arch": ["amd64", "armv7", "aarch64"],
   "boot": "auto",
-  "map": [
-    "config:rw",
-    "addons:rw"
-  ],
+  "map": ["config:rw", "addons:rw"],
   "host_network": false,
   "ingress": true,
   "ingress_port": 5001,
@@ -23,12 +16,20 @@
   "options": {
     "faces_path": "/config/face-rekon/faces",
     "unknowns_path": "/config/face-rekon/unknowns",
-    "qdrant_path": "/config/face-rekon/qdrant"
+    "qdrant_path": "/config/face-rekon/qdrant",
+    "min_detection_confidence": 0.7,
+    "min_quality_score": 0.5,
+    "min_face_size": 50,
+    "similarity_threshold": 0.35
   },
   "schema": {
     "faces_path": "str",
     "unknowns_path": "str",
-    "qdrant_path": "str"
+    "qdrant_path": "str",
+    "min_detection_confidence": "float?",
+    "min_quality_score": "float?",
+    "min_face_size": "int?",
+    "similarity_threshold": "float?"
   },
   "ports": {
     "5001/tcp": 5001
