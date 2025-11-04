@@ -2,6 +2,13 @@
 
 All notable changes to the Face Rekon Home Assistant add-on will be documented in this file.
 
+## [0.3.1-alpha.1](https://github.com/Rob-Negrete/ha-addons/compare/face-rekon-v0.3.0-alpha.1...face-rekon-v0.3.1-alpha.1) (2025-11-04)
+
+
+### 🐛 Bug Fixes
+
+* **docker:** update libglib2.0-0 to libglib2.0-0t64 for Debian Trixie ([#165](https://github.com/Rob-Negrete/ha-addons/issues/165)) ([6b076ac](https://github.com/Rob-Negrete/ha-addons/commit/6b076accd84abbfce02a3cd018f133323fcbbfef))
+
 ## [0.3.0-alpha.1](https://github.com/Rob-Negrete/ha-addons/compare/face-rekon-v0.2.8-alpha.1...face-rekon-v0.3.0-alpha.1) (2025-11-04)
 
 
