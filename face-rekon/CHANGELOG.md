@@ -2,6 +2,75 @@
 
 All notable changes to the Face Rekon Home Assistant add-on will be documented in this file.
 
+## [0.3.0-alpha.1](https://github.com/Rob-Negrete/ha-addons/compare/face-rekon-v0.2.8-alpha.1...face-rekon-v0.3.0-alpha.1) (2025-11-04)
+
+
+### ✨ Features
+
+* achieve 74% coverage for /recognize endpoint with comprehensive test strategy ([#95](https://github.com/Rob-Negrete/ha-addons/issues/95)) ([6341e69](https://github.com/Rob-Negrete/ha-addons/commit/6341e69f728b6559abe0755d55ceeeff71ced0c6))
+* add smart coverage target selection with validation ([#136](https://github.com/Rob-Negrete/ha-addons/issues/136)) ([bdc5d2d](https://github.com/Rob-Negrete/ha-addons/commit/bdc5d2de96f237db6ae57d44a49be10b02d22e74))
+* implement hybrid adaptive thumbnail generation for tiny faces ([#150](https://github.com/Rob-Negrete/ha-addons/issues/150)) ([ae8a747](https://github.com/Rob-Negrete/ha-addons/commit/ae8a747899aacb66e5cd37f89c17813c9dc8845e))
+* implement Real-ESRGAN 4x super-resolution for tiny face thumbnails ([#151](https://github.com/Rob-Negrete/ha-addons/issues/151)) ([ae8bfbc](https://github.com/Rob-Negrete/ha-addons/commit/ae8bfbc7ac1e542a97881a593e41dc5904ff5261))
+* Improve /assets/&lt;path:filename&gt; endpoint coverage to 78% ([#104](https://github.com/Rob-Negrete/ha-addons/issues/104)) ([9abef0f](https://github.com/Rob-Negrete/ha-addons/commit/9abef0f48485397e0261ec9a529cd66498b50b03))
+* Improve debug_test_webp endpoint coverage from 37.5% to 52.1% ([#97](https://github.com/Rob-Negrete/ha-addons/issues/97)) ([948fabd](https://github.com/Rob-Negrete/ha-addons/commit/948fabd14b55fd125aa148697e90184cbcd6eb42))
+* Improve loadSnapshot endpoint coverage from 76% to 77% ([#102](https://github.com/Rob-Negrete/ha-addons/issues/102)) ([da0958d](https://github.com/Rob-Negrete/ha-addons/commit/da0958defdeb83708bc8a08efec5ec671f2914e1))
+* remove debug endpoint and improve image processing coverage ([#128](https://github.com/Rob-Negrete/ha-addons/issues/128)) ([ab8b2ea](https://github.com/Rob-Negrete/ha-addons/commit/ab8b2ea6be48ec5ef24ac1b4b8203f86f557775c))
+
+
+### 🐛 Bug Fixes
+
+* add configurable thresholds to reduce false positive face detections ([#164](https://github.com/Rob-Negrete/ha-addons/issues/164)) ([376a8c8](https://github.com/Rob-Negrete/ha-addons/commit/376a8c8fa3c576a3cdd41bc19d71fbdb1ba95769))
+* handle LFS file conflicts in coverage-health workflow ([#119](https://github.com/Rob-Negrete/ha-addons/issues/119)) ([fbc73f6](https://github.com/Rob-Negrete/ha-addons/commit/fbc73f688c6328ca4bf32fdffdf5f500c24c0f28))
+* move select_coverage_target.py to tests directory ([#141](https://github.com/Rob-Negrete/ha-addons/issues/141)) ([c19fe39](https://github.com/Rob-Negrete/ha-addons/commit/c19fe39762cd50dfccbca1aad87a3351f66c8aa7))
+* upgrade qdrant-client to 1.9.0 to fix CVE-2024-3829 ([6fde630](https://github.com/Rob-Negrete/ha-addons/commit/6fde63016127d1c67d784e9dcc21c6c9f7fbba29))
+
+
+### 📚 Documentation
+
+* enhance /bump-coverage command with Docker integration testing guidelines ([#99](https://github.com/Rob-Negrete/ha-addons/issues/99)) ([97d99de](https://github.com/Rob-Negrete/ha-addons/commit/97d99de3a1c78a70a6937df5d803c12c8fec3e38))
+
+
+### ♻️ Code Refactoring
+
+* move test images from Git LFS to regular Git tracking ([#121](https://github.com/Rob-Negrete/ha-addons/issues/121)) ([309e53a](https://github.com/Rob-Negrete/ha-addons/commit/309e53a8e5efecf42d28018dead85ed8c4032567))
+* remove dead code and fix data prefix parsing to reach 90% coverage ([#161](https://github.com/Rob-Negrete/ha-addons/issues/161)) ([c9e3915](https://github.com/Rob-Negrete/ha-addons/commit/c9e391525440303a7cdd9eea43f1fb8884b28282))
+* remove dead code to achieve 92% coverage ([#163](https://github.com/Rob-Negrete/ha-addons/issues/163)) ([15ae4b4](https://github.com/Rob-Negrete/ha-addons/commit/15ae4b44bfafe1ce3a7732285500277dcab36441))
+* remove unused Qdrant remote server code to achieve 90%+ coverage ([#162](https://github.com/Rob-Negrete/ha-addons/issues/162)) ([acc688b](https://github.com/Rob-Negrete/ha-addons/commit/acc688b328acd6fa5c22442b541b00a2b9562f00))
+
+
+### ✅ Tests
+
+* achieve 100% coverage for clasificador.update_face function ([#145](https://github.com/Rob-Negrete/ha-addons/issues/145)) ([49eafad](https://github.com/Rob-Negrete/ha-addons/commit/49eafad9bd353b5c08e9396d31e10fb2b003c369))
+* achieve 100% coverage for delete_face function ([#131](https://github.com/Rob-Negrete/ha-addons/issues/131)) ([4ff3d2b](https://github.com/Rob-Negrete/ha-addons/commit/4ff3d2b613b9eb6c8c673bad248b055e8e965825))
+* achieve 100% coverage for QdrantAdapter._connect_with_retry ([#139](https://github.com/Rob-Negrete/ha-addons/issues/139)) ([9e4ef45](https://github.com/Rob-Negrete/ha-addons/commit/9e4ef458ecfcd6fdeb632f914dc0527e6e1c467b))
+* achieve 100% coverage for save_face_crop_to_file function ([#140](https://github.com/Rob-Negrete/ha-addons/issues/140)) ([bdaaa9f](https://github.com/Rob-Negrete/ha-addons/commit/bdaaa9feeb59e0264a04f8ae08aea922d02eda56))
+* achieve 100% coverage for serve_face_image endpoint ([#129](https://github.com/Rob-Negrete/ha-addons/issues/129)) ([ddac922](https://github.com/Rob-Negrete/ha-addons/commit/ddac922283a0dd6073e1cffec2369fa24e66ecb2))
+* achieve 100% coverage for update_face method ([#134](https://github.com/Rob-Negrete/ha-addons/issues/134)) ([68f5984](https://github.com/Rob-Negrete/ha-addons/commit/68f59845356a07dc2c15a882195d297048552279))
+* achieve coverage for check_recent_detection function ([#133](https://github.com/Rob-Negrete/ha-addons/issues/133)) ([133a674](https://github.com/Rob-Negrete/ha-addons/commit/133a6743d1a105fa8655268af272d13d95f72f1b))
+* add comprehensive integration tests for search_similar_faces ([#146](https://github.com/Rob-Negrete/ha-addons/issues/146)) ([214633d](https://github.com/Rob-Negrete/ha-addons/commit/214633dbb1056807744e7dd5db6429322a4818a3))
+* add optimized test images for Real-ESRGAN validation ([#152](https://github.com/Rob-Negrete/ha-addons/issues/152)) ([edb7244](https://github.com/Rob-Negrete/ha-addons/commit/edb72449f5f5b069670fdd84e631e4e94afdfc71))
+* add Recognize.post exception handler coverage (lines 223-234) ([#158](https://github.com/Rob-Negrete/ha-addons/issues/158)) ([0fc54b8](https://github.com/Rob-Negrete/ha-addons/commit/0fc54b8aaab5e042dfd9e9794474c9cae1b3eed4))
+* enhance extract_faces_with_crops coverage to 85.28% with real degraded images ([#149](https://github.com/Rob-Negrete/ha-addons/issues/149)) ([edcebea](https://github.com/Rob-Negrete/ha-addons/commit/edcebea06c5934a57c135513c35a74be15fef165))
+* enhance extract_faces_with_crops coverage with real degraded images ([#148](https://github.com/Rob-Negrete/ha-addons/issues/148)) ([639e98e](https://github.com/Rob-Negrete/ha-addons/commit/639e98ec2c4d33150bbb0cde3edcf8bca09e0666))
+* enhance identify_all_faces coverage to 84.29% ([#147](https://github.com/Rob-Negrete/ha-addons/issues/147)) ([79b849d](https://github.com/Rob-Negrete/ha-addons/commit/79b849daae4945f151cdb345d238cf9004b1605d))
+* improve apply_super_resolution coverage to 100% with error path testing ([#156](https://github.com/Rob-Negrete/ha-addons/issues/156)) ([9766efa](https://github.com/Rob-Negrete/ha-addons/commit/9766efae61b2388333d0e12f7ae1e6b98c5761bb))
+* improve apply_super_resolution coverage to 58.1% with Real-ESRGAN integration tests ([#153](https://github.com/Rob-Negrete/ha-addons/issues/153)) ([8207f41](https://github.com/Rob-Negrete/ha-addons/commit/8207f4174e79cf4a40b763d057ece8ea9d42b42f))
+* improve extract_faces_with_crops coverage using real face images ([#116](https://github.com/Rob-Negrete/ha-addons/issues/116)) ([aa210d9](https://github.com/Rob-Negrete/ha-addons/commit/aa210d9e9635deef4a4c2812e1a58048289f5ab3))
+* improve identify_all_faces borderline/unknown coverage to 90%+ ([#157](https://github.com/Rob-Negrete/ha-addons/issues/157)) ([9cef2b3](https://github.com/Rob-Negrete/ha-addons/commit/9cef2b30490699bd7cb087b50c84350e1db6084f))
+* improve identify_all_faces coverage with real face images ([#118](https://github.com/Rob-Negrete/ha-addons/issues/118)) ([5986bfc](https://github.com/Rob-Negrete/ha-addons/commit/5986bfc035cb8b9fe1180c58f9f1bc100d75e14e))
+* improve QdrantAdapter connection retry coverage to 100% ([#154](https://github.com/Rob-Negrete/ha-addons/issues/154)) ([f4a3612](https://github.com/Rob-Negrete/ha-addons/commit/f4a36129b5ba1a0b125933544d6fdd4013a39344))
+* improve Recognize.post coverage to 84.29% ([#143](https://github.com/Rob-Negrete/ha-addons/issues/143)) ([6142ed0](https://github.com/Rob-Negrete/ha-addons/commit/6142ed0e94b03696b8f6924bb4a95cc16d62322e))
+
+
+### 🧹 Chores
+
+* cleanup legacy coverage files and improve gitignore ([#144](https://github.com/Rob-Negrete/ha-addons/issues/144)) ([255c0a3](https://github.com/Rob-Negrete/ha-addons/commit/255c0a31f607927fbf46d09469e47dfee743c860))
+* improve clasificador.py coverage from 36% to 40% ([#115](https://github.com/Rob-Negrete/ha-addons/issues/115)) ([a38313c](https://github.com/Rob-Negrete/ha-addons/commit/a38313c876d57e2f7a85314c4d9efe7ee44f1817))
+* improve clasificador.py coverage from 36% to 41% ([#114](https://github.com/Rob-Negrete/ha-addons/issues/114)) ([2d99f70](https://github.com/Rob-Negrete/ha-addons/commit/2d99f70f4a106b0951ec5aaa5a8b8d0dd11360d9))
+* Improve qdrant_adapter.py coverage from 34% to 78% ([#124](https://github.com/Rob-Negrete/ha-addons/issues/124)) ([6b9b345](https://github.com/Rob-Negrete/ha-addons/commit/6b9b3450fa3c4b0d901d2e404e4f15c08a27fa81))
+* Improve save_multiple_faces_optimized() coverage from 0% to 100% ([#123](https://github.com/Rob-Negrete/ha-addons/issues/123)) ([1a7ab9e](https://github.com/Rob-Negrete/ha-addons/commit/1a7ab9e58f86d65b84494d906441d02d4ec36974))
+* raise coverage baseline from 72% to 80% ([#155](https://github.com/Rob-Negrete/ha-addons/issues/155)) ([7230e44](https://github.com/Rob-Negrete/ha-addons/commit/7230e442b96be00dfb521c21cbcedd910faced0e))
+
 ## [0.2.8-alpha.1](https://github.com/Rob-Negrete/ha-addons/compare/face-rekon-v0.2.7-alpha.1...face-rekon-v0.2.8-alpha.1) (2025-09-28)
 
 
