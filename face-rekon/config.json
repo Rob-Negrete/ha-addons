@@ -1,12 +1,18 @@
 {
   "name": "Face Rekon",
-  "version": "0.3.1-alpha.1",
+  "version": "0.3.2-alpha.1",
   "slug": "face_rekon",
   "description": "AI-powered face recognition with comprehensive web UI for managing and labeling faces. Features real-time detection, Qdrant vector similarity search, optimized storage, and seamless Home Assistant integration.",
   "startup": "application",
-  "arch": ["amd64", "aarch64"],
+  "arch": [
+    "amd64",
+    "aarch64"
+  ],
   "boot": "auto",
-  "map": ["config:rw", "addons:rw"],
+  "map": [
+    "config:rw",
+    "addons:rw"
+  ],
   "host_network": false,
   "ingress": true,
   "ingress_port": 5001,

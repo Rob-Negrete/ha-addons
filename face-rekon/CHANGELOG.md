@@ -2,6 +2,13 @@
 
 All notable changes to the Face Rekon Home Assistant add-on will be documented in this file.
 
+## [0.3.2-alpha.1](https://github.com/Rob-Negrete/ha-addons/compare/face-rekon-v0.3.1-alpha.1...face-rekon-v0.3.2-alpha.1) (2025-11-06)
+
+
+### 🐛 Bug Fixes
+
+* **config:** remove armv7 architecture support ([#167](https://github.com/Rob-Negrete/ha-addons/issues/167)) ([204a372](https://github.com/Rob-Negrete/ha-addons/commit/204a3727f0976939af03dd58b2b898e21151db33))
+
 ## [0.3.1-alpha.1](https://github.com/Rob-Negrete/ha-addons/compare/face-rekon-v0.3.0-alpha.1...face-rekon-v0.3.1-alpha.1) (2025-11-04)
 
 
