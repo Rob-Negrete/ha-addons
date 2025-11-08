@@ -9,6 +9,7 @@ RUN apt-get update && \
         libsm6 \
         libxext6 \
         libxrender-dev \
+        jq \
         && rm -rf /var/lib/apt/lists/*
 
 # Crear estructura del add-on
