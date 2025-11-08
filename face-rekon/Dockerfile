@@ -15,33 +15,41 @@ RUN apt-get update && \
 # Crear estructura del add-on
 WORKDIR /app
 
-# Copiar archivos
-COPY run.sh /run.sh
-COPY scripts/ /app/scripts/
-COPY ui/ /app/ui/
-# COPY data/ /app/data/
-RUN mkdir -p /app/data/
+# Instalar dependencias de Python ANTES de copiar código para mejor caching
+# Esto evita reinstalar todo cuando solo cambia el código
+# Layer 1: PyTorch (más pesado, ~800MB, cambia raramente)
+RUN pip install --no-cache-dir \
+    torch==1.13.1 \
+    torchvision==0.14.1
 
-
-# Permisos de ejecución
-RUN chmod +x /run.sh
-
-# Instalar dependencias de Python
+# Layer 2: Dependencias NumPy y procesamiento básico
 RUN pip install --no-cache-dir \
     'numpy<2.0.0' \
-    insightface==0.7.3 \
-    pillow \
-    opencv-python-headless \
     onnxruntime \
+    opencv-python-headless \
+    pillow
+
+# Layer 3: ML y procesamiento de imágenes
+RUN pip install --no-cache-dir \
+    insightface==0.7.3 \
+    basicsr==1.4.2 \
+    realesrgan==0.3.0
+
+# Layer 4: Flask y almacenamiento (ligero, ~20MB)
+RUN pip install --no-cache-dir \
     flask \
     flask-cors \
     flask-restx \
-    qdrant-client==1.7.0 \
-    torch==1.13.1 \
-    torchvision==0.14.1 \
-    gfpgan==1.3.8 \
-    realesrgan==0.3.0 \
-    basicsr==1.4.2
+    qdrant-client==1.7.0
+
+# Ahora copiar archivos de aplicación (al final para aprovechar cache)
+COPY run.sh /run.sh
+COPY scripts/ /app/scripts/
+COPY ui/ /app/ui/
+RUN mkdir -p /app/data/
+
+# Permisos de ejecución
+RUN chmod +x /run.sh
 
 # Ejecutar script de reconocimiento
 CMD ["/run.sh"]

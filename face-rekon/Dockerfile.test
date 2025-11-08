@@ -8,26 +8,36 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libglib2.0-0 \
     && rm -rf /var/lib/apt/lists/*
 
-# Install ML dependencies (cache these layers)
+# Install ML dependencies in layers (cache these layers)
+# Layer 1: PyTorch (heaviest, ~800MB)
+RUN pip install --no-cache-dir \
+    torch==1.13.1 \
+    torchvision==0.14.1
+
+# Layer 2: NumPy and basic processing
 RUN pip install --no-cache-dir \
     'numpy<2.0.0' \
     onnxruntime \
-    insightface==0.7.3 \
     opencv-python-headless \
-    torch==1.13.1 \
-    torchvision==0.14.1 \
-    realesrgan==0.3.0 \
-    basicsr==1.4.2
+    pillow
 
-# Install test dependencies
+# Layer 3: ML and image processing (removed gfpgan - not used)
+RUN pip install --no-cache-dir \
+    insightface==0.7.3 \
+    basicsr==1.4.2 \
+    realesrgan==0.3.0
+
+# Layer 4: Flask and storage
 RUN pip install --no-cache-dir \
     flask==3.1.2 \
     flask-cors==6.0.1 \
     flask-restx==1.3.0 \
-    pillow \
-    pytest==7.4.0 \
-    pytest-cov==4.1.0 \
     qdrant-client==1.7.0
+
+# Layer 5: Test dependencies
+RUN pip install --no-cache-dir \
+    pytest==7.4.0 \
+    pytest-cov==4.1.0
 
 # Set working directory
 WORKDIR /app
