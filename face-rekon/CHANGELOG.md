@@ -2,6 +2,13 @@
 
 All notable changes to the Face Rekon Home Assistant add-on will be documented in this file.
 
+## [0.3.3-alpha.1](https://github.com/Rob-Negrete/ha-addons/compare/face-rekon-v0.3.2-alpha.1...face-rekon-v0.3.3-alpha.1) (2025-11-08)
+
+
+### 🐛 Bug Fixes
+
+* **docker:** add jq dependency for configuration parsing ([#169](https://github.com/Rob-Negrete/ha-addons/issues/169)) ([fac5f0d](https://github.com/Rob-Negrete/ha-addons/commit/fac5f0defc4c09cfb823b1a5510880efe340ebb0))
+
 ## [0.3.2-alpha.1](https://github.com/Rob-Negrete/ha-addons/compare/face-rekon-v0.3.1-alpha.1...face-rekon-v0.3.2-alpha.1) (2025-11-06)
 
 
