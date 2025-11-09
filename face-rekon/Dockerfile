@@ -15,19 +15,23 @@ RUN apt-get update && \
 # Crear estructura del add-on
 WORKDIR /app
 
-# Instalar dependencias de Python ANTES de copiar código
-# 2-layer approach to reduce disk space pressure per layer
-# Layer 1: Core dependencies with numpy constraint (~2GB)
+# Instalar dependencias de Python en capas para evitar exceder espacio en disco
+# Layer 1: PyTorch + core libs (must install torch FIRST to establish numpy<2.0)
 RUN pip install --no-cache-dir \
     'numpy<2.0.0' \
+    torch \
+    torchvision
+
+# Layer 2: ML processing libraries (reuse torch from Layer 1)
+RUN pip install --no-cache-dir \
     onnxruntime \
     pillow \
-    opencv-python-headless
+    opencv-python-headless \
+    insightface==0.7.3
 
-# Layer 2: ML libraries + Flask (~1.5GB)
-# Note: realesrgan pulls in basicsr, facexlib, gfpgan as dependencies
+# Layer 3: Enhanced image processing + Flask (lightweight ~500MB)
+# Note: realesrgan pulls in basicsr, facexlib, gfpgan
 RUN pip install --no-cache-dir \
-    insightface==0.7.3 \
     realesrgan==0.3.0 \
     flask \
     flask-cors \
