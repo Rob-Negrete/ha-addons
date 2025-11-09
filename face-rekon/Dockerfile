@@ -17,14 +17,14 @@ WORKDIR /app
 
 # Instalar dependencias de Python ANTES de copiar código para mejor caching
 # Esto evita reinstalar todo cuando solo cambia el código
-# Layer 1: PyTorch (más pesado, ~800MB, cambia raramente)
+# Layer 1: PyTorch + numpy (must be together, ~800MB)
 RUN pip install --no-cache-dir \
+    'numpy<2.0.0' \
     torch==1.13.1 \
     torchvision==0.14.1
 
-# Layer 2: Dependencias NumPy y procesamiento básico
+# Layer 2: Core processing libraries
 RUN pip install --no-cache-dir \
-    'numpy<2.0.0' \
     onnxruntime \
     opencv-python-headless \
     pillow
@@ -41,6 +41,9 @@ RUN pip install --no-cache-dir \
     flask-cors \
     flask-restx \
     qdrant-client==1.7.0
+
+# Layer 5: Force numpy<2.0 (some ML packages try to upgrade it)
+RUN pip install --no-cache-dir --force-reinstall --no-deps 'numpy<2.0.0'
 
 # Ahora copiar archivos de aplicación (al final para aprovechar cache)
 COPY run.sh /run.sh

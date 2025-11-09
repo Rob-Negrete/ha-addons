@@ -9,19 +9,19 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # Install ML dependencies in layers (cache these layers)
-# Layer 1: PyTorch (heaviest, ~800MB)
+# Layer 1: PyTorch + numpy (must be together, ~800MB)
 RUN pip install --no-cache-dir \
+    'numpy<2.0.0' \
     torch==1.13.1 \
     torchvision==0.14.1
 
 # Layer 2: NumPy and basic processing
 RUN pip install --no-cache-dir \
-    'numpy<2.0.0' \
     onnxruntime \
     opencv-python-headless \
     pillow
 
-# Layer 3: ML and image processing (removed gfpgan - not used)
+# Layer 3: ML and image processing
 RUN pip install --no-cache-dir \
     insightface==0.7.3 \
     basicsr==1.4.2 \
@@ -38,6 +38,9 @@ RUN pip install --no-cache-dir \
 RUN pip install --no-cache-dir \
     pytest==7.4.0 \
     pytest-cov==4.1.0
+
+# Layer 6: Force numpy<2.0 (some ML packages try to upgrade it)
+RUN pip install --no-cache-dir --force-reinstall --no-deps 'numpy<2.0.0'
 
 # Set working directory
 WORKDIR /app
