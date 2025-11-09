@@ -16,14 +16,18 @@ RUN apt-get update && \
 WORKDIR /app
 
 # Instalar dependencias de Python ANTES de copiar código
-# Install all together to let pip resolve dependencies properly
+# 2-layer approach to reduce disk space pressure per layer
+# Layer 1: Core dependencies with numpy constraint (~2GB)
 RUN pip install --no-cache-dir \
     'numpy<2.0.0' \
     onnxruntime \
-    opencv-python-headless \
     pillow \
+    opencv-python-headless
+
+# Layer 2: ML libraries + Flask (~1.5GB)
+# Note: realesrgan pulls in basicsr, facexlib, gfpgan as dependencies
+RUN pip install --no-cache-dir \
     insightface==0.7.3 \
-    basicsr==1.4.2 \
     realesrgan==0.3.0 \
     flask \
     flask-cors \
