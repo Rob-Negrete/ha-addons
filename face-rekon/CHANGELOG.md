@@ -2,6 +2,13 @@
 
 All notable changes to the Face Rekon Home Assistant add-on will be documented in this file.
 
+## [0.3.5-alpha.1](https://github.com/Rob-Negrete/ha-addons/compare/face-rekon-v0.3.4-alpha.1...face-rekon-v0.3.5-alpha.1) (2025-11-10)
+
+
+### ⚡ Performance Improvements
+
+* **docker:** simplify dependencies & upgrade to Python 3.11 ([#173](https://github.com/Rob-Negrete/ha-addons/issues/173)) ([c42a7de](https://github.com/Rob-Negrete/ha-addons/commit/c42a7de4b10017cd1a906f74c72c0108a089f939))
+
 ## [0.3.4-alpha.1](https://github.com/Rob-Negrete/ha-addons/compare/face-rekon-v0.3.3-alpha.1...face-rekon-v0.3.4-alpha.1) (2025-11-09)
 
 
