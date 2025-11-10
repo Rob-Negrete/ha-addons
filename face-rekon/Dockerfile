@@ -1,4 +1,4 @@
-FROM python:3.10-slim
+FROM python:3.11-slim
 
 # Instalar dependencias del sistema
 RUN apt-get update && \
@@ -15,35 +15,28 @@ RUN apt-get update && \
 # Crear estructura del add-on
 WORKDIR /app
 
-# Instalar dependencias de Python ANTES de copiar código para mejor caching
-# Esto evita reinstalar todo cuando solo cambia el código
-# Layer 1: PyTorch + numpy (must be together, ~800MB)
+# Instalar dependencias de Python en capas para evitar exceder espacio en disco
+# Layer 1: PyTorch + core libs (must install torch FIRST to establish numpy<2.0)
 RUN pip install --no-cache-dir \
     'numpy<2.0.0' \
-    torch==1.13.1 \
-    torchvision==0.14.1
+    torch \
+    torchvision
 
-# Layer 2: Core processing libraries
+# Layer 2: ML processing libraries (reuse torch from Layer 1)
 RUN pip install --no-cache-dir \
     onnxruntime \
+    pillow \
     opencv-python-headless \
-    pillow
+    insightface==0.7.3
 
-# Layer 3: ML y procesamiento de imágenes
+# Layer 3: Enhanced image processing + Flask (lightweight ~500MB)
+# Note: realesrgan pulls in basicsr, facexlib, gfpgan
 RUN pip install --no-cache-dir \
-    insightface==0.7.3 \
-    basicsr==1.4.2 \
-    realesrgan==0.3.0
-
-# Layer 4: Flask y almacenamiento (ligero, ~20MB)
-RUN pip install --no-cache-dir \
+    realesrgan==0.3.0 \
     flask \
     flask-cors \
     flask-restx \
     qdrant-client==1.7.0
-
-# Layer 5: Force numpy<2.0 (some ML packages try to upgrade it)
-RUN pip install --no-cache-dir --force-reinstall --no-deps 'numpy<2.0.0'
 
 # Ahora copiar archivos de aplicación (al final para aprovechar cache)
 COPY run.sh /run.sh
